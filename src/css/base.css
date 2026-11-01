@@ -3418,8 +3418,11 @@ html.dark .mcmodder-almanacs i {
 }
 /* 确认/取消按钮的文字继承自 .edui-dialog-foot 的浅色文字色，会被上面的 invert(100%)
    一并反转成近黑，落在同样被反转成深色的按钮底图（icons-all.gif，原图白底）上几乎不可见。
-   这里把文字预先改为深色，反转后即呈浅色，与反转后的底图对比度正常。 */
-html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-button-body {
+   注意按钮文字标签是 <div class="edui-label">，会被本文件前部 body/div 大组直接命中为
+   浅色文字——直接命中的规则优先于继承，因此必须把深色同样直接定在标签上，
+   只改父级 .edui-button-body 的颜色无法覆盖它。反转后标签即呈浅色。 */
+html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-button-body,
+html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-label {
   color: #111;
 }
 html.dark .edui-default .edui-tablepicker .edui-pickarea,
