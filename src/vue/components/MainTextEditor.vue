@@ -30,7 +30,7 @@
 
 <script setup lang="ts">
 import CodeMirror from "codemirror";
-import { onMounted, ref, useTemplateRef } from "vue";
+import { nextTick, onMounted, ref, useTemplateRef } from "vue";
 
 interface Props {
   /** 编辑器容器上的 `id` 属性 */
@@ -57,7 +57,11 @@ onMounted(() => {
   if (props.shouldWarn?.()) {
     warning.value = true;
   } else {
-    emits("load");
+    // nextTick 推迟到 mount() 返回之后：父组件（AdvancedUEditor）的 onLoad 回调里
+    // 要通过 this.mdEditorApp / this.htmlEditorApp 访问编辑器实例，而该赋值发生在
+    // mount() 返回之后。若在 mounted 内同步 emit，回调执行时实例尚未赋值，
+    // onLoad 必然抛错（Vue 生产版会吞掉），内容永远灌不进编辑器。
+    void nextTick(() => emits("load"));
   }
 });
 
