@@ -135,6 +135,9 @@ export class StyleLoader {
     const splitScreenOnVerifyCss = importCSS("splitScreenOnVerify");
     const codemirrorCss = importCSS("codemirror");
     const reducedMotionCss = importCSS("reducedMotion");
+    // 弹窗专用样式不进宿主样式表，单独存放在 parent.ueditorDialogCss 上，
+    // 由 UEditor 的弹窗 iframe 样式注入负责分发（见 UEditor.attachDialogStyleListener）
+    const ueditorDialogCss = importCSS("ueditorDialog");
 
     const basePalette: Palette = {
       background: "#fff",
@@ -539,6 +542,7 @@ export class StyleLoader {
       tabSelectorInfo: tabSelectorInfoCss,
       splitScreenOnVerify: splitScreenOnVerifyCss,
       codemirrorCss: codemirrorCss,
+      ueditorDialogCss: ueditorDialogCss,
       // 末尾追加：减弱动效规则需要压过同选择器的静态样式
       reducedMotion: reducedMotionCss,
     };
@@ -582,6 +586,7 @@ export class StyleLoader {
     style += css.reducedMotion;
 
     parent.css = style;
+    parent.ueditorDialogCss = css.ueditorDialogCss;
     Utils.addStyle(style);
 
     const radiusRatio: number | undefined = configs.getSettings("radiusRatio");

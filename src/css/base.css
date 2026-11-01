@@ -3416,6 +3416,12 @@ html.dark .news_block .right .addArea,
 html.dark .mcmodder-almanacs i {
   filter: invert(100%);
 }
+/* 确认/取消按钮的文字继承自 .edui-dialog-foot 的浅色文字色，会被上面的 invert(100%)
+   一并反转成近黑，落在同样被反转成深色的按钮底图（icons-all.gif，原图白底）上几乎不可见。
+   这里把文字预先改为深色，反转后即呈浅色，与反转后的底图对比度正常。 */
+html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-button-body {
+  color: #111;
+}
 html.dark .edui-default .edui-tablepicker .edui-pickarea,
 html.dark .edui-default .edui-tablepicker .edui-pickarea .edui-overlay {
   filter: invert(80%);

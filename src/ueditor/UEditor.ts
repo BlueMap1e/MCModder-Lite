@@ -124,6 +124,9 @@ export class UEditor {
       e.$document?.find("html").toggleClass("dark", isDark);
     });
 
+    // 弹窗内容 iframe 的样式注入整页挂一次即可，多个编辑器实例不会重复挂载
+    UEditor.attachDialogStyleListener(this.parent);
+
     // 现代化按钮
     // if (this.configs.get("mcmodderUI")) {
     const toolBar = this.$outerFrame.find(".edui-editor-toolbarboxinner");
@@ -154,6 +157,43 @@ export class UEditor {
     this.editor.addListener("contentChange", () => {
       this.updateEditorStats();
     });
+  }
+
+  /** 是否已给宿主文档挂上「弹窗 iframe 样式注入」监听（监听本身与具体编辑器实例无关） */
+  private static dialogStyleListenerAttached = false;
+
+  /**
+   * 给宿主文档挂上「UEditor 弹窗 iframe 样式注入」监听（整页一次）。
+   *
+   * UEditor 的对话框（插入图片/链接/表格等）渲染在宿主页的 `#edui_fixedlayer` 下，
+   * 其正文是独立的 iframe（由 `iframeUrlMap` 指向 `/ueditor/dialogs/` 下的页面）。
+   * 宿主页与编辑器正文 iframe 的样式都作用不到这里，弹窗因此在夜间模式下仍是白底黑字。
+   * 本样式表（`parent.css`）内含 `base.css` 针对弹窗页面结构的规则
+   * （`body .tabbody .panel`、`body #remote input.text` 等），
+   * 再配合 `parent.ueditorDialogCss` 中的弹窗专属夜间规则，注入后即可随 `dark` 类生效。
+   *
+   * 用捕获阶段的 `load` 事件而非 MutationObserver：iframe 的 `load` 不冒泡，
+   * 但捕获监听可以收到；且弹窗每次打开都会重载 iframe，注入时机天然跟随内容加载，
+   * 夜间模式中途切换后重新打开弹窗也能拿到正确的状态。
+   */
+  private static attachDialogStyleListener(parent: Mcmodder) {
+    if (UEditor.dialogStyleListenerAttached) return;
+    UEditor.dialogStyleListenerAttached = true;
+    document.addEventListener(
+      "load",
+      (event) => {
+        const iframe = event.target;
+        if (!(iframe instanceof HTMLIFrameElement)) return;
+        // UEditor 的对话框与含 iframe 的弹出层都挂在固定层下，据此过滤掉页面里无关的 iframe
+        if (!iframe.closest("#edui_fixedlayer")) return;
+        const doc = iframe.contentDocument;
+        // 弹窗页面与主站同源，正常都能取到；跨域场景静默放弃
+        if (!doc?.documentElement) return;
+        Utils.addStyle(parent.css + parent.ueditorDialogCss, "mcmodder-dialog-style", doc);
+        doc.documentElement.classList.toggle("dark", parent.isNightMode);
+      },
+      true,
+    );
   }
 
   /**

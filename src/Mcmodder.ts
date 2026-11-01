@@ -63,6 +63,8 @@ export class Mcmodder {
   isNightMode = false;
   title = "";
   css = "";
+  /** UEditor 弹窗内容 iframe 专用的夜间样式（见 `src/css/ueditorDialog.css`），不并入宿主样式 */
+  ueditorDialogCss = "";
   itemTypeList?: ItemCustomTypeList;
   readonly hostname: string;
   private msgAlertCount = 0;
@@ -568,6 +570,12 @@ export class Mcmodder {
     const nightMode = !!this.configRepository.getSettings("nightMode");
     this.isNightMode = nightMode;
     const icon = $("#mcmodder-night-switch i");
+    // UEditor 弹窗内容 iframe（挂在 #edui_fixedlayer 下）也一并同步，
+    // 覆盖「弹窗开着时切换夜间模式」的情形；固定层尚不存在时选择结果为空，安全跳过
+    const dialogIframeDocs = $("#edui_fixedlayer iframe")
+      .get()
+      .map((iframe) => (iframe as HTMLIFrameElement).contentDocument)
+      .filter((doc): doc is Document => !!doc?.documentElement);
     if (nightMode) {
       icon.removeClass("on");
       if ($("#item-cover-preview-img").first().attr("src") === Values.assets.mcmod.imagesNone) {
@@ -578,6 +586,7 @@ export class Mcmodder {
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").addClass("dark");
       });
+      dialogIframeDocs.forEach((doc) => doc.documentElement.classList.add("dark"));
       this.elementColorDictionary.forEach((color, e) => {
         const darkenColor = this.elementColorCache.get(color);
         e.style.setProperty("color", darkenColor!);
@@ -592,6 +601,7 @@ export class Mcmodder {
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").removeClass("dark");
       });
+      dialogIframeDocs.forEach((doc) => doc.documentElement.classList.remove("dark"));
       this.elementColorDictionary.forEach((_color, e) => {
         e.style.setProperty("color", this.elementColorDictionary.get(e)!);
       });
