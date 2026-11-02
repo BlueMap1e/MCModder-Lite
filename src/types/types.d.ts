@@ -150,6 +150,7 @@ interface Settings {
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;
   adaptableNightMode: boolean;
+  dimCoverAtNight: boolean;
   bbsNightMode: boolean;
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;

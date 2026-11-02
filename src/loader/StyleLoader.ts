@@ -512,6 +512,9 @@ export class StyleLoader {
     if (configs.getSettings("disableGradient")) {
       htmlNode.addClass("mcmodder-config-disable-gradient");
     }
+    if (configs.getSettings("dimCoverAtNight")) {
+      htmlNode.addClass("mcmodder-config-dim-cover");
+    }
     // if (configs.get("disableFadeTransition")) {
     //   htmlNode.addClass("mcmodder-config-disable-fade-transition")
     // }

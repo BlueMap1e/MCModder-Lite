@@ -89,6 +89,14 @@ export const settings = [
             value: true,
           },
           {
+            id: "dimCoverAtNight",
+            title: "夜间模式调暗封面图",
+            description:
+              "夜间模式下调暗模组/整合包页的封面大图。百科的封面美术图多为白底，深夜直视比较刺眼。",
+            type: "checkbox",
+            value: true,
+          },
+          {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
             description: "(Beta!) 对社群应用夜间模式配色。",

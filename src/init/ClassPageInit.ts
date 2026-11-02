@@ -44,8 +44,50 @@ export class ClassPageInit extends Init {
     }
   }
 
+  /**
+   * 夜间模式下的评分雷达图修复：站点建图代码把 ECharts 的 backgroundColor 硬编码为
+   * "#FFF"（canvas 绘制，任何 CSS 都无法覆盖），夜间模式下呈现刺眼的白色块。
+   * 图表由站点在数据加载后异步创建（给容器打上 `_echarts_instance_` 属性），
+   * 这里用属性观察器等待创建，再按当前夜间状态切换背景（夜间透明 / 日间还原站点原值）；
+   * `html` 的 `dark` 类被切换时同样重新应用。
+   */
+  private setupNightChartFix() {
+    const apply = () => {
+      const el = document.getElementById("class-rating");
+      if (!el) return;
+      if (typeof echarts === "undefined") return;
+      const chart = echarts.getInstanceByDom(el);
+      if (!chart) return;
+      const night = document.documentElement.classList.contains("dark");
+      if (night) {
+        if (!el.dataset.mcmodderOrigBg) {
+          el.dataset.mcmodderOrigBg = String(chart.getOption()?.backgroundColor ?? "#FFF");
+        }
+        chart.setOption({ backgroundColor: "transparent" });
+      } else if (el.dataset.mcmodderOrigBg) {
+        chart.setOption({ backgroundColor: el.dataset.mcmodderOrigBg });
+        delete el.dataset.mcmodderOrigBg;
+      }
+    };
+    // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）
+    new MutationObserver(apply).observe(document.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["_echarts_instance_"],
+    });
+    // 夜间开关：dark 类切换时重新应用
+    new MutationObserver(apply).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    apply();
+  }
+
   run() {
     $(".common-center").addClass("mcmodder-class-page");
+    if ($(".class-rating-block").length) {
+      this.setupNightChartFix();
+    }
     this.isClassPage = ClassPageInit.classPageRegExp.test(this.parent.href);
     this.pageTypeName = this.isClassPage ? "模组" : "整合包";
 
