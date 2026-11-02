@@ -847,17 +847,6 @@ body > .container > *,
 .mcmodder-presubmit-editor,
 #mcmodder-text-result,
 .mcmodder-golden-alert,
-.mcmodder-gui-alert,
-.mcmodder-changelog,
-.mcmodder-almanacs .good,
-.mcmodder-almanacs .bad,
-.form-control,
-.sl-state-block,
-.btn {
-  border-radius: var(--mcmodder-width-radius);
-  padding: 0.1em var(--mcmodder-width-padding-2);
-  box-shadow: var(--mcmodder-color-box-shadow) 0px 2px 4px 0px;
-}
 #edui1 {
   border-radius: var(--mcmodder-width-radius);
 }
@@ -867,15 +856,6 @@ body .edui-default .edui-editor-toolbarboxouter,
 }
 body .edui-default .edui-editor-iframeholder {
   padding: 0 0.5em;
-}
-.mcmodder-gui-alert {
-  max-width: 60%;
-  background: linear-gradient(
-    45deg,
-    var(--mcmodder-color-primary-transparent1),
-    var(--mcmodder-color-accent-transparent1)
-  );
-  line-height: 1.8;
 }
 .mcmodder-logger {
   height: 300px;

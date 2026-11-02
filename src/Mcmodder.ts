@@ -485,7 +485,6 @@ export class Mcmodder {
     }
   }
 
-  /** 切换表态 emoji 的 Twemoji 渲染（`html.mcmodder-attitude-twemoji` 为样式开关，无需重载） */
   switchNightMode() {
     // 只写配置，由 updateNightMode() 依据配置同步 isNightMode 与页面状态；
     // 这里显式再调一次，避免依赖 Vue watcher 的异步时机。
