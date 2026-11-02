@@ -1,6 +1,5 @@
 import { Values } from "../Values";
 import { CenterCardInit } from "./center/CenterCardInit";
-import { CenterCommentInit } from "./center/CenterCommentInit";
 import { CenterRankInit } from "./center/CenterRankInit";
 import { CenterSettingInit } from "./center/CenterSettingInit";
 import { Init } from "./Init";
@@ -84,15 +83,6 @@ export class CenterInit extends Init {
         selector: "#center-page-rank",
         init: () => new CenterRankInit(this).run(),
         isReady: () => $(".center-main.lv").length > 0 && $(".lv-title").length > 0,
-      });
-    }
-    if (this.configs.getSettings("customAttitude_v2")) {
-      this.watchPage({
-        selector: "#center-page-comment",
-        init: () => void new CenterCommentInit(this).run(),
-        // 短评面板每次进入都会重渲染：回调自身幂等，保持观察
-        once: false,
-        subtree: true,
       });
     }
 

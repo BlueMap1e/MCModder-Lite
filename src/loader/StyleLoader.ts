@@ -126,7 +126,6 @@ export class StyleLoader {
 
     const baseCss = importCSS("base");
     const mcmodderUICss = importCSS("mcmodderUI");
-    const attitudeCss = importCSS("attitude");
     const tableThemeColorCss = importCSS("tableThemeColor");
     const tableLeftAlignCss = importCSS("tableLeftAlign");
     const tabSelectorInfoCss = importCSS("tabSelectorInfo");
@@ -401,21 +400,6 @@ export class StyleLoader {
         "platform-javaagent": "#111827",
         uknowtoomuch: "#000",
         "uknowtoomuch-hover": "#fff",
-        "attitude-up": "#09f",
-        "attitude-grintears": "#ad901c",
-        "attitude-heart": "#c03",
-        "attitude-flushed": "#000",
-        "attitude-cry": "#36c",
-        "attitude-meh": "#777",
-        "attitude-down": "#222",
-        "attitude-lemon": "#938626",
-        "attitude-horsehead": "#74260c",
-        "attitude-heartbroken": "#900",
-        "attitude-angry": "#f30",
-        "attitude-tired": "#960",
-        "attitude-snowflake": "#39c",
-        "attitude-handshake": "#363",
-        "attitude-devil-angry": "#8a1212",
         "classstatus-1": "#2cbe4e",
         "classstatus-2": "#cb6431",
         "classstatus-3": "#cb2431",
@@ -474,21 +458,6 @@ export class StyleLoader {
         "version-release-2": "#5858",
         uknowtoomuch: "#444",
         "uknowtoomuch-hover": "#ddd",
-        "attitude-up": "#09f",
-        "attitude-grintears": "#db1",
-        "attitude-heart": "#f14",
-        "attitude-flushed": "#fff",
-        "attitude-cry": "#9be",
-        "attitude-meh": "#999",
-        "attitude-down": "#666",
-        "attitude-lemon": "#a93",
-        "attitude-horsehead": "#d64",
-        "attitude-heartbroken": "#a11",
-        "attitude-angry": "#f30",
-        "attitude-tired": "#b71",
-        "attitude-snowflake": "#7ac",
-        "attitude-handshake": "#383",
-        "attitude-devil-angry": "#ff4d4d",
         "classstatus-1": "#183",
         "classstatus-2": "#852",
         "classstatus-3": "#822",
@@ -529,7 +498,6 @@ export class StyleLoader {
       }`,
       base: baseCss,
       mcmodderUI: mcmodderUICss,
-      attitude: attitudeCss,
       tableThemeColor: tableThemeColorCss,
       tableLeftAlign: tableLeftAlignCss,
       tabSelectorInfo: tabSelectorInfoCss,
@@ -554,9 +522,6 @@ export class StyleLoader {
     // if (configs.get("mcmodderUI")) {
     style += css.mcmodderUI;
     // }
-    if (configs.getSettings("customAttitude_v2")) {
-      style += css.attitude;
-    }
     if (/* configs.get("mcmodderUI") && */ configs.getSettings("tableThemeColor")) {
       style += css.tableThemeColor;
     }

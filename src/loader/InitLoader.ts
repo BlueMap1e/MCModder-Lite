@@ -12,7 +12,6 @@ import { Init } from "../init/Init";
 import { ItemEditorInit } from "../init/ItemEditorInit";
 import { ItemListInit } from "../init/ItemListInit";
 import { ItemPageInit } from "../init/ItemPageInit";
-import { MessageInit } from "../init/MessagePageInit";
 import { ModlistInit } from "../init/ModlistInit";
 import { OredictPageInit } from "../init/OredictPageInit";
 import { PostPageInit } from "../init/PostPageInit";
@@ -36,7 +35,6 @@ export class InitLoader {
       new PostPageInit(parent),
       new ItemListInit(parent),
       new OredictPageInit(parent),
-      new MessageInit(parent),
       new EditHistoryPageInit(parent),
       new VerifyHistoryInit(parent),
       new QueuePageInit(parent),

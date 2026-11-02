@@ -1,5 +1,4 @@
 import { createApp } from "vue";
-import { AttitudeSystem } from "../attitude/AttitudeSystem";
 import { Utils } from "../Utils";
 import Countdown from "../vue/components/Countdown.vue";
 import { TimerUtils } from "../widget/TimerUtils.ts";
@@ -12,7 +11,6 @@ export class CommentInit extends Init {
   }
 
   /** 自定义表态（恶魔安格瑞 + 全 emoji）：全站单例，与消息中心共用计数缓存；浏览公开，发送需认证 */
-  private readonly attitude = AttitudeSystem.for(this.parent);
 
   /** 短评跨页跳转：查找、翻页与 loading 都由它负责 */
   private readonly jump = new CommentJumpController(this.parent, this.configs);
@@ -123,8 +121,6 @@ export class CommentInit extends Init {
         }
       } else if (className === "common-comment-block lazy") {
         this.unlockComment();
-        // 整块重渲染（如翻页）时兜底重注入
-        void this.attitude.processCommentRows(commentFloor);
       }
     }
   });
@@ -139,9 +135,6 @@ export class CommentInit extends Init {
   private processCommentFloor(commentFloor: JQuery) {
     // 显示快速跳转面板
     this.renderPagination();
-
-    // 自定义表态：注入按钮并刷新这批短评的计数
-    void this.attitude.processCommentRows(commentFloor);
 
     const alertHeight = this.configs.getSettings("missileAlertHeight")!;
     const expandHeight = this.configs.getSettings("commentExpandHeight")!;
@@ -197,7 +190,6 @@ export class CommentInit extends Init {
   }
 
   private processCommentReplyFloor(commentFloor: JQuery) {
-    void this.attitude.processCommentRows(commentFloor);
     const autoLink = this.configs.getSettings("replyLink");
     $("div.comment-reply-row", commentFloor).each((_, _e) => {
       const e = $(_e);
@@ -279,11 +271,5 @@ export class CommentInit extends Init {
         childList: true,
         subtree: true,
       });
-
-    // 自定义表态：绑定工具条事件，并刷新页面上已有的短评
-    if (this.configs.getSettings("customAttitude_v2")) {
-      this.attitude.bindEvents();
-      this.attitude.processCommentRows($(document.body));
-    }
   }
 }

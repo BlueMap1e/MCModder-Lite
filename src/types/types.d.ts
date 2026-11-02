@@ -141,37 +141,11 @@ interface AppStorage {
    * 读写均直接走 GM Storage。结构见 {@link RequestToastRecord}。
    */
   mcmodderRequestToasts?: RequestToastRecord[];
-  /**
-   * 自定义表态的轻量缓存（与 {@link AppStorage.mcmodderModalBroadcast} 一样不登记为可缓存键，
-   * 读写直接走 GM Storage），供跨页面的未读表态提醒复用。
-   */
-  attitudeCache?: {
-    unread?: number;
-    total?: number;
-    unreadAt?: number;
-    /** 已确认看到的最大表态记录 id（打开消息中心 / 点击铃铛时推进） */
-    lastSeenId?: number;
-    /** 最近一次增量检查看到的最大表态记录 id */
-    latestId?: number;
-    /** 最近一次增量检查的时间戳与结果（多标签去重用） */
-    checkedAt?: number;
-    checkedCount?: number;
-  };
 }
 
 interface Settings {
   themeColor1: string;
   themeColor2: string;
-  autoCheckUpdate: boolean;
-  useSupabase_v2: boolean;
-  fetchCustomSplashes: boolean;
-  customSplashRate: number;
-  supabaseSplash: boolean;
-  anonymiseSplashContributor: boolean;
-  supabaseByteChart: boolean;
-  showUserBadge: boolean;
-  customAttitude_v2: boolean;
-  attitudeTwemoji: boolean;
   moveAds: boolean;
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;
@@ -267,8 +241,6 @@ interface Settings {
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
   userFavList: string;
-  /** 最近使用的自定义表态 emoji（JSON 数组字符串，本机维度） */
-  attitudeRecentEmojis: string;
   recentlyVisited: string;
   recentlyVisitedMods: RecentlyVisited[];
   myProfiles: string;
@@ -294,11 +266,6 @@ interface Settings {
   jsonDatabase?: string[];
   useSupabase?: boolean;
   customAttitude?: boolean;
-}
-
-interface OnlineSettings {
-  anonymiseSplashContributor: boolean;
-  showUserBadge: boolean;
 }
 
 interface SettingsSection {
@@ -366,8 +333,6 @@ interface ConfigParamsBase<T extends ConfigurableSettings["id"], V, R> {
   range?: R;
   /** 可见性，缺省为始终可见 */
   visible?: (ctx: ConfigVisibilityContext) => boolean | undefined;
-  /** 配置项需要与云端同步 */
-  syncWithSupabase?: T extends keyof OnlineSettings ? true : false;
 }
 
 /** 复选框类配置项 */
@@ -951,16 +916,7 @@ interface SuggestionConfigManager {
 
 type InputListOption = import("./props").InputListOption;
 
-type AttitudePickerState = import("./props").AttitudePickerState;
-
-type AttitudeStickerListProps = import("./props").AttitudeStickerListProps;
-
-type StickerViewerOption = import("./props").StickerViewerOption;
-
-type AttitudeReactorsOption = import("./props").AttitudeReactorsOption;
-
-type PopoverOption =
-  InputListOption | AttitudePickerState | StickerViewerOption | AttitudeReactorsOption;
+type PopoverOption = InputListOption;
 
 interface McmodItemEditorInnerData {
   /**
@@ -1772,12 +1728,7 @@ interface RequestToastRecord {
 }
 
 interface ScheduleRequestTypes {
-  annualCelebration: import("../schedulerequest/types/AnnualCelebrationScheduleRequest").AnnualCelebrationScheduleRequest;
   autoCheckin: import("../schedulerequest/types/AutoCheckinScheduleRequest").AutoCheckinScheduleRequest;
-  autoCheckUpdate: import("../schedulerequest/types/AutoCheckUpdateScheduleRequest").AutoCheckUpdateScheduleRequest;
-  autoCheckVerify: import("../schedulerequest/types/AutoCheckVerifyScheduleRequest").AutoCheckVerifyScheduleRequest;
-  autoHandlePreSubmit: import("../schedulerequest/types/AutoHandlePreSubmitScheduleRequest").AutoHandlePreSubmitScheduleRequest;
-  autoSubscribe: import("../schedulerequest/types/AutoSubscribeScheduleRequest").AutoSubscribeScheduleRequest;
 }
 
 interface ScheduleRequest {
@@ -1884,233 +1835,4 @@ interface RequestResult {
   value?: any;
 }
 
-interface RequestQueueExecution {
-  // 网络通信牛逼
-  // eslint-disable-next-line
-  [key: string]: any;
-  runningIndex: Set<number>;
-  queue: RequestList;
-  results: RequestResult[];
-  progress: number;
-}
-
-type RequestQueuePreExecution = Partial<RequestQueueExecution>;
-
-type RequestQueueBackup = Omit<RequestQueueExecution, "runningIndex"> & {
-  runningIndex: number[];
-};
-
-/** 一条短评的自定义表态聚合结果 */
-interface AttitudeRecord {
-  /** `attitude_type` → 数量 */
-  counts: AttitudeCounts;
-  /** 我点过的 `attitude_type`；未认证时为空 */
-  mine: string[];
-}
-
-/** 我收到的表态统计（页头提醒、消息中心徽标与合计行共用） */
-interface AttitudeStats {
-  /** 未读条数 */
-  unread: number;
-  /** 我收到的表态总条数 */
-  total: number;
-}
-
-/** 写一条表态所需的短评上下文 */
-interface AttitudeTarget {
-  commentId: string;
-  toUid: number;
-  toUsername: string;
-  commentText: string;
-  sourceUrl: string;
-  /** 短评节点：顶层 `.comment-row` 或楼中楼 `.comment-reply-row` */
-  row: HTMLElement;
-}
-
 type MapKeyHandler<V, K> = (data: V) => K | K[];
-
-interface StructureEditorBlocktype {
-  id: number;
-  itemID: number;
-  blockName: string;
-  class: string;
-  textures: string[];
-  op: string | null;
-}
-
-interface SupabaseErrorResponse {
-  error?: string;
-}
-
-interface SupabaseTrackSplashResponse {
-  count: number;
-  last_visited_user_id: number;
-  last_visited_user_name: string;
-  last_visited_at: string;
-}
-
-interface SupabaseByteChartResponse {
-  data: [string, number][];
-}
-
-interface SupabaseAuthenticatorResponse {
-  user_id: number;
-  user_name: string;
-  auth_key: string;
-}
-
-interface SupabaseSyncSettingsResponse {
-  last_modified: string;
-  mcmodder_settings?: string;
-  user_profile?: string;
-  template_list?: string;
-}
-
-interface SupabaseCustomSplash {
-  id?: number;
-  content: string;
-  author_id?: number;
-  author_name?: string;
-}
-
-interface SupabaseUploadSplashResponse {
-  message?: string;
-  error?: string;
-  data?: unknown;
-}
-
-interface SupabaseGetCustomSplashesResponse {
-  splashes?: SupabaseCustomSplash[];
-  error?: string;
-}
-
-/** 单条表态的聚合计数：`attitude_type` → 数量 */
-type AttitudeCounts = Record<string, number>;
-
-/**
- * RPC `mcmodder_attitude_counts` 的一行：某短评下某类型的聚合计数。
- *
- * 行序（`order by min(id)`）即「各类别首次表态的时间序」，客户端按行序构造展示顺序；服务端不返回
- * 聚合对象，避免 json 聚合打乱键序。
- */
-interface SupabaseAttitudeCountRow {
-  comment_id: string;
-  attitude_type: string;
-  total: number;
-  /** 我是否点过该类型（未认证时恒为 false） */
-  mine: boolean;
-}
-
-/** RPC `mcmodder_attitude_user_counts` 的一行：某用户收到的某类型表态数量（行序同 `SupabaseAttitudeCountRow`） */
-interface SupabaseAttitudeUserCountRow {
-  attitude_type: string;
-  total: number;
-}
-
-/** RPC `mcmodder_attitude_reactors` 的一行：某短评下某类型的表态者 + 同条件下的总人数 */
-interface SupabaseAttitudeReactorRow {
-  uid: number;
-  username?: string;
-  avatar?: string;
-  created_at: string;
-  /** 同条件下的总人数（服务端 `count(*) over ()`） */
-  total: number;
-}
-
-/** RPC `mcmodder_attitude_sticker_quota` 的一行：今日贴纸额度（东八区自然日） */
-interface SupabaseAttitudeStickerQuotaRow {
-  used_today: number;
-  daily_limit: number;
-  remaining: number;
-}
-
-/** RPC `mcmodder_attitude_inbox_list` 的一行：一条表态消息 + 符合条件的总条数 */
-interface SupabaseAttitudeInboxListRow extends SupabaseAttitudeInboxItem {
-  /** 与 `unreadOnly` 对应的总条数（服务端 `count(*) over ()`） */
-  total: number;
-}
-
-/** RPC `mcmodder_attitude_inbox_stats` 的一行：我收到的表态统计 */
-interface SupabaseAttitudeStatsRow {
-  /** 未读条数 */
-  unread: number;
-  /** 总条数 */
-  total: number;
-}
-
-/** RPC `mcmodder_attitude_inbox_check` 的一行：`since_id` 之后的新表态数量与我的最新记录 id */
-interface SupabaseAttitudeCheckRow {
-  new_count: number;
-  latest_id: number;
-}
-
-/** `attitude-put`（Edge，写操作）的响应：目标短评的最新聚合计数与我的表态类型 */
-interface SupabaseAttitudePutResponse {
-  counts?: AttitudeCounts;
-  mine?: string[];
-  error?: string;
-}
-
-/** 一张自定义表态贴纸（图片本体在百科图床，云端只登记归属与创建时间） */
-interface SupabaseAttitudeSticker {
-  id: number;
-  uid: number;
-  image_url: string;
-  /** 原始文件名（展示用，服务端截断） */
-  name?: string;
-  created_at: string;
-  /** 共享到贴纸广场的时间；null/undefined = 未共享 */
-  shared_at?: string | null;
-  /** 是否我上传的（“我的贴纸”集合行；广场行同义） */
-  is_mine?: boolean;
-  /** 是否我收藏的（“我的贴纸”集合行 / 广场行） */
-  is_favorite?: boolean;
-  /** 收藏人数（广场行；其他来源可能缺省） */
-  favorite_count?: number;
-}
-
-/** 贴纸广场的排序方式：latest = 最新共享，favorites = 收藏人数最多 */
-type StickerPlazaSort = "latest" | "favorites";
-
-/** RPC `mcmodder_attitude_sticker_plaza` 的一行：广场贴纸 + 收藏人数 + 分页总数 */
-interface SupabaseAttitudeStickerPlazaRow extends SupabaseAttitudeSticker {
-  /** 该贴纸被多少用户收藏（服务端聚合 `sticker_likes`） */
-  favorite_count: number;
-  /** 与当前过滤条件对应的总条数（服务端 `count(*) over ()`） */
-  total: number;
-}
-
-/** RPC `mcmodder_attitude_sticker_favorite` 的一行：操作后的收藏状态与收藏人数 */
-interface SupabaseAttitudeStickerFavoriteRow {
-  id: number;
-  is_favorite: boolean;
-  favorite_count: number;
-}
-
-/** 贴纸上传额度（东八区自然日） */
-interface SupabaseAttitudeStickerQuota {
-  limit?: number;
-  used?: number;
-  remaining?: number;
-}
-
-/** `attitude-sticker`（Edge）的 `put` 响应：登记的贴纸与最新额度 */
-interface SupabaseAttitudeStickerPutResponse {
-  sticker?: SupabaseAttitudeSticker;
-  quota?: SupabaseAttitudeStickerQuota;
-  error?: string;
-}
-
-/** 表态消息中心的一条记录（RPC `mcmodder_attitude_inbox_list` 的行去掉 `total`） */
-interface SupabaseAttitudeInboxItem {
-  id: number;
-  comment_id: string;
-  attitude_type: string;
-  from_uid: number;
-  from_username?: string;
-  from_avatar?: string;
-  comment_text?: string;
-  source_url?: string;
-  is_read: boolean;
-  created_at: string;
-}
