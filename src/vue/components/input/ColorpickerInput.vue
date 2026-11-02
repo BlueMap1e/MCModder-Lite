@@ -1,33 +1,46 @@
 <template>
   <div class="mcmodder-colorpicker">
-    <!-- 预设色块：全部经过亮/夜两底对比度筛查，按用途分组 -->
+    <!-- 预设色块：按组合分组（每组两色是配套设计的），全部经过亮/夜两底对比度筛查 -->
     <div class="mcmodder-colorpicker-swatches">
-      <button
-        v-for="preset in PRESETS"
-        :key="preset.color"
-        type="button"
-        class="mcmodder-colorpicker-swatch"
-        :class="{ 'is-active': preset.color === activeColor }"
-        :style="{ background: preset.color }"
-        :title="`${preset.group} ${preset.color}`"
-        :aria-label="`${preset.group} ${preset.color}`"
-        @click="pick(preset.color)"
-      />
-      <!-- 原生取色器兜底：完全自定义时使用 -->
-      <input
-        ref="inputRef"
-        type="color"
-        class="mcmodder-colorpicker-native"
-        :title="title + '（自定义）'"
-        :aria-label="title"
-        @change="handleNativeChange"
-      />
+      <span
+        v-for="group in PRESET_GROUPS"
+        :key="group.name"
+        class="mcmodder-colorpicker-group"
+        :title="group.name"
+      >
+        <button
+          v-for="preset in group.colors"
+          :key="preset.color"
+          type="button"
+          class="mcmodder-colorpicker-swatch"
+          :class="{ 'is-active': preset.color === activeColor }"
+          :style="{ background: preset.color }"
+          :title="`${group.name} ${preset.color}`"
+          :aria-label="`${group.name} ${preset.color}`"
+          @click="pick(preset.color)"
+        />
+      </span>
+      <!-- 原生取色器兜底：完全自定义时使用。做成文字标签以免被误认为预设色块 -->
+      <label
+        class="mcmodder-colorpicker-custom"
+        :class="{ 'is-active': !isPresetColor }"
+        :title="title + '（自定义颜色）'"
+      >
+        自定义
+        <input
+          ref="inputRef"
+          type="color"
+          class="mcmodder-colorpicker-native"
+          :aria-label="title"
+          @change="handleNativeChange"
+        />
+      </label>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, useTemplateRef } from "vue";
+import { computed, ref, useTemplateRef } from "vue";
 import { useInputBase } from "../../composables/useInputBase";
 import type { InputProps } from "../../../types/props";
 
@@ -48,22 +61,23 @@ const activeColor = ref(props.value);
 
 /**
  * 预设色板。选色原则：中性、低冲击、亮/夜两底皆可用。
+ * 每组两色是**配套设计**（同色系深浅档），主/副配色各取一组即可得到平和的渐变；
+ * 也允许跨组自由组合，但双色相混搭会重新引入视觉冲突，组间距即为提示。
  * - 石墨蓝：默认方案（黑白灰蓝，内容站气质）
  * - 百科经典：MC 百科 Logo 的两色，保留社区特征
  * - 暖橙 / 松绿 / 中性：备选强调色
  */
-const PRESETS: { group: string; color: string }[] = [
-  { group: "石墨蓝", color: "#3b82f6" },
-  { group: "石墨蓝（深）", color: "#1e40af" },
-  { group: "百科经典（主）", color: "#86c155" },
-  { group: "百科经典（副）", color: "#58b6d8" },
-  { group: "暖橙", color: "#c15f3c" },
-  { group: "暖橙（深）", color: "#a14a2f" },
-  { group: "中性灰蓝", color: "#64748b" },
-  { group: "中性灰（深）", color: "#334155" },
-  { group: "松绿", color: "#0d9488" },
-  { group: "松绿（深）", color: "#0f766e" },
+const PRESET_GROUPS: { name: string; colors: string[] }[] = [
+  { name: "石墨蓝", colors: ["#3b82f6", "#1e40af"] },
+  { name: "百科经典", colors: ["#86c155", "#58b6d8"] },
+  { name: "暖橙", colors: ["#c15f3c", "#a14a2f"] },
+  { name: "中性", colors: ["#64748b", "#334155"] },
+  { name: "松绿", colors: ["#0d9488", "#0f766e"] },
 ];
+
+const PRESET_COLORS = new Set(PRESET_GROUPS.flatMap((g) => g.colors));
+
+const isPresetColor = computed(() => PRESET_COLORS.has(activeColor.value));
 
 function getDOMValue() {
   return inputRef.value!.value;
@@ -102,6 +116,10 @@ defineExpose<InputControlRef<string>>({
   display: inline-flex;
   align-items: center;
   flex-wrap: wrap;
+  gap: 4px 14px;
+}
+.mcmodder-colorpicker-group {
+  display: inline-flex;
   gap: 4px;
 }
 .mcmodder-colorpicker-swatch {
@@ -116,14 +134,32 @@ defineExpose<InputControlRef<string>>({
   outline: 2px solid var(--mcmodder-color-primary);
   outline-offset: 1px;
 }
-.mcmodder-colorpicker-native {
-  width: 28px;
-  height: 22px;
-  padding: 0;
-  border: 1px solid var(--mcmodder-color-background);
+.mcmodder-colorpicker-custom {
+  display: inline-flex;
+  align-items: center;
+  height: 26px;
+  padding: 0 10px;
+  border: 1px solid var(--mcmodder-color-text-dark1);
   border-radius: 4px;
-  background: none;
+  color: var(--mcmodder-color-text-dark1);
+  font-size: 13px;
   cursor: pointer;
-  margin-inline-start: 6px;
+  user-select: none;
+  position: relative;
+}
+.mcmodder-colorpicker-custom.is-active {
+  outline: 2px solid var(--mcmodder-color-primary);
+  outline-offset: 1px;
+}
+/* 原生 input 藏进标签里（点击标签即触发），DOM 上保留以承接取值链路 */
+.mcmodder-colorpicker-native {
+  position: absolute;
+  inset: 0;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  border: none;
+  padding: 0;
 }
 </style>
