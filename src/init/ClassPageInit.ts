@@ -44,12 +44,19 @@ export class ClassPageInit extends Init {
     }
   }
 
+  /** 各雷达图容器在首次夜间改写前捕获的原始 option 片段（日间还原用） */
+  private chartOriginalOptions = new Map<HTMLElement, string>();
+
   /**
-   * 夜间模式下的评分雷达图修复：站点建图代码把 ECharts 的 backgroundColor 硬编码为
-   * "#FFF"（canvas 绘制，任何 CSS 都无法覆盖），夜间模式下呈现刺眼的白色块。
-   * 图表由站点在数据加载后异步创建（给容器打上 `_echarts_instance_` 属性），
-   * 这里用属性观察器等待创建，再按当前夜间状态切换背景（夜间透明 / 日间还原站点原值）；
-   * `html` 的 `dark` 类被切换时同样重新应用。
+   * 夜间模式下的评分雷达图重主题化：站点建图代码把 ECharts 的 backgroundColor 硬编码为
+   * "#FFF"、数据多边形为深灰 `#555`、填充为黑色半透明（canvas 绘制，CSS 无法覆盖），
+   * 夜间模式下是一块白底 + 低对比暗线的刺眼图形。
+   *
+   * 时序要点：`_echarts_instance_` 属性在 `echarts.init()` 时就会出现，而站点自己的
+   * `setOption`（携带 `#FFF`）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
+   * 还要在若干延时点复检背景是否仍为 transparent，被覆盖就重新应用；日间按首次捕获的
+   * 原始 option 片段（`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
+   * （站点随后到达的 setOption 本身就是日间样式）。`html` 的 `dark` 类切换同样触发。
    */
   private setupNightChartFix() {
     const apply = () => {
@@ -60,13 +67,53 @@ export class ClassPageInit extends Init {
       if (!chart) return;
       const night = document.documentElement.classList.contains("dark");
       if (night) {
-        if (!el.dataset.mcmodderOrigBg) {
-          el.dataset.mcmodderOrigBg = String(chart.getOption()?.backgroundColor ?? "#FFF");
+        const current = chart.getOption();
+        if (current?.backgroundColor !== "transparent") {
+          if (current && !this.chartOriginalOptions.has(el)) {
+            this.chartOriginalOptions.set(
+              el,
+              JSON.stringify({
+                backgroundColor: current.backgroundColor,
+                color: current.color,
+                radar: current.radar,
+                series: current.series,
+              }),
+            );
+          }
+          // 强调色取自用户当前主题（夜档），线条与填充随之联动取色器
+          const accent =
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--mcmodder-color-accent")
+              .trim() || "#35c1fd";
+          chart.setOption({
+            backgroundColor: "transparent",
+            color: [accent],
+            radar: {
+              splitLine: { lineStyle: { color: "rgba(255,255,255,0.3)" } },
+              axisLine: { lineStyle: { color: "rgba(255,255,255,0.35)" } },
+              splitArea: {
+                areaStyle: { color: ["rgba(255,255,255,0.02)", "rgba(255,255,255,0.07)"] },
+              },
+            },
+            series: [
+              {
+                lineStyle: { color: accent },
+                itemStyle: { color: accent },
+                areaStyle: { color: Utils.setColorAlpha(accent, 0.2) },
+              },
+            ],
+          });
+          // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
+          for (const delay of [100, 300, 800, 2000]) {
+            setTimeout(apply, delay);
+          }
         }
-        chart.setOption({ backgroundColor: "transparent" });
-      } else if (el.dataset.mcmodderOrigBg) {
-        chart.setOption({ backgroundColor: el.dataset.mcmodderOrigBg });
-        delete el.dataset.mcmodderOrigBg;
+      } else {
+        const original = this.chartOriginalOptions.get(el);
+        if (original) {
+          chart.setOption(JSON.parse(original));
+          this.chartOriginalOptions.delete(el);
+        }
       }
     };
     // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）
