@@ -282,13 +282,6 @@ export const settings = [
             type: "checkbox",
           },
           {
-            id: "multiDiffCompare",
-            title: "改动列表批量对比",
-            description:
-              "(WIP) 在改动列表页中分别选取起始项和终止项，即可一键获取并展示在此期间的所有改动详情。",
-            type: "checkbox",
-          },
-          {
             id: "fastUrge",
             title: "快速催审",
             description: "在待审列表中显示“一键催审”按钮。",

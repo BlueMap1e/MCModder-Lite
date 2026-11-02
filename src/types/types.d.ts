@@ -179,7 +179,6 @@ interface Settings {
   anonymousUknowtoomuch: boolean;
   autoExpandPage: boolean;
   autoCloseSwal: boolean;
-  multiDiffCompare: boolean;
   versionHelper: boolean;
   versionEditorHelper: boolean;
   subscribeDelay: number;

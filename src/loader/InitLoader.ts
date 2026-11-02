@@ -4,7 +4,6 @@ import { ClassAddInit } from "../init/ClassAddInit";
 import { ClassEditorInit } from "../init/ClassEditorInit";
 import { ClassPageInit } from "../init/ClassPageInit";
 import { CommentInit } from "../init/CommentInit";
-import { DiffListInit } from "../init/DiffListInit";
 import { DiffPageInit } from "../init/DiffPageInit";
 import { EditHistoryPageInit } from "../init/EditHistoryPageInit";
 import { HomePageInit } from "../init/HomePageInit";
@@ -43,7 +42,6 @@ export class InitLoader {
       new VersionListInit(parent),
       new ClassPageInit(parent),
       new DiffPageInit(parent),
-      new DiffListInit(parent),
       new RankInit(parent),
       new SandboxInit(parent),
       new ModlistInit(parent),
