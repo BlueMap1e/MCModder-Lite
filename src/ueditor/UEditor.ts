@@ -155,8 +155,31 @@ export class UEditor {
     this.updateEditorStats();
 
     this.editor.addListener("contentChange", () => {
+      this.ensureTrailingParagraph();
       this.updateEditorStats();
     });
+    // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
+    this.ensureTrailingParagraph();
+  }
+
+  /**
+   * 若正文的最后一个元素是表格，则在末尾补一个空段落。
+   *
+   * 资料以表格结尾时，正文里没有可放置光标的"表格之后的落点"：
+   * 浏览器（Firefox / Chromium 均如此）会把光标困在最后一个单元格里，且此时新建的行
+   * 会从表格继承 UEditor 自带的 `table { white-space: nowrap }`（新版浏览器会把它
+   * 以内联 `text-wrap-mode: nowrap` 烤进新行），导致表格后的文字永远不换行，
+   * 表格因此成为无法绕过的"一堵墙"。百科原版保存的资料通常带有这个尾随空段落
+   * （即用户所知的"最后一行通常会自动给定一个换行符"），但 Markdown → HTML 重写
+   * 等场景产生的正文没有它。这里在内容变化后按需补上，恢复原版体验。
+   */
+  private ensureTrailingParagraph() {
+    if (!this.body || !this.document) return;
+    if (this.body.lastElementChild?.tagName === "TABLE") {
+      const p = this.document.createElement("p");
+      p.innerHTML = "<br/>";
+      this.body.appendChild(p);
+    }
   }
 
   /** 是否已给宿主文档挂上「弹窗 iframe 样式注入」监听（监听本身与具体编辑器实例无关） */

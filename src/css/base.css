@@ -3446,6 +3446,18 @@ html .edui-default .edui-editor-toolbarboxouter,
 .dark .selectTdClass {
   background-color: var(--mcmodder-color-primary-light) !important;
 }
+/* UEditor 自带的表格样式里写了 table { white-space: nowrap }（见 ueditor.all.js 的
+   utils.cssRule("table", ...)），而新版 Chromium 在编辑中产生新行时，会把光标位置
+   继承的 text-wrap-mode（white-space 的子属性）以内联样式携带到新行上。二者叠加的
+   结果是：光标从表格末尾向外新建的行会被烤上一个 <span style="text-wrap-mode: nowrap">，
+   表格之后输入的文字永远不换行，表格因此成为"一堵墙"。
+   这里在编辑器正文 iframe 内（.view 是 UEditor 编辑器 body 的专属类）中和它，
+   使单元格内的文字换行行为与资料页的实际展示一致。 */
+body.view table,
+body.view td,
+body.view th {
+  white-space: normal;
+}
 footer h5 {
   color: var(--mcmodder-color-copyright-title);
 }
