@@ -12,16 +12,18 @@ export const settings = [
           {
             id: "themeColor1",
             title: "主题样式主配色",
-            description: "主题样式主配色。",
+            description:
+              "主题样式主配色。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
-            value: "#86c155",
+            value: "#3b82f6",
           },
           {
             id: "themeColor2",
             title: "主题样式副配色",
-            description: "主题样式副配色。",
+            description:
+              "主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
-            value: "#58b6d8",
+            value: "#1e40af",
           },
         ],
       },
