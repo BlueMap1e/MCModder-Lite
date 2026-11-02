@@ -77,12 +77,7 @@ const userscriptMeta = {
     "cdn.jsdelivr.net",
     "cdn.jsdelivr.net.cn",
   ],
-  require: [
-    "https://registry.npmmirror.com/turndown/7.2.4/files/dist/turndown.js",
-    "https://fastly.jsdelivr.net/npm/@supabase/supabase-js@2.118.0/dist/umd/supabase.js",
-    "https://registry.npmmirror.com/three/0.160.0/files/build/three.min.js",
-    "https://registry.npmmirror.com/opentype.js/1.3.4/files/dist/opentype.min.js",
-  ],
+  require: ["https://registry.npmmirror.com/turndown/7.2.4/files/dist/turndown.js"],
 } as const;
 
 /** 32 位 FNV-1a 哈希，用于给 dev 期模块 URL 打缓存戳 */
@@ -148,9 +143,6 @@ export default defineConfig({
         },
         externalGlobals: {
           turndown: "TurndownService",
-          "@supabase/supabase-js": "supabase",
-          three: "THREE",
-          "opentype.js": "opentype",
         },
       },
     }),

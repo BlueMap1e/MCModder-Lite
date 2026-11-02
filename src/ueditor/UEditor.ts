@@ -168,6 +168,13 @@ export class UEditor {
     this.bodyObserver = new MutationObserver(() => this.scheduleBodySync());
     this.bodyObserver.observe(this.body!, { childList: true });
     this.attachTableEscapeKeyHandler();
+    // 兜底的兜底：contentchange / MutationObserver 这类事件路径在个别环境下存在
+    // 无法本地复现的失效（Tampermonkey 沙箱 realm 与页面 realm 的调度差异，
+    // 实机中高频退格可击穿，而本地 Playwright 无法复现）。selectionchange 是浏览器
+    // 原生事件（光标移动/选区变化必发，不经过 UEditor），配合低频 watchdog 轮询，
+    // 二者都只做幂等修复：即使事件路径全部失守，状态最迟在下一次光标移动或 1.5s 内自愈。
+    this.document!.addEventListener("selectionchange", () => this.scheduleBodySync());
+    window.setInterval(() => this.scheduleBodySync(), 1500);
     // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
     this.ensureTrailingParagraph();
   }
