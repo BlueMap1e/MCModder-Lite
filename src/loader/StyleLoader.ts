@@ -128,7 +128,6 @@ export class StyleLoader {
     const baseCss = importCSS("base");
     const mcmodderUICss = importCSS("mcmodderUI");
     const attitudeCss = importCSS("attitude");
-    const aprilFoolsCss = importCSS("aprilFools");
     const tableThemeColorCss = importCSS("tableThemeColor");
     const tableLeftAlignCss = importCSS("tableLeftAlign");
     const tabSelectorInfoCss = importCSS("tabSelectorInfo");
@@ -374,8 +373,6 @@ export class StyleLoader {
         "link-foot": "#008000",
         "channel-1": "#334bdb",
         "channel-2": "#904623",
-        "almanacs-good": "#f7f7b880",
-        "almanacs-bad": "#ffceac80",
         "copyright-title": "#3b566e",
         "copyright-text": "#6f8ba4",
         "alert-primary-1": "#004085",
@@ -456,8 +453,6 @@ export class StyleLoader {
         "link-foot": "#3a3",
         "channel-1": "#8af",
         "channel-2": "#fa8",
-        "almanacs-good": "#4428",
-        "almanacs-bad": "#4328",
         "copyright-title": "#8cf",
         "copyright-text": "#8bd",
         "alert-primary-1": "#bdf",
@@ -536,7 +531,6 @@ export class StyleLoader {
       base: baseCss,
       mcmodderUI: mcmodderUICss,
       attitude: attitudeCss,
-      aprilFools: aprilFoolsCss,
       tableThemeColor: tableThemeColorCss,
       tableLeftAlign: tableLeftAlignCss,
       tabSelectorInfo: tabSelectorInfoCss,
@@ -579,10 +573,6 @@ export class StyleLoader {
     // if (configs.get("markdownIt")) {
     style += css.codemirrorCss;
     // }
-    if (configs.getSettings("enableAprilFools")) {
-      /* McmodderUtils.addStyle(" .center-task-block:first-child { animation:aprilfools 2.75s linear infinite; background:#FFF; z-index:999; } @keyframes aprilfools { 0% { -webkit-transform:rotate(0deg); } 25% { -webkit-transform:rotate(90deg); } 50% { -webkit-transform:rotate(180deg); } 75% { -webkit-transform:rotate(270deg); } 100% { -webkit-transform:rotate(360deg); } } ") */
-      style += css.aprilFools;
-    }
     style += css.reducedMotion;
 
     parent.css = style;

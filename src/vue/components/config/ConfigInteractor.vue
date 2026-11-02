@@ -46,15 +46,6 @@
         :on-successful-change="onConfigSuccessfulChange"
         :range="valueSet!"
       />
-      <DropdownTextInput
-        v-else-if="type === 'dropdownTextMenu'"
-        :title="title"
-        :value="value as string"
-        :on-successful-change="onConfigSuccessfulChange"
-        :suggestion-manager="{
-          onInitSuggestion: () => suggestion!,
-        }"
-      />
       <KeybindInput
         v-else-if="type === 'keybind'"
         :title="title"
@@ -90,7 +81,6 @@ import ColorpickerInput from "../input/ColorpickerInput.vue";
 import NumberInput from "../input/NumberInput.vue";
 import SliderInput from "../input/SliderInput.vue";
 import DropdownMenuInput from "../input/DropdownMenuInput.vue";
-import DropdownTextInput from "../input/DropdownTextInput.vue";
 import KeybindInput from "../input/KeybindInput.vue";
 import { useSanitizedHTML } from "../../composables/useSanitizedHTML";
 import type { ConfigRepository } from "../../../config/ConfigRepository.ts";
@@ -134,22 +124,6 @@ const opt = computed(() => {
       valueSet[data.value as number] += " (默认)";
       return { valueSet };
     }
-    case "dropdownTextMenu": {
-      const suggestion = (data.suggestion as InputSuggestion[]).map((e) => {
-        if (typeof e === "string" && e === data.value) {
-          e = {
-            text: e,
-            value: e,
-          };
-        }
-        if (typeof e === "object" && e.value === data.value) {
-          e = { ...e };
-          e.text += " (默认)";
-        }
-        return e;
-      });
-      return { suggestion };
-    }
     case "keybind":
       return {};
   }
@@ -158,7 +132,6 @@ const opt = computed(() => {
 const range = computed(() => opt.value.range);
 const finiteRange = computed(() => opt.value.finiteRange);
 const valueSet = computed(() => opt.value.valueSet);
-const suggestion = computed(() => opt.value.suggestion);
 
 function onConfigSuccessfulChange(resp: InputValidInfo<typeof value.value>) {
   if (resp.final !== undefined) {

@@ -1,8 +1,5 @@
-import { GM_setValue } from "$";
 import { Utils } from "../Utils";
 import { Init } from "./Init";
-import { createApp } from "vue";
-import AlmanacsFrame from "../vue/components/AlmanacsFrame.vue";
 
 export class HomePageInit extends Init {
   canRun() {
@@ -31,20 +28,6 @@ export class HomePageInit extends Init {
             ($(".m_center ._search .text").val(""),
             $(".m_center ._search .text").css("color", "var(--mcmodder-color-text)")));
       };
-
-    if (this.configs.getSettings("almanacs")) {
-      // 数据迁移
-      const almanacsList = this.configs.getSettings("almanacsList");
-      if (almanacsList) {
-        GM_setValue("almanacsList", almanacsList);
-        this.configs.setSettings("almanacsList", "");
-      }
-
-      const container = $(`<div class="news_block mcmodder-almanacs">`).insertAfter(
-        $(".news_block").first(),
-      );
-      createApp(AlmanacsFrame, { parent: this.parent }).mount(container.get(0));
-    }
 
     if (this.configs.getSettings("rememberVisitedMods")) {
       this.initRecentlyVisitedMods();

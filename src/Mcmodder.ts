@@ -1,6 +1,5 @@
 import { GM_getValue, GM_openInTab, GM_setValue } from "$";
 import { ConfigUtils } from "./config/ConfigUtils";
-import { DraggableFrame } from "./widget/draggable/DraggableFrame";
 import { MemuCommandLoader } from "./loader/MenuCommandLoader";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
 import { StyleLoader } from "./loader/StyleLoader";
@@ -16,7 +15,6 @@ import { EditorInit } from "./init/EditorInit";
 import { Swiper } from "./widget/Swiper";
 import { SupabaseUtils } from "./supabase/SupabaseUtils";
 import { AttitudeSystem } from "./attitude/AttitudeSystem";
-import { Splash3D } from "./widget/Splash3D";
 import { createApp } from "vue";
 import FavUser from "./vue/components/FavUser.vue";
 import ProfileSelector from "./vue/components/ProfileSelector.vue";
@@ -46,7 +44,6 @@ export class Mcmodder {
   /** 自定义表态系统（全站单例：短评页与消息中心共用同一份计数缓存与未读统计） */
   attitudeSystem: AttitudeSystem;
   styleColors: ThemeColorSet;
-  splash3D?: Splash3D;
   preferredWiderScreen = false;
   isNightMode = false;
   title = "";
@@ -695,23 +692,6 @@ export class Mcmodder {
         })
         .catch(() => {});
     }
-    if (
-      this.configRepository.getSettings("splashStyle") === 1 &&
-      (this.href === `${this.hostname}/` || this.href === `${this.hostname}/v4/`)
-    ) {
-      this.splash3D = new Splash3D(this);
-      this.splash3D.init();
-    }
-    // 愚人节特性
-    if (this.configRepository.getSettings("enableAprilFools")) {
-      if (this.href.includes("/author/22957.html")) {
-        $("div.author-user-avatar img").attr(
-          "src",
-          "https://i.mcmod.cn/editor/upload/20230331/1680246648_2_vWiM.gif",
-        );
-      }
-    }
-
     // 表格修复
     if (this.configRepository.getSettings("tableFix")) {
       this.tableFix();
@@ -992,41 +972,6 @@ export class Mcmodder {
         const heightRight = areaRight.get(0).getBoundingClientRect().height;
         $(".col-lg-12.right").css("min-height", `${Math.max(heightLeft, heightRight)}px`);
       }, 1e3);
-    }
-
-    if (
-      this.href.startsWith(this.hostname) &&
-      !this.href.includes("tools/cbcreator") &&
-      this.configRepository.getSettings("enableLive2D")
-    ) {
-      const waifuFrame = $(`<div class="waifu">
-        <div class="waifu-tips" style="opacity: 0;"></div>
-        <canvas id="live2d" width="220" height="260" class="live2d"></canvas>
-        <ul class="waifu-tool">
-          <li name="menu" page="pageHome" class="active">
-            <span data-original-title="返回主页" data-toggle="tooltip" class="fui-home"></span>
-          </li>
-          <li>
-            <span data-original-title="赶走" data-toggle="tooltip" class="fui-cross"></span>
-          </li>
-        </ul>
-      </div>`).prependTo("body");
-      new DraggableFrame(waifuFrame);
-
-      $(
-        `<link rel="stylesheet" type="text/css" href="${this.hostname}/live2d/waifu.css">`,
-      ).appendTo("head");
-
-      $(`
-        <script src="${this.hostname}/live2d/waifu-tips.js" />
-        <script src="${this.hostname}/live2d/live2d.js" />
-        <script type="text/javascript">initModel("${this.hostname}/live2d/")</script>
-      `).appendTo("body");
-
-      $(document).on("click", ".waifu-tool .fui-cross", () => {
-        $.cookie("mcmodgirl_hide", null, { path: "/" });
-        this.configRepository.setSettings("enableLive2D", false);
-      });
     }
 
     $(".common-background").remove();

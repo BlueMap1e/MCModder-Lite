@@ -110,7 +110,6 @@ interface AppStorage {
   userProfile?: Record<string, string>;
   mcmodderSplashList_v2?: string;
   templateList?: Template[];
-  almanacsList?: Almanacs[];
   mcmodderLogger?: string;
   mcmodderJsonStorage?: Record<string, ItemList>;
   mcmodderRecipeJsonStorage?: Record<string, RecipeList>;
@@ -185,12 +184,7 @@ interface Settings {
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
   compactSupportedVersions: boolean;
-  almanacs: boolean;
-  enableSplashTracker: boolean;
   splashStyle: 0 | 1;
-  splashFontUrl: string;
-  enableLive2D: boolean;
-  enableAprilFools: boolean;
   autoCheckin: boolean;
   defaultBackground: string;
   defaultNightBackground: string;
@@ -259,7 +253,6 @@ interface Settings {
   itemRepository: 0 | 1;
   minimumRequestInterval: number;
   requestMonitorPosition: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
-  lieqi: boolean;
   keybindFastLink: Key;
   keybindFastSubmit: Key;
   keybindVerifyPass: Key;
@@ -298,7 +291,6 @@ interface Settings {
   // 以下为旧版遗留
   templateList?: Template[];
   useNotoSans?: boolean;
-  almanacsList?: Almanacs[];
   jsonDatabase?: string[];
   useSupabase?: boolean;
   customAttitude?: boolean;
@@ -645,17 +637,6 @@ interface AutoLinkOredictEntry extends AutoLinkBaseEntry {
 type AutoLinkEntry =
   AutoLinkItemEntry | AutoLinkClassEntry | AutoLinkAuthorEntry | AutoLinkOredictEntry;
 type AutoLinkEntries = AutoLinkEntry[];
-
-type Almanacs = {
-  date: number;
-  good: string[];
-  bad: string[];
-};
-type AlmanacsPage = {
-  almanacs: Almanacs;
-  prevDate: number;
-  nextDate: number;
-};
 
 interface ChangedStorage {
   id: string;

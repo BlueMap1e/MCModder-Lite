@@ -35,24 +35,6 @@ export class CommentInit extends Init {
     });
   }
 
-  private promoteAsManager(target: JQuery) {
-    const userLv = target.find(".common-user-lv");
-    const lv = userLv
-      .prop("title")
-      .replace(PublicLangData.comment.suffix.mod_admin + " (", "")
-      .replace(PublicLangData.comment.suffix.mod_manager + " (", "")
-      .replace(PublicLangData.comment.suffix.mod_developer + " (", "")
-      .replaceAll(")", "");
-    target
-      .find(".common-user-lv")
-      .attr({
-        class: "common-user-lv manager",
-        title: `${PublicLangData.comment.suffix.mod_manager} (${lv})`,
-        href: "https://t.bilibili.com/779290398405165095",
-      })
-      .text(PublicLangData.comment.suffix.mod_manager);
-  }
-
   private replaceMobileClientIcon(target: JQuery) {
     const legacy = target.find(".phone");
     if (legacy.length) {
@@ -177,15 +159,6 @@ export class CommentInit extends Init {
         return;
       }
 
-      // 愚人节特性 全员管理
-      if (
-        this.configs.getSettings("enableAprilFools") &&
-        uid === this.parent.currentUID &&
-        this.parent.href.includes("/class/")
-      ) {
-        this.promoteAsManager(target);
-      }
-
       // 楼中楼快速链接
       this.setReplyLink(target);
       const commentContent = target.find("div.comment-row-text-content.common-text.font14").get(0);
@@ -282,37 +255,8 @@ export class CommentInit extends Init {
     }
   }
 
-  private lieqi(target: JQuery) {
-    const attitudeList = [
-      "fa-thumbs-up",
-      "fa-grin-tears",
-      "fa-heart",
-      "fa-flushed",
-      "fa-sad-cry",
-      "fa-meh",
-      "fa-thumbs-down",
-      "fa-lemon",
-      "fa-horse-head",
-      "fa-heart-broken",
-      "fa-angry",
-      "fa-tired",
-      "fa-snowflake",
-      "fa-handshake",
-    ];
-    attitudeList.forEach((attitude) => {
-      target.find(`.${attitude}`).each((_, _e) => {
-        const e = $(_e);
-        e.removeClass(attitude).addClass("fa-surprise");
-        e.parents("[title]").first().attr("title", "猎奇");
-      });
-    });
-  }
-
   private setReplyLink(target: JQuery) {
     this.jump.notifyCommentRendered(target);
-    if (this.configs.getSettings("lieqi")) {
-      this.lieqi(target);
-    }
   }
 
   run() {

@@ -149,40 +149,6 @@ export class ClassPageInit extends Init {
         `<span class="more"><a href="/class/version/${classID}.html" target="_blank">更多</a><a></a></span>`,
       );
 
-    // 愚人节特性
-    if (this.configs.getSettings("enableAprilFools")) {
-      const forgeAliasList = ["诅咒锻炉", "CurseFabric", "BlessForge", "BlessFabric"];
-      const langList = PublicLangData.website;
-      for (const i of $("ul.common-link-icon-frame span.name").toArray()) {
-        if (i.innerHTML === langList.discord) i.innerHTML = "Drocsid";
-        if (i.innerHTML === langList.github) i.innerHTML = "GayHub";
-        if (i.innerHTML === langList.gitlab) i.innerHTML = "GayLab";
-        if (i.innerHTML === langList.gitee) i.innerHTML = "Giteeeeee";
-        if (i.innerHTML === langList.modrinth) i.innerHTML = "Pluginrinth";
-        if (i.innerHTML === langList.wiki) i.innerHTML = "Kiwi";
-        if (i.innerHTML === langList.curseforge)
-          i.innerHTML = forgeAliasList[Math.floor(Math.random() * 4)];
-      }
-      $("div.frame span.avatar[title='MCreator - MCr'] img").attr(
-        "src",
-        Values.assets.mcmod.aprilFools.mcr,
-      );
-      $(".class-card .text-block span").each((_, e) => {
-        e.innerHTML = e.innerHTML
-          .replace(PublicLangData.class.card.red, "猛票")
-          .replace(PublicLangData.class.card.black, "盲票");
-      });
-      $(".class-card .progress-bar").each((_, e) => {
-        $(e).attr(
-          "data-original-title",
-          $(e)
-            .attr("data-original-title")
-            .replace(PublicLangData.class.card.red, "猛票")
-            .replace(PublicLangData.class.card.black, "盲票"),
-        );
-      });
-    }
-
     // 禁用模组页排版
     if (
       /* this.configs.get("mcmodderUI") && */ !this.configs.getSettings(

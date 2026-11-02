@@ -26,13 +26,6 @@ export class MessageInit extends Init {
   run() {
     this.bindCommentJumpHints();
 
-    if (this.configs.getSettings("lieqi")) {
-      $(".content-comment-attitude > i").attr("class", "fas fa-surprise");
-      $(".content-comment-attitude").each((_, c) => {
-        $(c).contents().last().get(0).textContent = "猎奇";
-      });
-    }
-
     if (!this.attitude.enabled) return;
     this.scheduleRefresh();
 
