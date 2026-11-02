@@ -3493,3 +3493,10 @@ body .top-main .info .more-info .separate-li {
     url("//at.alicdn.com/t/font_1079461_j8razwnawwc.ttf") format("truetype"),
     url("//at.alicdn.com/t/font_1079461_j8razwnawwc.svg#iconfont") format("svg");
 }
+
+/* 夜间模式下调暗封面大图：百科的封面美术图多为白底，深夜直视刺眼。
+   由设置「夜间模式调暗封面图」（mcmodder-config-dim-cover 类）控制，默认开启。 */
+html.dark.mcmodder-config-dim-cover .cover img,
+html.dark.mcmodder-config-dim-cover .class-cover-image img {
+  filter: brightness(0.8);
+}

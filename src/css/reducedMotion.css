@@ -47,11 +47,6 @@
     animation: none !important;
   }
 
-  /* 关注用户头像的悬停摆动 */
-  .mcmodder-favuser a:hover .avatar {
-    animation: none !important;
-  }
-
   /* 愚人节彩蛋：任务卡整块旋转（enableAprilFools 开启时） */
   .center-task-block:first-child {
     animation: none !important;
@@ -97,8 +92,7 @@
   .topic_block .title .hover,
   .star_block .title .hover,
 
-  /* 关注用户删除模式下的头像缩放、用户面板条目的位移与箭头滑动 */
-  .mcmodder-favuser.delete-mode .user.deleted .avatar img,
+  /* 用户面板条目的位移与箭头滑动 */
   .header-layer-block li a,
   .header-layer-block li a i:last-child,
 

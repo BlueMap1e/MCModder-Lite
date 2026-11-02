@@ -44,8 +44,97 @@ export class ClassPageInit extends Init {
     }
   }
 
+  /** 各雷达图容器在首次夜间改写前捕获的原始 option 片段（日间还原用） */
+  private chartOriginalOptions = new Map<HTMLElement, string>();
+
+  /**
+   * 夜间模式下的评分雷达图重主题化：站点建图代码把 ECharts 的 backgroundColor 硬编码为
+   * "#FFF"、数据多边形为深灰 `#555`、填充为黑色半透明（canvas 绘制，CSS 无法覆盖），
+   * 夜间模式下是一块白底 + 低对比暗线的刺眼图形。
+   *
+   * 时序要点：`_echarts_instance_` 属性在 `echarts.init()` 时就会出现，而站点自己的
+   * `setOption`（携带 `#FFF`）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
+   * 还要在若干延时点复检背景是否仍为 transparent，被覆盖就重新应用；日间按首次捕获的
+   * 原始 option 片段（`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
+   * （站点随后到达的 setOption 本身就是日间样式）。`html` 的 `dark` 类切换同样触发。
+   */
+  private setupNightChartFix() {
+    const apply = () => {
+      const el = document.getElementById("class-rating");
+      if (!el) return;
+      if (typeof echarts === "undefined") return;
+      const chart = echarts.getInstanceByDom(el);
+      if (!chart) return;
+      const night = document.documentElement.classList.contains("dark");
+      if (night) {
+        const current = chart.getOption();
+        if (current?.backgroundColor !== "transparent") {
+          if (current && !this.chartOriginalOptions.has(el)) {
+            this.chartOriginalOptions.set(
+              el,
+              JSON.stringify({
+                backgroundColor: current.backgroundColor,
+                color: current.color,
+                radar: current.radar,
+                series: current.series,
+              }),
+            );
+          }
+          // 强调色取自用户当前主题（夜档），线条与填充随之联动取色器
+          const accent =
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--mcmodder-color-accent")
+              .trim() || "#35c1fd";
+          chart.setOption({
+            backgroundColor: "transparent",
+            color: [accent],
+            radar: {
+              splitLine: { lineStyle: { color: "rgba(255,255,255,0.3)" } },
+              axisLine: { lineStyle: { color: "rgba(255,255,255,0.35)" } },
+              splitArea: {
+                areaStyle: { color: ["rgba(255,255,255,0.02)", "rgba(255,255,255,0.07)"] },
+              },
+            },
+            series: [
+              {
+                lineStyle: { color: accent },
+                itemStyle: { color: accent },
+                areaStyle: { color: Utils.setColorAlpha(accent, 0.2) },
+              },
+            ],
+          });
+          // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
+          for (const delay of [100, 300, 800, 2000]) {
+            setTimeout(apply, delay);
+          }
+        }
+      } else {
+        const original = this.chartOriginalOptions.get(el);
+        if (original) {
+          chart.setOption(JSON.parse(original));
+          this.chartOriginalOptions.delete(el);
+        }
+      }
+    };
+    // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）
+    new MutationObserver(apply).observe(document.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["_echarts_instance_"],
+    });
+    // 夜间开关：dark 类切换时重新应用
+    new MutationObserver(apply).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    apply();
+  }
+
   run() {
     $(".common-center").addClass("mcmodder-class-page");
+    if ($(".class-rating-block").length) {
+      this.setupNightChartFix();
+    }
     this.isClassPage = ClassPageInit.classPageRegExp.test(this.parent.href);
     this.pageTypeName = this.isClassPage ? "模组" : "整合包";
 
@@ -417,126 +506,6 @@ export class ClassPageInit extends Init {
             });
         })
         .insertAfter($(".col-lg-6").last());
-    }
-
-    // 压缩支持版本
-    if (this.configs.getSettings("compactSupportedVersions")) {
-      type MCVersion = [number, number, number];
-      type MCVersionRange = [MCVersion?, MCVersion?];
-      let startIndex: number,
-        patchIndex: number,
-        versionRanges: MCVersionRange[],
-        currentRange: MCVersionRange;
-      $(".mcver > ul > ul").each((_, versionListNode) => {
-        versionRanges = [];
-        currentRange = [];
-        const versionList: MCVersion[] = Array.from(versionListNode.children)
-          .slice(1)
-          .map((_ver) => {
-            _ver.classList.add("mcmodder-uncompactedmcver");
-            let ver = _ver.textContent;
-            if (ver === "远古版本") ver = "1.1.0"; // 为统一处理，远古版本视为1.1.0
-            const verArray = ver.split(".").map(Number) as MCVersion;
-            while (verArray.length < 3) verArray.push(0);
-            return verArray;
-          });
-
-        for (const ver of versionList) {
-          const major = ver[0];
-          const minor = ver[1];
-          const patch = ver[2];
-          patchIndex = 0;
-          // 根据版本格式获取对应的版本列表
-          const list =
-            major === 1 ? Values.allVersionList[minor] : Values.newVersionList[major - 26]?.[minor];
-          const series = minor;
-
-          if (list) {
-            for (const index in list) {
-              if (list[index] === patch) {
-                patchIndex = Number(index);
-                break;
-              }
-            }
-          }
-
-          let isSameSeries = false;
-          if (currentRange && currentRange.length) {
-            const prevMajor = currentRange[0]![0];
-            const prevSeries = currentRange[0]![1];
-            isSameSeries = prevSeries === series && prevMajor === major;
-          }
-
-          if (
-            !currentRange ||
-            !currentRange.length ||
-            !isSameSeries ||
-            patchIndex + 1 != startIndex
-          ) {
-            // 新建一个版本区间
-            currentRange = [Array.from(ver) as MCVersion, Array.from(ver) as MCVersion];
-            versionRanges.push(currentRange);
-            startIndex = patchIndex;
-          } else if (patchIndex + 1 === startIndex) {
-            // 将当前版本与最近的版本区间合并
-            startIndex = patchIndex;
-            currentRange[0] = Array.from(ver) as MCVersion;
-          }
-        }
-
-        const $versionListNode = $(versionListNode);
-        versionRanges.forEach((versionRange) => {
-          // 将所有版本区间写入页面
-          if (versionRange.length < 2) return;
-          let rangeContent;
-          const major = versionRange[0]![0];
-          const minor = versionRange[0]![1];
-          const patchOld = versionRange[0]![2];
-          const patchNew = versionRange[1]![2];
-
-          const list =
-            major === 1 ? Values.allVersionList[minor] : Values.newVersionList[major - 26]?.[minor];
-
-          if (
-            list &&
-            list.length > 1 &&
-            patchOld === list[0] &&
-            patchNew === list[list.length - 1]
-          ) {
-            rangeContent = major === 1 ? `1.${minor}.x` : `${major}.${minor}.x`;
-          } else if (patchOld === patchNew) {
-            rangeContent = Utils.versionArrayToString(versionRange[0]!);
-          } else {
-            rangeContent = `${Utils.versionArrayToString(versionRange[1]!)}-${Utils.versionArrayToString(versionRange[0]!)}`;
-          }
-
-          $versionListNode.append(
-            `<li class="text-danger mcmodder-compactedmcver"><a target="_blank" class="mcmodder-content-block">${rangeContent}</a></li>`,
-          );
-        });
-      });
-
-      let isUncompactedmcverShown = false;
-      const uncompactedmcver = $(".mcmodder-uncompactedmcver");
-      const compactedmcver = $(".mcmodder-compactedmcver");
-      uncompactedmcver.hide();
-      compactedmcver.show();
-      window.addEventListener("keydown", (e) => {
-        if (isUncompactedmcverShown) return;
-        if (e.key === "Shift" && e.target === document.body) {
-          uncompactedmcver.show();
-          compactedmcver.hide();
-          isUncompactedmcverShown = true;
-        }
-      });
-      window.addEventListener("keyup", (e) => {
-        if (!isUncompactedmcverShown) return;
-        if (e.key === "Shift" && e.target === document.body) {
-          uncompactedmcver.hide();
-          compactedmcver.show();
-          isUncompactedmcverShown = false;
-        }
-      });
     }
 
     // 将本模组加入最近浏览中

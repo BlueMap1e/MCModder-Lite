@@ -252,42 +252,6 @@ export class Values {
 
   static readonly adTitleCss =
     "position: absolute;color: #555;border-radius: 5px;border: 1px solid #555;font-size: 12px;padding: 0 2px;left:5px;top:5px;bottom:auto;right:auto;background:RGBA(255,255,255,.45);";
-
-  static readonly maxLevel = 30;
-  static readonly expRequisition = [
-    0,
-    20,
-    20,
-    200,
-    240,
-    480,
-    960,
-    1728,
-    2918,
-    4597,
-    6698,
-    8930,
-    10716,
-    11252,
-    9752,
-    5851,
-    6437,
-    7080,
-    7787,
-    8567,
-    9423,
-    10366,
-    11402,
-    12543,
-    13796,
-    15177,
-    16694,
-    18363,
-    20200,
-    22219,
-    24442,
-    Number.MAX_SAFE_INTEGER - 3e5,
-  ];
   static readonly formatColors = [
     "000000",
     "0000AA",
@@ -405,35 +369,6 @@ export class Values {
     "maxDurability",
     "smallIcon",
     "largeIcon",
-  ];
-  //用于 < 26.1的版本列表
-  static readonly allVersionList = [
-    [],
-    [],
-    [5],
-    [2],
-    [2, 3, 7],
-    [2],
-    [4], // 1.6-
-    [2, 4, 5, 8, 9, 10],
-    [0, 8, 9],
-    [0, 4], // 1.7 ~ 1.9
-    [0, 1, 2],
-    [0, 1, 2],
-    [0, 1, 2],
-    [0, 1, 2], // 1.11 ~ 1.13
-    [0, 1, 2, 3, 4],
-    [0, 1, 2],
-    [0, 1, 2, 3, 4, 5], // 1.14 ~ 1.16
-    [0, 1],
-    [0, 1, 2],
-    [0, 1, 2, 3, 4], // 1.17 ~ 1.19
-    [0, 1, 2, 3, 4, 5, 6],
-    [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11], // 1.20 ~ 1.21
-  ];
-  //26.1以后的版本列表 YY.D.H
-  static readonly newVersionList = [
-    [[], [0, 1, 2, 3]], // 26: 26.0(none), 26.1([0, 1])
   ];
 
   static readonly loaderID = {

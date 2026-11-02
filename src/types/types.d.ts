@@ -150,14 +150,13 @@ interface Settings {
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;
   adaptableNightMode: boolean;
+  dimCoverAtNight: boolean;
   bbsNightMode: boolean;
-  forceV4: boolean;
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;
   // unlockHeaderContainer: boolean,
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
-  compactSupportedVersions: boolean;
   splashStyle: 0 | 1;
   autoCheckin: boolean;
   defaultBackground: string;
@@ -199,13 +198,8 @@ interface Settings {
   compactedVerifyEntry: boolean;
   advancedRanklist: boolean;
   advancedOredictPage: boolean;
-  rememberVisited: boolean;
-  favUserDisplayStyle: 0 | 1 | 2;
   rememberVisitedMods: boolean;
   centerMainExpand: boolean;
-  byteChart: boolean;
-  maxByteColorValue: number;
-  expCalculator: boolean;
   unlockComment: boolean;
   uploadFileButton: boolean;
   ignoreEmptyLine: boolean;
@@ -239,8 +233,6 @@ interface Settings {
   lastUid: number;
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
-  userFavList: string;
-  recentlyVisited: string;
   recentlyVisitedMods: RecentlyVisited[];
   myProfiles: string;
   guiLocker: number;

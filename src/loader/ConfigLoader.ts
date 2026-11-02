@@ -12,16 +12,18 @@ export const settings = [
           {
             id: "themeColor1",
             title: "主题样式主配色",
-            description: "主题样式主配色。",
+            description:
+              "主题样式主配色。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
-            value: "#86c155",
+            value: "#3b82f6",
           },
           {
             id: "themeColor2",
             title: "主题样式副配色",
-            description: "主题样式副配色。",
+            description:
+              "主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
-            value: "#58b6d8",
+            value: "#1e40af",
           },
         ],
       },
@@ -76,6 +78,7 @@ export const settings = [
             description:
               "将百科的部分广告移动到不影响浏览体验的位置。（本脚本不会主动隐藏或屏蔽广告，若欲屏蔽请自行安装广告屏蔽插件）",
             type: "checkbox",
+            value: true,
           },
           {
             id: "adaptableNightMode",
@@ -83,17 +86,20 @@ export const settings = [
             description:
               "夜间模式将跟随当前浏览器偏好设置而自动开启或关闭。启用此配置也将隐藏页面右上角的夜间模式开关。",
             type: "checkbox",
+            value: true,
+          },
+          {
+            id: "dimCoverAtNight",
+            title: "夜间模式调暗封面图",
+            description:
+              "夜间模式下调暗模组/整合包页的封面大图。百科的封面美术图多为白底，深夜直视比较刺眼。",
+            type: "checkbox",
+            value: true,
           },
           {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
             description: "(Beta!) 对社群应用夜间模式配色。",
-            type: "checkbox",
-          },
-          {
-            id: "forceV4",
-            title: "强制v4",
-            description: "打开百科任意非v4主页时，自动跳转到v4主页。",
             type: "checkbox",
           },
           {
@@ -170,6 +176,7 @@ export const settings = [
             title: "贡献榜重排版",
             description: "让贡献榜中各用户的昵称、排名、编辑量、编辑占比一目了然！",
             type: "checkbox",
+            value: true,
           },
           {
             id: "advancedOredictPage",
@@ -194,34 +201,12 @@ export const settings = [
             title: "自动签到",
             description: "每日首次访问百科，或是本机时间为 00:00:00 时，自动执行签到操作。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "centerMainExpand",
             title: "个人主页数据拓展",
             description: "显示平均字数和科龄，令模组区域并排显示，过长的模组区域默认压缩。",
-            type: "checkbox",
-          },
-          {
-            id: "byteChart",
-            title: "字数活跃图表",
-            description:
-              "决定是否在个人主页显示字数活跃图表，以及是否在贡献榜查看历史贡献数据时自动获取编辑字数数据。",
-            type: "checkbox",
-          },
-          {
-            id: "maxByteColorValue",
-            title: "字数活跃图表最大有效值",
-            description:
-              "决定字数活跃图表的总体颜色深度，当日编辑字节数大于该值时，对应字数图表中的色块始终为黑色。",
-            type: "number",
-            value: 30000,
-            range: [5000, 524984],
-            visible: (ctx) => ctx.configs.getSettings("byteChart"),
-          },
-          {
-            id: "expCalculator",
-            title: "经验计算器",
-            description: "决定是否在个人等级页显示当前等级相关数据。",
             type: "checkbox",
           },
         ],
@@ -451,13 +436,7 @@ export const settings = [
             description:
               /* "在启用“Mcmodder 风格 UI”的基础上，" */ "禁用对模组页和整合包页的默认排版功能。可能更利于编辑者审查模组基本信息。",
             type: "checkbox",
-          },
-          {
-            id: "compactSupportedVersions",
-            title: "支持版本压缩",
-            description:
-              "将多个相近的支持版本显示为一个版本，如 {1.12.2, 1.12.1, 1.12} => 1.12.x。按住 Shift 键时显示原始的版本列表。",
-            type: "checkbox",
+            value: true,
           },
           {
             id: "fastCopyName",
@@ -609,30 +588,6 @@ export const settings = [
             title: "忽略短评空白行",
             description: "隐藏短评正文中的空白行。",
             type: "checkbox",
-          },
-        ],
-      },
-      {
-        id: "userlist",
-        label: "快捷串门",
-        settings: [
-          {
-            id: "rememberVisited",
-            title: "最近串门追踪",
-            description: "自动记录我最近串门的用户。经常串门的用户会显示在“最近串门”当中。",
-            type: "checkbox",
-          },
-          {
-            id: "favUserDisplayStyle",
-            title: "收藏用户样式",
-            description: "决定“最近串门”列表中已收藏用户的头像显示样式。",
-            type: "dropdownMenu",
-            value: 0,
-            range: {
-              0: "星星",
-              1: "大头钉",
-              2: "爱心",
-            },
           },
         ],
       },

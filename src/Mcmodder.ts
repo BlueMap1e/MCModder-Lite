@@ -14,7 +14,6 @@ import { GeneralEditInit } from "./init/GeneralEditInit";
 import { EditorInit } from "./init/EditorInit";
 import { Swiper } from "./widget/Swiper";
 import { createApp } from "vue";
-import FavUser from "./vue/components/FavUser.vue";
 import ProfileSelector from "./vue/components/ProfileSelector.vue";
 import { ConfigRepository } from "./config/ConfigRepository.ts";
 
@@ -510,10 +509,6 @@ export class Mcmodder {
   }
 
   main() {
-    if (this.configRepository.getSettings("forceV4") && this.href === `${this.hostname}/`) {
-      window.location.href = `${this.hostname}/v4/`;
-    }
-
     // v2.2- 自定义字体配置兼容
     const useNotoSans = this.configRepository.getSettings("useNotoSans");
     if (useNotoSans) {
@@ -597,25 +592,9 @@ export class Mcmodder {
         const lv = myProfile.lv
           ? `<span class="mcmodder-profile-lv common-user-lv lv-${myProfile.lv}">Lv.${myProfile.lv}</span>`
           : "";
-        const myAvatar = $(
-          `<div class="mcmodder-profile">${avatar}<p>${nickname} ${lv}</p></div>`,
-        ).insertBefore(insertPos);
-
-        // const hoverListener = $(".header-user-info.hover");
-        // const cover = $(`<div class="header-panel-cover">`).insertBefore(myAvatar.parent());
-        // cover.bind("pointerover", _e => {
-        //   hoverListener.trigger("mouseout");
-        // })
-
-        const favUserOuterContainer = $(`
-          <div class="mcmodder-favuser-outercontainer" />
-        `).insertAfter(myAvatar);
-        const favUserApp = createApp(FavUser, {
-          parent: this,
-        }).mount(favUserOuterContainer.get(0)) as InstanceType<typeof FavUser>;
-        if (!favUserApp.isEmpty()) {
-          $(".header-layer-block").addClass("with-favuser");
-        }
+        $(`<div class="mcmodder-profile">${avatar}<p>${nickname} ${lv}</p></div>`).insertBefore(
+          insertPos,
+        );
 
         $(".header-user .header-layer-block li a").each((_, _c) => {
           const c = $(_c);
