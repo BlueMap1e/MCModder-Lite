@@ -1,4 +1,3 @@
-import { GTCEuEnergyFrame } from "../integration/GTCEuEnergyFrame";
 import { Init } from "./Init";
 
 export class ItemTabInit extends Init {
@@ -6,13 +5,6 @@ export class ItemTabInit extends Init {
     return false;
   }
   run() {
-    // GTCEu
-    if (this.configs.getSettings("gtceuIntegration")) {
-      $(".power_area").each((_, c) => {
-        new GTCEuEnergyFrame(c);
-      });
-    }
-
     // 紧凑合成表
     /* if (!this.configs.get("compactedTablist")) return;
     Utils.addStyle(`

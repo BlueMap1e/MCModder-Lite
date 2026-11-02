@@ -936,12 +936,6 @@ export const settings = [
         label: "杂项",
         settings: [
           {
-            id: "gtceuIntegration",
-            title: "GTCEu集成",
-            description: "将启用 GTCEu 相关特性。<del>绝对不是私货！！</del>",
-            type: "checkbox",
-          },
-          {
             id: "freezeAdvancements",
             title: "冻结进度",
             description: "使窗口右上角弹出的进度框不再自动消失。快截图留念吧！",

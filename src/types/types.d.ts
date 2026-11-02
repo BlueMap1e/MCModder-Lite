@@ -186,7 +186,6 @@ interface Settings {
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
   compactSupportedVersions: boolean;
-  gtceuIntegration: boolean;
   almanacs: boolean;
   enableSplashTracker: boolean;
   splashStyle: 0 | 1;
