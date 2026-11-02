@@ -7,14 +7,6 @@ export class Values {
     settings: function () {
       GM_openInTab("https://center.mcmod.cn/#/setting/", { active: true });
     },
-    structureEditor: function () {
-      GM_openInTab(`${Values.hostname}/mcmodder/structureeditor/`, {
-        active: true,
-      });
-    },
-    jsonHelper: function () {
-      GM_openInTab(`${Values.hostname}/mcmodder/jsonhelper/`, { active: true });
-    },
     exportLogs: function () {
       $("html")
         .empty()

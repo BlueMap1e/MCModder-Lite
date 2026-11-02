@@ -12,7 +12,6 @@ import { Init } from "../init/Init";
 import { ItemEditorInit } from "../init/ItemEditorInit";
 import { ItemListInit } from "../init/ItemListInit";
 import { ItemPageInit } from "../init/ItemPageInit";
-import { JsonHelperInit } from "../init/JsonHelperInit";
 import { MessageInit } from "../init/MessagePageInit";
 import { ModlistInit } from "../init/ModlistInit";
 import { OredictPageInit } from "../init/OredictPageInit";
@@ -20,7 +19,6 @@ import { PostPageInit } from "../init/PostPageInit";
 import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
 import { SandboxInit } from "../init/SandboxInit";
-import { StructureEditorInit } from "../init/StructureEditorInit";
 import { TabEditInit } from "../init/TabEditInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
@@ -53,8 +51,6 @@ export class InitLoader {
       new ModlistInit(parent),
       new CenterInit(parent),
       new AdminInit(parent),
-      new StructureEditorInit(parent),
-      new JsonHelperInit(parent),
       new CommentInit(parent),
     );
   }
