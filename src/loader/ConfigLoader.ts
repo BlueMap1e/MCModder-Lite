@@ -76,6 +76,7 @@ export const settings = [
             description:
               "将百科的部分广告移动到不影响浏览体验的位置。（本脚本不会主动隐藏或屏蔽广告，若欲屏蔽请自行安装广告屏蔽插件）",
             type: "checkbox",
+            value: true,
           },
           {
             id: "adaptableNightMode",
@@ -83,6 +84,7 @@ export const settings = [
             description:
               "夜间模式将跟随当前浏览器偏好设置而自动开启或关闭。启用此配置也将隐藏页面右上角的夜间模式开关。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "bbsNightMode",
@@ -164,6 +166,7 @@ export const settings = [
             title: "贡献榜重排版",
             description: "让贡献榜中各用户的昵称、排名、编辑量、编辑占比一目了然！",
             type: "checkbox",
+            value: true,
           },
           {
             id: "advancedOredictPage",
@@ -188,6 +191,7 @@ export const settings = [
             title: "自动签到",
             description: "每日首次访问百科，或是本机时间为 00:00:00 时，自动执行签到操作。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "centerMainExpand",
@@ -422,13 +426,7 @@ export const settings = [
             description:
               /* "在启用“Mcmodder 风格 UI”的基础上，" */ "禁用对模组页和整合包页的默认排版功能。可能更利于编辑者审查模组基本信息。",
             type: "checkbox",
-          },
-          {
-            id: "compactSupportedVersions",
-            title: "支持版本压缩",
-            description:
-              "将多个相近的支持版本显示为一个版本，如 {1.12.2, 1.12.1, 1.12} => 1.12.x。按住 Shift 键时显示原始的版本列表。",
-            type: "checkbox",
+            value: true,
           },
           {
             id: "fastCopyName",

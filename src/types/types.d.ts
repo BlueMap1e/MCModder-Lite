@@ -156,7 +156,6 @@ interface Settings {
   // unlockHeaderContainer: boolean,
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
-  compactSupportedVersions: boolean;
   splashStyle: 0 | 1;
   autoCheckin: boolean;
   defaultBackground: string;
