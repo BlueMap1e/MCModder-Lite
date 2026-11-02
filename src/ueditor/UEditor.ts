@@ -167,6 +167,7 @@ export class UEditor {
     // ensureTrailingParagraph 幂等（补完最后一个元素就不是 TABLE 了），不会形成循环。
     this.bodyObserver = new MutationObserver(() => this.scheduleBodySync());
     this.bodyObserver.observe(this.body!, { childList: true });
+    this.attachTableEscapeKeyHandler();
     // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
     this.ensureTrailingParagraph();
   }
@@ -183,6 +184,65 @@ export class UEditor {
       this.ensureTrailingParagraph();
       this.updateEditorStats();
     });
+  }
+
+  /**
+   * 「表格末行末列的空单元格」按键逃逸。
+   *
+   * UEditor 的表格按键处理会把方向键接管为表格内导航（preventDefault 后自己移动光标），
+   * 光标位于空单元格时尤其如此：ArrowDown 被拦截、End/ArrowRight/Tab 全是格间移动，
+   * 即使表格后已有尾随段落，键盘也无法离开表格——这是"表格墙"在快速删空单元格后的
+   * 残留形态（实测 Firefox，无脚本对照下有内容的单元格同样逃不出去，是原版即有的墙）。
+   * 这里在 iframe 文档的**捕获阶段**拦截：光标折叠于表格最后一个单元格且该单元格为空、
+   * 按下 ArrowDown/ArrowRight 时，先把光标移到表格之后的块级元素（没有则先补尾随段落），
+   * 再阻止 UEditor 的导航接管。有内容的单元格交给原生行为（配合尾随段落原生即可逃逸）。
+   */
+  private attachTableEscapeKeyHandler() {
+    const doc = this.document;
+    if (!doc || !this.body || !this.window) return;
+    doc.addEventListener(
+      "keydown",
+      (ev: KeyboardEvent) => {
+        if (ev.key !== "ArrowDown" && ev.key !== "ArrowRight") return;
+        if (ev.shiftKey || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+        const sel = this.window!.getSelection();
+        if (!sel || !sel.isCollapsed || !sel.anchorNode) return;
+        let node: Node | null = sel.anchorNode;
+        while (node && (node as Element).tagName !== "TD" && (node as Element).tagName !== "TH") {
+          node = node.parentNode;
+        }
+        const cell = node as HTMLTableCellElement | null;
+        const row = cell?.parentElement as HTMLTableRowElement | null;
+        const table = row?.closest("table");
+        if (!cell || !row || !table) return;
+        // 只处理真正的"右下角"单元格：合并单元格的长尾场景交给原版行为
+        const lastRow = table.rows[table.rows.length - 1];
+        if (!lastRow || cell !== lastRow.cells[lastRow.cells.length - 1]) return;
+        if (cell.textContent?.trim() !== "") return;
+        // 表格之后已有块级元素就直接用它；表格是正文最后元素时先补尾随段落再逃逸。
+        // UEditor 的按键监听挂在 document 冒泡阶段，捕获阶段 stopPropagation 可拦下它。
+        let target = table.nextElementSibling;
+        if (!target && this.body!.lastElementChild === table) {
+          this.ensureTrailingParagraph();
+          target = table.nextElementSibling;
+        }
+        if (!target || (target as Element).tagName === "TABLE") return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const range = doc.createRange();
+        range.setStart(target, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        // 同步 UEditor 内部选区，避免它基于旧位置做出错误的状态更新
+        try {
+          this.editor.selection.getRange().setStart(target, 0).collapse(true).select();
+        } catch {
+          /* 内部选区同步失败不影响已设好的原生光标 */
+        }
+      },
+      true,
+    );
   }
 
   /**
