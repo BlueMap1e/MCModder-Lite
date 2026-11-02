@@ -66,6 +66,8 @@ export class UEditor {
   body?: HTMLElement;
   /** {@link body} 的 jQuery 包装 */
   $body?: JQuery;
+  /** 观察 {@link body} 直接子节点变化的兜底观察器（contentchange 有漏触发路径） */
+  bodyObserver?: MutationObserver;
 
   /**
    * @param editor 百科的原生编辑器实例。
@@ -158,8 +160,29 @@ export class UEditor {
       this.ensureTrailingParagraph();
       this.updateEditorStats();
     });
+    // contentchange 并不在所有正文变更路径上触发：UEditor 的按键处理（如 Firefox 下
+    // Backspace 合并删除尾随空段落）会拦截默认行为后直接改 DOM，部分路径不 fire 事件，
+    // 导致补段落失效、高度滞留。挂一个只看 body 直接子节点的 MutationObserver 兜底，
+    // 保证补段落与高度始终跟随真实 DOM。我们的补段落自身也会触发观察器，但
+    // ensureTrailingParagraph 幂等（补完最后一个元素就不是 TABLE 了），不会形成循环。
+    this.bodyObserver = new MutationObserver(() => this.scheduleBodySync());
+    this.bodyObserver.observe(this.body!, { childList: true });
     // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
     this.ensureTrailingParagraph();
+  }
+
+  /** body 直接子节点变化后的同步任务是否已在队列中（微任务去重） */
+  private bodySyncQueued = false;
+
+  /** 在微任务里去重执行补段落 + 高度重算，同一批连续 DOM 变更只处理一次 */
+  private scheduleBodySync() {
+    if (this.bodySyncQueued) return;
+    this.bodySyncQueued = true;
+    queueMicrotask(() => {
+      this.bodySyncQueued = false;
+      this.ensureTrailingParagraph();
+      this.updateEditorStats();
+    });
   }
 
   /**
