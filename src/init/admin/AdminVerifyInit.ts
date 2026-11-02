@@ -1,7 +1,5 @@
 import { createApp, ref, shallowRef, type App, type ShallowRef } from "vue";
 import { HorizontalDraggableFrame } from "../../widget/draggable/HorizontalDraggableFrame";
-import Countdown from "../../vue/components/Countdown.vue";
-import { TimerUtils } from "../../widget/TimerUtils.ts";
 import { Utils } from "../../Utils.ts";
 import type { Mcmodder } from "../../Mcmodder.ts";
 import { InputListPopoverController } from "../../widget/popover/InputListPopoverController.ts";
@@ -16,8 +14,6 @@ import { ClassEditRules } from "../../editrule/ClassEditRules.ts";
 import { ItemEditRules } from "../../editrule/ItemEditRules.ts";
 import { TabEditRules } from "../../editrule/TabEditRules.ts";
 import VerifyTimeline from "../../vue/components/VerifyTimeline.vue";
-import GIFViewer from "../../vue/components/GIFViewer.vue";
-import { GIFUtils } from "../../gif/GIFUtils.ts";
 
 type ParsedOpinion = [number, number, number, number];
 
@@ -50,14 +46,6 @@ export class AdminVerifyInit extends AdminBaseInit {
   private textComparator?: App;
   /** 挂载在审核窗内、仅创建一个实例的审核足迹时间线组件（`VerifyTimeline`） */
   private timeline?: App;
-  /** 提交的编辑中，小图标查看组件 */
-  private smallIconViewer?: App;
-  /** 提交的编辑中，大图标查看组件 */
-  private largeIconViewer?: App;
-  /** 当前的内容中，小图标查看组件 */
-  private prevSmallIconViewer?: App;
-  /** 当前的内容中，大图标查看组件 */
-  private prevLargeIconViewer?: App;
   /** 正文对比组件的挂载点，每次加载待审项后被重新插回审核按钮之前 */
   private comparatorContainer?: HTMLElement;
   /** 时间线组件的挂载点，每次加载待审项后被重新插回审核按钮之后 */
@@ -133,14 +121,6 @@ export class AdminVerifyInit extends AdminBaseInit {
       this.textComparator = undefined;
       this.timeline?.unmount();
       this.timeline = undefined;
-      this.smallIconViewer?.unmount();
-      this.smallIconViewer = undefined;
-      this.largeIconViewer?.unmount();
-      this.largeIconViewer = undefined;
-      this.prevSmallIconViewer?.unmount();
-      this.prevSmallIconViewer = undefined;
-      this.prevLargeIconViewer?.unmount();
-      this.prevLargeIconViewer = undefined;
     }
     if (this.enableSplit && !this.frameMounted) {
       const connectedFrame = document.getElementById("connect-frame");
@@ -201,10 +181,6 @@ export class AdminVerifyInit extends AdminBaseInit {
       childList: true,
       subtree: true,
     });
-
-    if (!$("#mcmodder-check-verification").length) {
-      this.appendCheckButton();
-    }
 
     const interval = this.configs.getSettings("alwaysNotifyVerification") ?? 0;
     if (interval > 0.1) {
@@ -601,44 +577,8 @@ export class AdminVerifyInit extends AdminBaseInit {
       this.iconModifier(content);
 
       const img = content.current.find("img");
-      const prevImg = content.previous.find("img");
       const src = img.attr("src");
       data[key] = src;
-
-      const viewerContainer = $("<div>").addClass("mcmodder-gifviewer-frame").insertAfter(img);
-      const blob = Utils.base642Blob(src);
-      GIFUtils.isGIFBlob(blob).then((isGIF) => {
-        if (!isGIF) return;
-        let viewer;
-        if (key === "icon-32x-data") {
-          viewer = this.smallIconViewer = createApp(GIFViewer, { parent: this.parent });
-        } else if (key === "icon-128x-data") {
-          viewer = this.largeIconViewer = createApp(GIFViewer, { parent: this.parent });
-        }
-        (viewer?.mount(viewerContainer.get(0)) as InstanceType<typeof GIFViewer> | undefined)?.set(
-          blob,
-        );
-      });
-
-      if (prevImg.length > 0) {
-        const src = prevImg.attr("src");
-        const blob = Utils.base642Blob(src);
-        GIFUtils.isGIFBlob(blob).then((isGIF) => {
-          if (!isGIF) return;
-          const prevViewerContainer = $("<div>")
-            .addClass("mcmodder-gifviewer-frame")
-            .insertAfter(prevImg);
-          let viewer;
-          if (key === "icon-32x-data") {
-            viewer = this.prevSmallIconViewer ??= createApp(GIFViewer, { parent: this.parent });
-          } else if (key === "icon-128x-data") {
-            viewer = this.prevLargeIconViewer ??= createApp(GIFViewer, { parent: this.parent });
-          }
-          (
-            viewer?.mount(prevViewerContainer.get(0)) as InstanceType<typeof GIFViewer> | undefined
-          )?.set(blob);
-        });
-      }
     };
   }
 
@@ -1273,34 +1213,6 @@ export class AdminVerifyInit extends AdminBaseInit {
   private rearrange() {
     const containerWidgets = $(".container-widget").children();
     containerWidgets.eq(1).insertAfter(containerWidgets.eq(-1));
-  }
-
-  /** 添加“一键查询待审项”快捷按钮 */
-  private appendCheckButton() {
-    $(
-      '<button class="btn" id="mcmodder-check-verification" data-toggle="tooltip" data-original-title="快捷统计全部所管理模组区域的待审项数目，并予以高亮提示！对资深编辑员不适用。">一键查询待审项</button>',
-    )
-      .insertAfter(".selectJump.bs3")
-      .click(() => this.getVerificationCount());
-    const autoVerifyDelay = this.configs.getSettings("autoVerifyDelay");
-    if (autoVerifyDelay && autoVerifyDelay >= 1e-2) {
-      const title = $(`<span style="margin-left: 10px;">距离自动查询: </span>`).insertAfter(
-        "#mcmodder-check-verification",
-      );
-      const text = $("<span>").appendTo(title).get(0);
-      createApp(Countdown, {
-        parent: this.parent,
-        dataGetter: TimerUtils.DATAGETTER_SCHEDULE(
-          "autoCheckVerify",
-          this.parent.currentUID,
-          this.parent.scheduleRequestUtils,
-        ),
-      }).mount(text);
-    }
-  }
-
-  private async getVerificationCount() {
-    this.parent.scheduleRequestUtils.run("autoCheckVerify");
   }
 
   /** 获取当前的待审列表是在何种配置下加载的 */

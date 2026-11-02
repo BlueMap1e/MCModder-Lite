@@ -1,5 +1,4 @@
 import { Utils } from "../Utils";
-import { Values } from "../Values";
 
 export const settings = [
   {
@@ -36,7 +35,7 @@ export const settings = [
             description:
               "输入一个图片链接 URL。若当前页面没有设置背景，则自动使用此背景。图像加载可能会拖慢页面载入时间，可输入 <code>none</code> 以禁用此特性。",
             type: "text",
-            value: Values.assets.bg,
+            value: "none",
           },
           {
             id: "defaultNightBackground",
@@ -44,7 +43,7 @@ export const settings = [
             description:
               "输入一个图片链接 URL，在夜间模式下此背景会覆盖默认背景。输入 <code>none</code> 以禁用此特性。",
             type: "text",
-            value: Values.assets.nightMode.bg,
+            value: "none",
           },
         ],
       },
@@ -191,12 +190,6 @@ export const settings = [
         label: "个人中心",
         settings: [
           {
-            id: "customAdvancements",
-            title: "成就拓展",
-            description: "启用自定义成就及相关特性。",
-            type: "checkbox",
-          },
-          {
             id: "autoCheckin",
             title: "自动签到",
             description: "每日首次访问百科，或是本机时间为 00:00:00 时，自动执行签到操作。",
@@ -286,13 +279,6 @@ export const settings = [
             id: "autoCloseSwal",
             title: "渐入佳境",
             description: "成功提交审核后不再强制跳转至待审列表页面。对免审编辑无效。",
-            type: "checkbox",
-          },
-          {
-            id: "multiDiffCompare",
-            title: "改动列表批量对比",
-            description:
-              "(WIP) 在改动列表页中分别选取起始项和终止项，即可一键获取并展示在此期间的所有改动详情。",
             type: "checkbox",
           },
           {
@@ -508,34 +494,9 @@ export const settings = [
         ],
       },
       {
-        id: "presubmit",
-        label: "预编辑",
-        settings: [
-          {
-            id: "preSubmitCheckInterval",
-            title: "预编辑检测间隔",
-            description:
-              "设置相邻两次自动检测预编辑资料是否具备可正式提交条件之间的最短冷却时间，单位为小时，设置为小于 0.1 以禁用所有预编辑相关特性。",
-            type: "number",
-            value: 0,
-            range: [0, null],
-          },
-        ],
-      },
-      {
         id: "verify",
         label: "后台管理",
         settings: [
-          {
-            id: "autoVerifyDelay",
-            title: "自动查询待审项",
-            description:
-              "当打开百科页面时，自动查询所管理模组的待审项，并弹出提示消息。设置相邻两次自动查询待审项之间的最短冷却时间，单位为小时，设置为小于 0.01 以禁用。",
-            type: "number",
-            value: 0,
-            range: [0, null],
-            visible: (ctx) => Utils.hasVerifyOperateAccess(ctx.permission),
-          },
           {
             id: "alwaysNotifyVerification",
             title: "实时更新审核项",
@@ -672,111 +633,6 @@ export const settings = [
               1: "大头钉",
               2: "爱心",
             },
-          },
-        ],
-      },
-    ],
-  },
-  {
-    id: "cloud",
-    label: "云端与更新",
-    sections: [
-      {
-        id: "cloud",
-        label: "云端服务",
-        settings: [
-          {
-            id: "useSupabase_v2",
-            title: "启用云端服务",
-            description:
-              "是否启用 Mcmodder 云端服务与功能。相关服务由 Supabase 驱动。若禁用此项，所有依赖云端服务的功能都不会运作。",
-            type: "checkbox",
-            value: true,
-          },
-          {
-            id: "fetchCustomSplashes",
-            title: "抓取云端闪烁标语",
-            description: "是否抓取与显示用户投稿并审核通过的 Supabase 云端闪烁标语。",
-            type: "checkbox",
-            visible: (ctx) => ctx.configs.getSettings("useSupabase_v2"),
-          },
-          {
-            id: "customSplashRate",
-            title: "云端标语替换概率 (%)",
-            description: "设置进入主页时使用云端自定义闪烁标语替换 MC百科 官方默认标语的概率。",
-            type: "number",
-            value: 50,
-            range: [0, 100],
-            visible: (ctx) =>
-              ctx.configs.getSettings("useSupabase_v2") &&
-              ctx.configs.getSettings("fetchCustomSplashes"),
-          },
-          {
-            id: "supabaseSplash",
-            title: "云端闪烁标语同步",
-            description:
-              "[需要用户认证] 启用后，脚本会将主页记录的闪烁标语自动上传到云端的闪烁标语库，同时记录标语贡献者。",
-            type: "checkbox",
-            visible: (ctx) => ctx.configs.getSettings("useSupabase_v2"),
-          },
-          {
-            id: "anonymiseSplashContributor",
-            title: "匿名闪烁标语贡献者",
-            description:
-              "(WIP) [需要用户认证] 启用后，您所提交的闪烁标语的贡献信息将对其他用户隐藏。",
-            type: "checkbox",
-            visible: (ctx) =>
-              ctx.configs.getSettings("useSupabase_v2") &&
-              ctx.configs.getSettings("supabaseSplash"),
-            syncWithSupabase: true,
-          },
-          {
-            id: "supabaseByteChart",
-            title: "云端字数统计数据",
-            description: "启用后，脚本会从云端读取贡献榜数据，用于显示个人主页的字数活跃图表。",
-            type: "checkbox",
-            visible: (ctx) =>
-              ctx.configs.getSettings("useSupabase_v2") && ctx.configs.getSettings("byteChart"),
-          },
-          {
-            id: "showUserBadge",
-            title: "脚本用户展示",
-            description:
-              "(WIP) [需要用户认证] 启用后，您将能够在短评区/留言板中看到其他同样正在使用 Mcmodder 且启用了此选项的用户！同时，您对于其他用户也是如此。",
-            type: "checkbox",
-            visible: (ctx) => ctx.configs.getSettings("useSupabase_v2"),
-            syncWithSupabase: true,
-          },
-          {
-            id: "customAttitude_v2",
-            title: "自定义表态",
-            description:
-              "启用自定义表态系统。可以浏览短评所获得的表态，完成用户认证后，还可进行发送表态、接收表态提醒、个人获得表态统计，以及贴纸的上传和使用等操作。",
-            type: "checkbox",
-            value: true,
-            visible: (ctx) => ctx.configs.getSettings("useSupabase_v2"),
-          },
-          {
-            id: "attitudeTwemoji",
-            title: "表态使用 Twemoji 字体",
-            description: "用 Mozilla Twemoji 字体渲染自定义表态 emoji，保证跨平台一致外观。",
-            type: "checkbox",
-            visible: (ctx) =>
-              ctx.configs.getSettings("useSupabase_v2") &&
-              ctx.configs.getSettings("customAttitude_v2"),
-          },
-        ],
-      },
-      {
-        id: "update",
-        label: "更新检查",
-        settings: [
-          {
-            id: "autoCheckUpdate",
-            title: "自动检查更新",
-            description: "每隔一段时间自动检查更新，并在有新更新可用时提醒。",
-            type: "checkbox",
-            value: true,
           },
         ],
       },
@@ -936,87 +792,10 @@ export const settings = [
         label: "杂项",
         settings: [
           {
-            id: "gtceuIntegration",
-            title: "GTCEu集成",
-            description: "将启用 GTCEu 相关特性。<del>绝对不是私货！！</del>",
-            type: "checkbox",
-          },
-          {
-            id: "freezeAdvancements",
-            title: "冻结进度",
-            description: "使窗口右上角弹出的进度框不再自动消失。快截图留念吧！",
-            type: "checkbox",
-          },
-          {
             id: "uploadFileButton",
             title: "上传文件按钮",
             description:
               "在编辑器的工具栏新增“上传文件”选项，允许用户将本地文件（如 WEBP, AVIF 文件等）上传到百科。请勿滥用，除非你想见到重生亲手把这个特性毙掉。（此特性由 pppopipupu 发现）",
-            type: "checkbox",
-          },
-        ],
-      },
-      {
-        id: "fun",
-        label: "娱乐",
-        settings: [
-          {
-            id: "almanacs",
-            title: "今日份好运",
-            description: "在百科主页加载并显示今日黄历，并可记录和查询历史黄历。",
-            type: "checkbox",
-          },
-          {
-            id: "enableSplashTracker",
-            title: "闪烁标语追踪器",
-            description:
-              "打开百科任意主页时，自动记录页面所弹出的<del>重生骚话语录</del>闪烁标语。",
-            type: "checkbox",
-          },
-          {
-            id: "splashStyle",
-            title: "闪烁标语渲染风格",
-            description: "选择主页闪烁标语的渲染效果。",
-            type: "dropdownMenu",
-            value: 0,
-            range: {
-              0: "默认风格",
-              1: "3D Bloom 旋转字 (WebGPU)",
-            },
-          },
-          {
-            id: "splashFontUrl",
-            title: "闪烁标语 3D 字体 URL",
-            description: "闪烁标语在 3D Bloom 风格下所使用的 TTF 字体 CDN 链接。",
-            type: "dropdownTextMenu",
-            value:
-              "https://cdn.jsdelivr.net.cn/npm/@electron-fonts/noto-sans-sc/fonts/NotoSansSC-Regular.ttf",
-            suggestion: [
-              {
-                text: "Noto Sans SC",
-                value:
-                  "https://cdn.jsdelivr.net.cn/npm/@electron-fonts/noto-sans-sc/fonts/NotoSansSC-Regular.ttf",
-                showValue: true,
-              },
-            ],
-            visible: (ctx) => ctx.configs.getSettings("splashStyle") === 1,
-          },
-          {
-            id: "enableLive2D",
-            title: "Live2D",
-            description: "召唤百科娘！（如果不小心赶跑了可以在这里恢复）",
-            type: "checkbox",
-          },
-          {
-            id: "enableAprilFools",
-            title: "愚人节特性",
-            description: "允许百科愚人节彩蛋在任意日期触发。",
-            type: "checkbox",
-          },
-          {
-            id: "lieqi",
-            title: "猎奇仙人",
-            description: "猎奇猎奇猎奇！！！",
             type: "checkbox",
           },
         ],

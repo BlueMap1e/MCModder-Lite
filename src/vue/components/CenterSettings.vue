@@ -51,41 +51,6 @@
                     :configs="configs"
                     :matched-ranges="matchedRanges.get(key.id)"
                   >
-                    <template v-if="key.id === 'autoCheckUpdate'" #afterInput>
-                      <button
-                        id="mcmodder-update-check-manual"
-                        class="btn"
-                        @click="() => parent.scheduleRequestUtils.run('autoCheckUpdate')"
-                      >
-                        立即检查更新
-                      </button>
-                      <Countdown
-                        :parent="parent"
-                        :data-getter="
-                          TimerUtils.DATAGETTER_SCHEDULE(
-                            'autoCheckUpdate',
-                            null,
-                            parent.scheduleRequestUtils,
-                          )
-                        "
-                      />
-                    </template>
-                    <template v-else-if="key.id === 'useSupabase_v2'" #afterInput>
-                      <span
-                        v-show="configs.getSettingsRef('useSupabase_v2').value"
-                        class="center-block-settings-authbinder"
-                      >
-                        <SupabaseAuthBinder :parent="parent" />
-                      </span>
-                    </template>
-                    <template v-if="key.id === 'useSupabase_v2'" #afterItem>
-                      <div
-                        v-show="configs.getSettingsRef('useSupabase_v2').value"
-                        class="center-block-settings-configloader"
-                      >
-                        <SupabaseConfigLoader :parent="parent" />
-                      </div>
-                    </template>
                   </ConfigInteractor>
                 </div>
               </template>
@@ -150,55 +115,8 @@
     </ul>
   </div>
 
-  <div class="center-block-head">
-    <span class="mcmodder-title-new">投稿自定义闪烁标语</span>
-    <span class="text"
-      >已登录用户可投稿标语至云端。投稿需经脚本管理员审核过审后方可被其它脚本用户抓取显示。</span
-    >
-  </div>
-
   <div class="center-setting-block">
-    <div class="setting-item" style="display: flex; gap: 8px; align-items: center">
-      <input
-        v-model="splashInput"
-        type="text"
-        class="form-control"
-        placeholder="输入自定义闪烁标语内容..."
-        style="max-width: 400px; display: inline-block"
-      />
-      <ButtonWithSpinner :on-click="submitSplash">提交投稿</ButtonWithSpinner>
-    </div>
-  </div>
-
-  <div class="center-block-head">
-    <span class="mcmodder-title-new">我的表态贴纸</span>
-    <span class="text"
-      >我上传与收藏的表态贴纸都会显示在这里；上传的贴纸可以共享到贴纸广场，供其他用户使用。贴纸的图片文件均保存在百科图床，因此同样会受到百科图床的上传限制。</span
-    >
-  </div>
-
-  <div class="center-setting-block">
-    <template v-if="attitudeStickersEnabled">
-      <AttitudeStickerList
-        :parent="parent"
-        :stickers="attitudeStickers"
-        :quota="attitudeStickerQuota"
-        :on-upload="uploadAttitudeSticker"
-        :on-share="shareAttitudeSticker"
-        :on-favorite="unfavoriteAttitudeSticker"
-        :on-delete="deleteAttitudeSticker"
-        @sticker-renamed="onStickerRenamed"
-        @sticker-removed="onStickerRemoved"
-      />
-      <button class="btn btn-light" @click="refreshAttitudeStickers(true)">刷新列表</button>
-    </template>
-    <p v-else class="text-muted" style="font-size: 13px">{{ attitudeStickersHint }}</p>
-  </div>
-
-  <div class="center-setting-block">
-    <div class="setting-item">
-      <button class="btn" @click="emptyScheduleRequest">清除当前所有计划任务</button>
-    </div>
+    <div class="setting-item"></div>
     <p class="text-muted">这在某些时候很有用——也许吧？</p>
   </div>
 </template>
@@ -209,15 +127,9 @@ import { Mcmodder } from "../../Mcmodder";
 import { Values } from "../../Values";
 import { TableUtils } from "../../table/Table.ts";
 import ConfigInteractor from "./config/ConfigInteractor.vue";
-import Countdown from "./Countdown.vue";
-import { TimerUtils } from "../../widget/TimerUtils.ts";
-import SupabaseConfigLoader from "./supabase/SupabaseConfigLoader.vue";
 import ConfigResourceInteractor from "./config/ConfigResourceInteractor.vue";
 import { Utils } from "../../Utils.ts";
 import ConfigResourceFileListInteractor from "./config/ConfigResourceFileListInteractor.vue";
-import SupabaseAuthBinder from "./supabase/SupabaseAuthBinder.vue";
-import AttitudeStickerList from "./attitude/AttitudeStickerList.vue";
-import ButtonWithSpinner from "./ButtonWithSpinner.vue";
 import type { ConfigMatchRanges } from "../../types/props";
 import type {
   ConfigResourceFileListInteractorProps,
@@ -443,118 +355,6 @@ const configResourceFileListInteractorProps = [
     name: "已保存的合成表 JSON 文件（仅脚本存储）",
   } satisfies ConfigResourceFileListInteractorProps<"mcmodderRecipeJsonStorage">,
 ] as const;
-
-function emptyScheduleRequest() {
-  const list = props.parent.scheduleRequestUtils.get();
-  if (list.length) {
-    props.parent.scheduleRequestUtils.empty();
-    Utils.commonMsg(`${list.length.toLocaleString()} 项计划任务已被清除~`);
-  } else {
-    Utils.commonMsg("当前没有计划任务~");
-  }
-}
-
-/** 我上传的表态贴纸（图片存于百科图床，云端只登记归属） */
-const attitudeStickers = ref<SupabaseAttitudeSticker[]>([]);
-const attitudeStickerQuota = ref<SupabaseAttitudeStickerQuota | null>(null);
-const attitudeStickersLoading = ref(false);
-
-const customAttitudeEnabled = configs.value.getSettingsRef("customAttitude_v2");
-const useSupabaseEnabled = configs.value.getSettingsRef("useSupabase_v2");
-/** 表态与云端开关都打开且已认证时才可用 */
-const attitudeStickersEnabled = computed(
-  () =>
-    customAttitudeEnabled.value &&
-    useSupabaseEnabled.value &&
-    !!props.parent.attitudeSystem.getAuthKey(),
-);
-const attitudeStickersHint = computed(() => {
-  if (!customAttitudeEnabled.value) return "自定义表态未开启：可在上方开启后再管理表态贴纸。";
-  if (!useSupabaseEnabled.value) return "云端服务未开启：可在上方开启后再管理表态贴纸。";
-  return "尚未完成云端认证：请先在上方完成认证。";
-});
-
-async function refreshAttitudeStickers(force = false) {
-  if (!attitudeStickersEnabled.value) return;
-  attitudeStickersLoading.value = true;
-  try {
-    const data = await props.parent.attitudeSystem.listMyStickers(force);
-    if (!data) return;
-    attitudeStickers.value = data.stickers;
-    attitudeStickerQuota.value = data.quota ?? null;
-  } finally {
-    attitudeStickersLoading.value = false;
-  }
-}
-
-async function uploadAttitudeSticker(file: File) {
-  await props.parent.attitudeSystem.uploadSticker(file);
-  await refreshAttitudeStickers(true);
-}
-
-/** 面板内重命名成功：替换列表里的旧记录（AttitudeSystem 的缓存已由面板同步） */
-function onStickerRenamed(sticker: SupabaseAttitudeSticker) {
-  const index = attitudeStickers.value.findIndex((item) => item.id === sticker.id);
-  if (index >= 0) attitudeStickers.value[index] = sticker;
-}
-
-/** 贴纸被删除 / 移出贴纸库：把列表里的对应项剔除 */
-function onStickerRemoved(sticker: SupabaseAttitudeSticker) {
-  attitudeStickers.value = attitudeStickers.value.filter((item) => item.id !== sticker.id);
-}
-
-async function shareAttitudeSticker(sticker: SupabaseAttitudeSticker) {
-  const ok = await props.parent.attitudeSystem.shareSticker(sticker.id, !sticker.shared_at);
-  if (ok) await refreshAttitudeStickers(true);
-  return ok;
-}
-
-async function unfavoriteAttitudeSticker(sticker: SupabaseAttitudeSticker) {
-  const result = await props.parent.attitudeSystem.favoriteSticker(sticker.id, false);
-  if (!result) return false;
-  await refreshAttitudeStickers(true);
-  return true;
-}
-
-async function deleteAttitudeSticker(sticker: SupabaseAttitudeSticker) {
-  const ok = await props.parent.attitudeSystem.deleteSticker(sticker.id);
-  if (ok) attitudeStickers.value = attitudeStickers.value.filter((item) => item.id !== sticker.id);
-  return ok;
-}
-
-onMounted(() => void refreshAttitudeStickers());
-watch(attitudeStickersEnabled, (enabled) => {
-  if (enabled) void refreshAttitudeStickers();
-});
-
-const splashInput = ref<string>("");
-
-async function submitSplash() {
-  const content = splashInput.value.trim();
-
-  if (!content) {
-    Utils.commonMsg("标语内容不能为空！", false);
-    return;
-  }
-
-  if (!props.parent.currentUID) {
-    Utils.commonMsg("请先登录 MC百科 账号后再发起投稿！", false);
-    return;
-  }
-
-  const authKey = configs.value.getProfile("auth_key");
-  if (!authKey) {
-    Utils.commonMsg("未获取到登录校验 Key，请重新登录！", false);
-    return;
-  }
-
-  const res = await props.parent.supabaseUtils.uploadCustomSplash(content, authKey);
-
-  if (res && res.message) {
-    Utils.commonMsg(res.message);
-    splashInput.value = "";
-  }
-}
 
 function goto(type: "category" | "section", id: string) {
   const target = $(settingsContentRef.value!).find(`[data-${type}=${id}]`);

@@ -1,16 +1,9 @@
 import { GM_getValue, GM_openInTab, GM_setValue } from "$";
-import { AdvancementID, AdvancementUtils } from "./advancement/AdvancementUtils";
 import { ConfigUtils } from "./config/ConfigUtils";
-import { DraggableFrame } from "./widget/draggable/DraggableFrame";
-import { AdvancementLoader } from "./loader/AdvancementLoader";
 import { MemuCommandLoader } from "./loader/MenuCommandLoader";
-import { ScheduleRequestLoader } from "./loader/ScheduleRequestLoader";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
 import { StyleLoader } from "./loader/StyleLoader";
-import { ScheduleRequestUtils } from "./schedulerequest/ScheduleRequestUtils";
 import { StorageBuffer } from "./StorageBuffer";
-import { ModalBroadcaster } from "./modal/ModalBroadcaster";
-import { RequestToastBroadcaster } from "./widget/toast/RequestToastBroadcaster";
 import { AdvancedUEditor } from "./ueditor/AdvancedUEditor";
 import { UEditor } from "./ueditor/UEditor";
 import { Utils, type ThemeColorSet } from "./Utils";
@@ -20,10 +13,6 @@ import { InitLoader } from "./loader/InitLoader";
 import { GeneralEditInit } from "./init/GeneralEditInit";
 import { EditorInit } from "./init/EditorInit";
 import { Swiper } from "./widget/Swiper";
-import { SupabaseUtils } from "./supabase/SupabaseUtils";
-import { AttitudeSystem } from "./attitude/AttitudeSystem";
-import { Splash3D } from "./widget/Splash3D";
-import { EchartsUtils } from "./echarts/EChartsUtils";
 import { createApp } from "vue";
 import FavUser from "./vue/components/FavUser.vue";
 import ProfileSelector from "./vue/components/ProfileSelector.vue";
@@ -40,11 +29,7 @@ export class Mcmodder {
   configRepository: ConfigRepository;
   currentUID: number;
   currentUsername: string;
-  advutils: AdvancementUtils;
-  scheduleRequestUtils: ScheduleRequestUtils;
   storageBuffer: StorageBuffer;
-  modalBroadcaster: ModalBroadcaster;
-  requestToastBroadcaster: RequestToastBroadcaster;
   initList: Init[] = [];
   readonly isV4: boolean;
   readonly isMac: boolean;
@@ -53,12 +38,8 @@ export class Mcmodder {
   ueditorFrame: UEditor[];
   screenAttachedFrame: ScreenAttachedFrameData[];
   cfgutils: ConfigUtils;
-  supabaseUtils: SupabaseUtils;
   /** 自定义表态系统（全站单例：短评页与消息中心共用同一份计数缓存与未读统计） */
-  attitudeSystem: AttitudeSystem;
-  echartsUtils: EchartsUtils;
   styleColors: ThemeColorSet;
-  splash3D?: Splash3D;
   preferredWiderScreen = false;
   isNightMode = false;
   title = "";
@@ -100,26 +81,11 @@ export class Mcmodder {
     this.storageBuffer = new StorageBuffer(this);
     StorageBufferLoader.run(this.storageBuffer);
 
-    this.modalBroadcaster = new ModalBroadcaster(this);
-    this.requestToastBroadcaster = new RequestToastBroadcaster(this);
-
     this.utils = new Utils(this);
     this.configRepository = this.utils.configs;
 
-    this.echartsUtils = new EchartsUtils(this);
-
     this.cfgutils = new ConfigUtils(this);
     this.styleColors = Utils.getThemeColors(this.configRepository);
-
-    this.advutils = new AdvancementUtils(this);
-    AdvancementLoader.run(this.advutils);
-
-    this.scheduleRequestUtils = new ScheduleRequestUtils(this);
-    ScheduleRequestLoader.run(this.scheduleRequestUtils);
-
-    this.supabaseUtils = new SupabaseUtils(this);
-
-    this.attitudeSystem = AttitudeSystem.for(this);
 
     InitLoader.run(this, this.initList);
 
@@ -302,19 +268,9 @@ export class Mcmodder {
     this.updateTitleNode();
   }
 
-  /**
-   * 刷新页头铃铛未读数：站点消息数 + 未确认的自定义表态数（表态数走 `attitude-inbox` 的增量
-   * `check`，只在进入页面时调用一次）。
-   */
-  async refreshBellNotify() {
-    const count = await this.attitudeSystem.getNewCount();
-    if (count === undefined) return;
-    this.notifyUnreadMessage(this.msgSiteCount + count);
-  }
-
   /** 只按缓存数据重画铃铛（站点刷新消息数时用，不发请求） */
   private applyBellNotify() {
-    this.notifyUnreadMessage(this.msgSiteCount + this.attitudeSystem.getCachedNewCount());
+    this.notifyUnreadMessage(this.msgSiteCount);
   }
 
   updateTitleNode(count = this.msgAlertCount) {
@@ -455,99 +411,6 @@ export class Mcmodder {
     }
   }
 
-  async trackSplash() {
-    const win =
-      typeof (globalThis as any).unsafeWindow !== "undefined"
-        ? (globalThis as any).unsafeWindow
-        : window;
-    if ((win as any).__mcmodder_splash_tracked__) return;
-    if ((win as any).__mcmodder_custom_splash__) {
-      (win as any).__mcmodder_splash_tracked__ = true;
-      return;
-    }
-
-    let splashText = (win as any).__mcmodder_orig_splash__ || "";
-    if (!splashText) {
-      if (this.href === `${this.hostname}/`) splashText = $(".ooops .text").first().text();
-      else if (this.href === `${this.hostname}/v4/`) splashText = $(".splash span").first().text();
-    }
-    if (!splashText) return;
-
-    (win as any).__mcmodder_splash_tracked__ = true;
-    splashText = splashText.replace(this.currentUsername || "百科酱", "%s");
-    const splashes: string[] = GM_getValue("mcmodderSplashList_v2")?.split("\n") || [];
-    let flag = 0,
-      index = -1;
-    splashes.forEach((e, i) => {
-      const d = e.split(",");
-      if (d[1] === splashText) {
-        flag = Number(d[2]) + 1;
-        d[2] = flag.toString();
-        index = i;
-      }
-    });
-    if (!flag) splashes.push(`${Date.now()},${splashText},1`);
-    else splashes[index] = splashes[index].slice(0, splashes[index].lastIndexOf(",") + 1) + flag;
-    GM_setValue("mcmodderSplashList_v2", splashes.join("\n"));
-    if (flag)
-      Utils.commonMsg(`该标语在本地累计已出现 ${flag.toLocaleString()} 次~ 内容为: ${splashText}`);
-    else Utils.commonMsg(`成功记录新的闪烁标语~ 内容为: ${splashText}`);
-
-    if (this.configRepository.getSettings("supabaseSplash")) {
-      if (!this.supabaseUtils.hasClient() || !this.currentUID) return;
-      const resp = await this.supabaseUtils.invoke<SupabaseTrackSplashResponse>(
-        "track_splash_v2",
-        {
-          body: {
-            auth_key: this.configRepository.getProfile("auth_key"),
-            splash_text: splashText,
-          },
-        },
-        (errorMsg) => {
-          if (this.isV4) Utils.commonMsg(errorMsg, false);
-          else
-            (swal as any)({
-              type: "error",
-              title: "遇到问题",
-              text: errorMsg,
-              buttons: false,
-              timer: 3e3,
-            });
-        },
-      );
-      if (!resp) return;
-      let msg: string;
-      if (resp.count == 1) {
-        msg = "此标语是首次收录！";
-      } else {
-        msg = `此标语已是第 ${resp.count.toLocaleString()} 次收录`;
-        if (resp.last_visited_user_id) {
-          const last = Date.parse(resp.last_visited_at);
-          const time = Date.now() - last;
-          const formattedTime = Utils.getFormattedTime(time);
-          const username = resp.last_visited_user_name;
-          const userID = resp.last_visited_user_id;
-          const user = userID
-            ? userID > 0
-              ? `用户 ${username} (UID:${resp.last_visited_user_id}) `
-              : "匿名用户"
-            : "未登录用户";
-          msg += `，上一次由${user}于 ${formattedTime} 前记录`;
-        }
-        msg += "~";
-      }
-      if (this.isV4) Utils.commonMsg(msg);
-      else
-        (swal as any)({
-          type: "success",
-          title: "标语已上传",
-          text: msg,
-          buttons: false,
-          timer: 3e3,
-        });
-    }
-  }
-
   tableFix() {
     $("table [align]")
       .each((_, c) => {
@@ -581,7 +444,6 @@ export class Mcmodder {
       if ($("#item-cover-preview-img").first().attr("src") === Values.assets.mcmod.imagesNone) {
         $("#item-cover-preview-img").attr("src", Values.assets.nightMode.imagesNone);
       }
-      this.echartsUtils.enableNightStyle();
       $("html").addClass("dark");
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").addClass("dark");
@@ -596,7 +458,6 @@ export class Mcmodder {
       if ($("#item-cover-preview-img").first().attr("src") === Values.assets.nightMode.imagesNone) {
         $("#item-cover-preview-img").attr("src", Values.assets.mcmod.imagesNone);
       }
-      this.echartsUtils.disableNightStyle();
       $("html").removeClass("dark");
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").removeClass("dark");
@@ -624,14 +485,6 @@ export class Mcmodder {
     }
   }
 
-  /** 切换表态 emoji 的 Twemoji 渲染（`html.mcmodder-attitude-twemoji` 为样式开关，无需重载） */
-  updateAttitudeFont() {
-    $("html").toggleClass(
-      "mcmodder-attitude-twemoji",
-      !!this.configRepository.getSettings("attitudeTwemoji"),
-    );
-  }
-
   switchNightMode() {
     // 只写配置，由 updateNightMode() 依据配置同步 isNightMode 与页面状态；
     // 这里显式再调一次，避免依赖 Vue watcher 的异步时机。
@@ -654,7 +507,6 @@ export class Mcmodder {
   private watchRef() {
     this.configRepository.watchSettingsRef("nightMode", () => this.updateNightMode());
     this.configRepository.watchSettingsRef("preferredWiderScreen", () => this.updatePageWidth());
-    this.configRepository.watchSettingsRef("attitudeTwemoji", () => this.updateAttitudeFont());
   }
 
   main() {
@@ -694,55 +546,6 @@ export class Mcmodder {
     // 闪烁标语追踪系统升级
     if (GM_getValue("mcmodderSplashList")) {
       this.updateSplashListData();
-    }
-
-    // 闪烁标语追踪器
-    if (
-      this.href === `${this.hostname}/` ||
-      this.href === `${this.hostname}/v4/` ||
-      this.href === "https://play.mcmod.cn/"
-    ) {
-      this.trackSplash();
-      setTimeout(() => this.trackSplash(), 3e2);
-    }
-
-    // 后台抓取并更新云端自定义标语列表缓存
-    if (
-      this.configRepository.getSettings("useSupabase_v2") &&
-      this.configRepository.getSettings("fetchCustomSplashes")
-    ) {
-      this.supabaseUtils
-        .fetchCustomSplashes()
-        .then((list) => {
-          if (list && Array.isArray(list)) {
-            GM_setValue("mcmodderCustomSplashes", JSON.stringify(list));
-          }
-        })
-        .catch(() => {});
-    }
-    if (
-      this.configRepository.getSettings("splashStyle") === 1 &&
-      (this.href === `${this.hostname}/` || this.href === `${this.hostname}/v4/`)
-    ) {
-      this.splash3D = new Splash3D(this);
-      this.splash3D.init();
-    }
-    // 冻结进度
-    if (this.configRepository.getSettings("freezeAdvancements")) {
-      $(".common-task-tip").attr({
-        id: "task-mcmodder-frozen",
-        class: "mcmodder-task-tip",
-      });
-    }
-
-    // 愚人节特性
-    if (this.configRepository.getSettings("enableAprilFools")) {
-      if (this.href.includes("/author/22957.html")) {
-        $("div.author-user-avatar img").attr(
-          "src",
-          "https://i.mcmod.cn/editor/upload/20230331/1680246648_2_vWiM.gif",
-        );
-      }
     }
 
     // 表格修复
@@ -875,7 +678,6 @@ export class Mcmodder {
 
     this.updateNightMode();
     this.updatePageWidth();
-    this.updateAttitudeFont();
 
     if (!this.configRepository.getSettings("adaptableNightMode")) {
       $(
@@ -920,11 +722,6 @@ export class Mcmodder {
           GM_openInTab(`${this.hostname}/message/`, { active: true });
           this.msgSiteCount = 0;
           this.notifyUnreadMessage(0);
-          // 表态消息同样清空未读并确认提醒
-          void this.attitudeSystem
-            .markAllRead()
-            .then(() => this.attitudeSystem.acknowledgeNew())
-            .then(() => this.refreshBellNotify());
         });
     }
 
@@ -933,8 +730,6 @@ export class Mcmodder {
       $(".header-user-msg").remove();
       $(`<div class="mcmodder-rednum">`).appendTo("#mcmodder-message-center");
       this.applyBellNotify();
-      // 自定义表态提醒：进入页面时检查一次，结果与站点消息数叠加
-      if (this.currentUID) void this.refreshBellNotify();
     }
 
     if (typeof editor != "undefined") this.callEditor();
@@ -967,27 +762,6 @@ export class Mcmodder {
         },
       );
       window.dispatchEvent(new Event("resize"));
-    }
-
-    if (this.isV4 && this.configRepository.getSettings("customAdvancements")) {
-      // 更新自定义成就
-      const completed = this.configRepository.getProfile("completed");
-      if (completed) {
-        completed.split(",")?.forEach((sid) => {
-          const id = Number(sid);
-          const data = this.advutils.getData(id);
-          Utils.showTaskTip(
-            data.image || "",
-            PublicLangData.center.task.list[data.lang].title,
-            PublicLangData.center.task.list[data.lang].content,
-            "",
-            data.range,
-            "",
-          );
-          // playSound();
-        });
-      }
-      this.configRepository.setProfile("completed", "");
     }
 
     // 实时通讯
@@ -1046,45 +820,6 @@ export class Mcmodder {
         const heightRight = areaRight.get(0).getBoundingClientRect().height;
         $(".col-lg-12.right").css("min-height", `${Math.max(heightLeft, heightRight)}px`);
       }, 1e3);
-    }
-
-    if (
-      this.href.startsWith(this.hostname) &&
-      !this.href.includes("tools/cbcreator") &&
-      this.configRepository.getSettings("enableLive2D")
-    ) {
-      const waifuFrame = $(`<div class="waifu">
-        <div class="waifu-tips" style="opacity: 0;"></div>
-        <canvas id="live2d" width="220" height="260" class="live2d"></canvas>
-        <ul class="waifu-tool">
-          <li name="menu" page="pageHome" class="active">
-            <span data-original-title="返回主页" data-toggle="tooltip" class="fui-home"></span>
-          </li>
-          <li>
-            <span data-original-title="赶走" data-toggle="tooltip" class="fui-cross"></span>
-          </li>
-        </ul>
-      </div>`).prependTo("body");
-      new DraggableFrame(waifuFrame);
-
-      $(
-        `<link rel="stylesheet" type="text/css" href="${this.hostname}/live2d/waifu.css">`,
-      ).appendTo("head");
-
-      $(`
-        <script src="${this.hostname}/live2d/waifu-tips.js" />
-        <script src="${this.hostname}/live2d/live2d.js" />
-        <script type="text/javascript">initModel("${this.hostname}/live2d/")</script>
-      `).appendTo("body");
-
-      $(document).on("click", ".waifu-tool .fui-cross", () => {
-        $.cookie("mcmodgirl_hide", null, { path: "/" });
-        this.configRepository.setSettings("enableLive2D", false);
-      });
-      if (this.configRepository.getSettings("customAdvancements"))
-        $(document).on("click", ".waifu", () => {
-          this.advutils.addProgress(AdvancementID.CLICK_GIRL_100_TIMES);
-        });
     }
 
     $(".common-background").remove();

@@ -7,14 +7,6 @@ export class Values {
     settings: function () {
       GM_openInTab("https://center.mcmod.cn/#/setting/", { active: true });
     },
-    structureEditor: function () {
-      GM_openInTab(`${Values.hostname}/mcmodder/structureeditor/`, {
-        active: true,
-      });
-    },
-    jsonHelper: function () {
-      GM_openInTab(`${Values.hostname}/mcmodder/jsonhelper/`, { active: true });
-    },
     exportLogs: function () {
       $("html")
         .empty()
@@ -183,67 +175,6 @@ export class Values {
         ],
       },
     },
-  } as const;
-
-  /**
-   * 自定义表态（短评）相关常量。
-   *
-   * 请求批量上限（`maxCountsPerRequest` / `maxResolvePerRequest`）须与服务端一致：
-   * `mcmodder_attitude_counts` 与 `mcmodder_attitude_stickers_by_ids` 均为 200。
-   */
-  static readonly attitude = {
-    devilAngry: {
-      type: "devil-angry",
-      title: "恶魔安格瑞",
-      icon: (
-        import.meta.glob("./assets/attitude/devilAngry.svg", {
-          query: "?raw",
-          eager: true,
-        })["./assets/attitude/devilAngry.svg"] as { default: string }
-      ).default,
-    },
-    emojiDataUrl:
-      "https://cdn.jsdelivr.net.cn/npm/emoji-picker-element-data@1/zh/emojibase/data.json",
-    /** Twemoji 官方 SVG 目录（`<codepoint>.svg`） */
-    emojiSvgUrl: "https://cdn.jsdelivr.net.cn/gh/jdecked/twemoji@v15.0.3/assets/svg/",
-    /** Twemoji COLR 字体覆盖到 Emoji 15.0，选择器据此裁剪超出部分 */
-    emojiVersion: 15.0,
-    /** 选择面板「最近使用」保留的 emoji 个数 */
-    recentEmojisLimit: 12,
-    /**
-     * 表态贴纸：图片本体上传到百科图床（站点 UEditor 图片接口），云端只登记归属，
-     * 表态类型为 `sticker:<贴纸 id>`；每日新建数量由服务端限制。
-     */
-    sticker: {
-      /** 表态类型前缀：`sticker:<贴纸 id>`（服务端 `attitude-put` 按同一前缀解析） */
-      prefix: "sticker:",
-      /** 百科图床（站点 UEditor 图片上传接口） */
-      uploadUrl: "https://center.mcmod.cn/ueditor/php/controller.php?action=uploadimage",
-      /** 本地图片体积上限（字节）：与站点 UEditor 默认的 `imageMaxSize` 一致 */
-      maxUploadBytes: 2 * 1024 * 1024,
-      /** 可选图片来源：`<input accept>` 与服务端按扩展名判定的图床白名单对齐 */
-      uploadAccept: "image/png,image/jpeg,image/gif,image/bmp",
-      /** 「我的贴纸」列表与今日额度的缓存有效期 */
-      listCacheTtl: 30 * 1000,
-      /** 贴纸广场单页条数 */
-      plazaPageSize: 24,
-      /** 单次 `resolve` 携带的贴纸 id 上限（与服务端一致） */
-      maxResolvePerRequest: 200,
-    },
-    /** 表态消息中心单页条数 */
-    inboxPageSize: 20,
-    /** 表态消息未读数缓存有效期（页头提醒与消息中心徽标共用） */
-    unreadCacheTtl: 60 * 1000,
-    /**
-     * 表态提醒检查结果的复用窗口：同一浏览器连续开页时去重，检查本身只在进入页面时发起一次。
-     *
-     * 这是「每次导航都可能发一次请求」的关口：取 1 分钟，红点最多滞后 1 分钟，同时把活跃浏览时的
-     * 检查次数压到每分钟一次（原先 20 秒等于每次导航都发）。
-     */
-    remindCacheTtl: 60 * 1000,
-    countsCacheTtl: 60 * 1000,
-    countsDebounce: 300,
-    maxCountsPerRequest: 200,
   } as const;
 
   static readonly mcmodderVersion = GM_info.script.version || "Unknown";

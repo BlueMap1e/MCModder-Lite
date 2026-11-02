@@ -1,6 +1,5 @@
 import { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
-import { Values } from "../Values";
 
 /**
  * 样式加载器：把若干张「调色盘」展开为 `--mcmodder-color-*` CSS 变量，
@@ -127,8 +126,6 @@ export class StyleLoader {
 
     const baseCss = importCSS("base");
     const mcmodderUICss = importCSS("mcmodderUI");
-    const attitudeCss = importCSS("attitude");
-    const aprilFoolsCss = importCSS("aprilFools");
     const tableThemeColorCss = importCSS("tableThemeColor");
     const tableLeftAlignCss = importCSS("tableLeftAlign");
     const tabSelectorInfoCss = importCSS("tabSelectorInfo");
@@ -374,8 +371,6 @@ export class StyleLoader {
         "link-foot": "#008000",
         "channel-1": "#334bdb",
         "channel-2": "#904623",
-        "almanacs-good": "#f7f7b880",
-        "almanacs-bad": "#ffceac80",
         "copyright-title": "#3b566e",
         "copyright-text": "#6f8ba4",
         "alert-primary-1": "#004085",
@@ -405,21 +400,6 @@ export class StyleLoader {
         "platform-javaagent": "#111827",
         uknowtoomuch: "#000",
         "uknowtoomuch-hover": "#fff",
-        "attitude-up": "#09f",
-        "attitude-grintears": "#ad901c",
-        "attitude-heart": "#c03",
-        "attitude-flushed": "#000",
-        "attitude-cry": "#36c",
-        "attitude-meh": "#777",
-        "attitude-down": "#222",
-        "attitude-lemon": "#938626",
-        "attitude-horsehead": "#74260c",
-        "attitude-heartbroken": "#900",
-        "attitude-angry": "#f30",
-        "attitude-tired": "#960",
-        "attitude-snowflake": "#39c",
-        "attitude-handshake": "#363",
-        "attitude-devil-angry": "#8a1212",
         "classstatus-1": "#2cbe4e",
         "classstatus-2": "#cb6431",
         "classstatus-3": "#cb2431",
@@ -456,8 +436,6 @@ export class StyleLoader {
         "link-foot": "#3a3",
         "channel-1": "#8af",
         "channel-2": "#fa8",
-        "almanacs-good": "#4428",
-        "almanacs-bad": "#4328",
         "copyright-title": "#8cf",
         "copyright-text": "#8bd",
         "alert-primary-1": "#bdf",
@@ -480,21 +458,6 @@ export class StyleLoader {
         "version-release-2": "#5858",
         uknowtoomuch: "#444",
         "uknowtoomuch-hover": "#ddd",
-        "attitude-up": "#09f",
-        "attitude-grintears": "#db1",
-        "attitude-heart": "#f14",
-        "attitude-flushed": "#fff",
-        "attitude-cry": "#9be",
-        "attitude-meh": "#999",
-        "attitude-down": "#666",
-        "attitude-lemon": "#a93",
-        "attitude-horsehead": "#d64",
-        "attitude-heartbroken": "#a11",
-        "attitude-angry": "#f30",
-        "attitude-tired": "#b71",
-        "attitude-snowflake": "#7ac",
-        "attitude-handshake": "#383",
-        "attitude-devil-angry": "#ff4d4d",
         "classstatus-1": "#183",
         "classstatus-2": "#852",
         "classstatus-3": "#822",
@@ -505,8 +468,8 @@ export class StyleLoader {
       [],
     );
 
-    const bg = configs.getSettings("defaultBackground") || Values.assets.bg;
-    const bgNight = configs.getSettings("defaultNightBackground") || Values.assets.nightMode.bg;
+    const bg = configs.getSettings("defaultBackground") || "none";
+    const bgNight = configs.getSettings("defaultNightBackground") || "none";
     const otherCss = `
       --mcmodder-image-background: ${bg === "none" ? "none" : `url(${bg}) fixed`};
     `;
@@ -535,8 +498,6 @@ export class StyleLoader {
       }`,
       base: baseCss,
       mcmodderUI: mcmodderUICss,
-      attitude: attitudeCss,
-      aprilFools: aprilFoolsCss,
       tableThemeColor: tableThemeColorCss,
       tableLeftAlign: tableLeftAlignCss,
       tabSelectorInfo: tabSelectorInfoCss,
@@ -561,9 +522,6 @@ export class StyleLoader {
     // if (configs.get("mcmodderUI")) {
     style += css.mcmodderUI;
     // }
-    if (configs.getSettings("customAttitude_v2")) {
-      style += css.attitude;
-    }
     if (/* configs.get("mcmodderUI") && */ configs.getSettings("tableThemeColor")) {
       style += css.tableThemeColor;
     }
@@ -579,10 +537,6 @@ export class StyleLoader {
     // if (configs.get("markdownIt")) {
     style += css.codemirrorCss;
     // }
-    if (configs.getSettings("enableAprilFools")) {
-      /* McmodderUtils.addStyle(" .center-task-block:first-child { animation:aprilfools 2.75s linear infinite; background:#FFF; z-index:999; } @keyframes aprilfools { 0% { -webkit-transform:rotate(0deg); } 25% { -webkit-transform:rotate(90deg); } 50% { -webkit-transform:rotate(180deg); } 75% { -webkit-transform:rotate(270deg); } 100% { -webkit-transform:rotate(360deg); } } ") */
-      style += css.aprilFools;
-    }
     style += css.reducedMotion;
 
     parent.css = style;

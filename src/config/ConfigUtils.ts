@@ -64,7 +64,6 @@ export class ConfigUtils {
       ...("range" in params && { range: params.range }),
       ...("suggestion" in params && { suggestion: params.suggestion }),
       ...("visible" in params && { visible: params.visible }),
-      ...("syncWithSupabase" in params && { syncWithSupabase: params.syncWithSupabase }),
     } as ConfigurableSettingsOption<ConfigurableSettings["id"]>;
     this.setOption(data as ConfigurableSettingsOptions, id, option);
     if (this.configs.getSettings(id) === undefined) {

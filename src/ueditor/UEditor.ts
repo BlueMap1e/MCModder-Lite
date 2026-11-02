@@ -66,6 +66,8 @@ export class UEditor {
   body?: HTMLElement;
   /** {@link body} 的 jQuery 包装 */
   $body?: JQuery;
+  /** 观察 {@link body} 子树变化的兜底观察器（contentchange 有漏触发路径，尾随行内部变化也需捕获） */
+  bodyObserver?: MutationObserver;
 
   /**
    * @param editor 百科的原生编辑器实例。
@@ -158,27 +160,131 @@ export class UEditor {
       this.ensureTrailingParagraph();
       this.updateEditorStats();
     });
+    // contentchange 并不在所有正文变更路径上触发：UEditor 的按键处理（如 Firefox 下
+    // Backspace 合并删除尾随空段落）会拦截默认行为后直接改 DOM，部分路径不 fire 事件，
+    // 导致补段落失效、高度滞留。挂 MutationObserver 兜底保证始终跟随真实 DOM；
+    // subtree 必须开：删掉尾随行内部的 <br>（墙的形态 2）只改 p 的子节点，body 层
+    // childList 看不见（诊断日志实证）。归一化自身幂等，不会形成循环。
+    this.bodyObserver = new MutationObserver(() => this.scheduleBodySync());
+    this.bodyObserver.observe(this.body!, { childList: true, subtree: true });
+    this.attachTableEscapeKeyHandler();
+    // 兜底的兜底：contentchange / MutationObserver 这类事件路径在个别环境下存在
+    // 无法本地复现的失效（Tampermonkey 沙箱 realm 与页面 realm 的调度差异，
+    // 实机中高频退格可击穿，而本地 Playwright 无法复现）。selectionchange 是浏览器
+    // 原生事件（光标移动/选区变化必发，不经过 UEditor），配合低频 watchdog 轮询，
+    // 二者都只做幂等修复：即使事件路径全部失守，状态最迟在下一次光标移动或 1.5s 内自愈。
+    this.document!.addEventListener("selectionchange", () => this.scheduleBodySync());
+    window.setInterval(() => this.scheduleBodySync(), 1500);
     // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
     this.ensureTrailingParagraph();
   }
 
+  /** body 直接子节点变化后的同步任务是否已在队列中（微任务去重） */
+  private bodySyncQueued = false;
+
+  /** 在微任务里去重执行补段落 + 高度重算，同一批连续 DOM 变更只处理一次 */
+  private scheduleBodySync() {
+    if (this.bodySyncQueued) return;
+    this.bodySyncQueued = true;
+    queueMicrotask(() => {
+      this.bodySyncQueued = false;
+      this.ensureTrailingParagraph();
+      this.updateEditorStats();
+    });
+  }
+
   /**
-   * 若正文的最后一个元素是表格，则在末尾补一个空段落。
+   * 「表格末行末列的空单元格」按键逃逸。
    *
-   * 资料以表格结尾时，正文里没有可放置光标的"表格之后的落点"：
-   * 浏览器（Firefox / Chromium 均如此）会把光标困在最后一个单元格里，且此时新建的行
-   * 会从表格继承 UEditor 自带的 `table { white-space: nowrap }`（新版浏览器会把它
-   * 以内联 `text-wrap-mode: nowrap` 烤进新行），导致表格后的文字永远不换行，
-   * 表格因此成为无法绕过的"一堵墙"。百科原版保存的资料通常带有这个尾随空段落
-   * （即用户所知的"最后一行通常会自动给定一个换行符"），但 Markdown → HTML 重写
-   * 等场景产生的正文没有它。这里在内容变化后按需补上，恢复原版体验。
+   * UEditor 的表格按键处理会把方向键接管为表格内导航（preventDefault 后自己移动光标），
+   * 光标位于空单元格时尤其如此：ArrowDown 被拦截、End/ArrowRight/Tab 全是格间移动，
+   * 即使表格后已有尾随段落，键盘也无法离开表格——这是"表格墙"在快速删空单元格后的
+   * 残留形态（实测 Firefox，无脚本对照下有内容的单元格同样逃不出去，是原版即有的墙）。
+   * 这里在 iframe 文档的**捕获阶段**拦截：光标折叠于表格最后一个单元格且该单元格为空、
+   * 按下 ArrowDown/ArrowRight 时，先把光标移到表格之后的块级元素（没有则先补尾随段落），
+   * 再阻止 UEditor 的导航接管。有内容的单元格交给原生行为（配合尾随段落原生即可逃逸）。
+   */
+  private attachTableEscapeKeyHandler() {
+    const doc = this.document;
+    if (!doc || !this.body || !this.window) return;
+    doc.addEventListener(
+      "keydown",
+      (ev: KeyboardEvent) => {
+        if (ev.key !== "ArrowDown" && ev.key !== "ArrowRight") return;
+        if (ev.shiftKey || ev.altKey || ev.ctrlKey || ev.metaKey) return;
+        const sel = this.window!.getSelection();
+        if (!sel || !sel.isCollapsed || !sel.anchorNode) return;
+        let node: Node | null = sel.anchorNode;
+        while (node && (node as Element).tagName !== "TD" && (node as Element).tagName !== "TH") {
+          node = node.parentNode;
+        }
+        const cell = node as HTMLTableCellElement | null;
+        const row = cell?.parentElement as HTMLTableRowElement | null;
+        const table = row?.closest("table");
+        if (!cell || !row || !table) return;
+        // 只处理真正的"右下角"单元格：合并单元格的长尾场景交给原版行为
+        const lastRow = table.rows[table.rows.length - 1];
+        if (!lastRow || cell !== lastRow.cells[lastRow.cells.length - 1]) return;
+        if (cell.textContent?.trim() !== "") return;
+        // 表格之后已有块级元素就直接用它；表格是正文最后元素时先补尾随段落再逃逸。
+        // UEditor 的按键监听挂在 document 冒泡阶段，捕获阶段 stopPropagation 可拦下它。
+        let target = table.nextElementSibling;
+        if (!target && this.body!.lastElementChild === table) {
+          this.ensureTrailingParagraph();
+          target = table.nextElementSibling;
+        }
+        if (!target || (target as Element).tagName === "TABLE") return;
+        ev.preventDefault();
+        ev.stopPropagation();
+        const range = doc.createRange();
+        range.setStart(target, 0);
+        range.collapse(true);
+        sel.removeAllRanges();
+        sel.addRange(range);
+        // 同步 UEditor 内部选区，避免它基于旧位置做出错误的状态更新
+        try {
+          this.editor.selection.getRange().setStart(target, 0).collapse(true).select();
+        } catch {
+          /* 内部选区同步失败不影响已设好的原生光标 */
+        }
+      },
+      true,
+    );
+  }
+
+  /**
+   * 归一化正文的尾随行，保证表格之后永远存在可放置光标的落点。
+   *
+   * "表格墙"的三种形态（诊断日志实证，见诊断脚本 harness-build/mcmodder-tablewall-diag.user.js）：
+   * 1. 正文以表格结尾，表格后没有任何元素——光标困在最后一个单元格里；
+   * 2. 尾随行是**无 `<br>` 的空段落** `<p></p>`——删除尾随行的 `<br>` 即产生此形态，
+   *    该变化发生在 p **内部**，body 层的 childList 观察不可见；Firefox 下光标
+   *    无法落入这种空段落，表格后依旧没有落点；
+   * 3. 尾随行被浏览器烤入的 nowrap span 污染（`<p><span style="text-wrap-mode: nowrap">…`）——
+   *    这是百科保存内容**天生**的尾随行形态（诊断日志 ARMED 实证），在其中打字永远不换行。
+   *
+   * 早期版本只处理形态 1，2、3 正是用户实机"高频删除后墙再现且无解"的残留形态。
+   * 这里统一归一化为干净的 `<p><br></p>`（等价于原版体验的"最后一行自动换行符"）。
+   * 有文字/媒体内容的尾随行不动。幂等：归一化结果本身不满足任何触发条件，无循环。
    */
   private ensureTrailingParagraph() {
     if (!this.body || !this.document) return;
-    if (this.body.lastElementChild?.tagName === "TABLE") {
+    const last = this.body.lastElementChild;
+    if (!last) return;
+    if (last.tagName === "TABLE") {
       const p = this.document.createElement("p");
       p.innerHTML = "<br/>";
       this.body.appendChild(p);
+      return;
+    }
+    if (last.tagName !== "P") return;
+    if (last.querySelector("img,iframe,video,table")) return;
+    const text = last.textContent?.trim() ?? "";
+    if (text !== "") return;
+    const needsBr = !last.querySelector("br");
+    const nowrapPolluted = !!last.querySelector("[style*='nowrap']");
+    if (needsBr || nowrapPolluted) {
+      last.innerHTML = "<br/>";
     }
   }
 
