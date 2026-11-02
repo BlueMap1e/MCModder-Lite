@@ -1,7 +1,7 @@
 {
   "name": "mcmodder-lite",
   "private": true,
-  "version": "2.4.1-lite.1",
+  "version": "2.4.1-lite.2",
   "type": "module",
   "scripts": {
     "dev": "vite",
