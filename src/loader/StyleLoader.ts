@@ -1,6 +1,5 @@
 import { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
-import { Values } from "../Values";
 
 /**
  * 样式加载器：把若干张「调色盘」展开为 `--mcmodder-color-*` CSS 变量，
@@ -500,8 +499,8 @@ export class StyleLoader {
       [],
     );
 
-    const bg = configs.getSettings("defaultBackground") || Values.assets.bg;
-    const bgNight = configs.getSettings("defaultNightBackground") || Values.assets.nightMode.bg;
+    const bg = configs.getSettings("defaultBackground") || "none";
+    const bgNight = configs.getSettings("defaultNightBackground") || "none";
     const otherCss = `
       --mcmodder-image-background: ${bg === "none" ? "none" : `url(${bg}) fixed`};
     `;

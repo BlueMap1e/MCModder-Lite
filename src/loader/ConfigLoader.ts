@@ -1,5 +1,4 @@
 import { Utils } from "../Utils";
-import { Values } from "../Values";
 
 export const settings = [
   {
@@ -36,7 +35,7 @@ export const settings = [
             description:
               "输入一个图片链接 URL。若当前页面没有设置背景，则自动使用此背景。图像加载可能会拖慢页面载入时间，可输入 <code>none</code> 以禁用此特性。",
             type: "text",
-            value: Values.assets.bg,
+            value: "none",
           },
           {
             id: "defaultNightBackground",
@@ -44,7 +43,7 @@ export const settings = [
             description:
               "输入一个图片链接 URL，在夜间模式下此背景会覆盖默认背景。输入 <code>none</code> 以禁用此特性。",
             type: "text",
-            value: Values.assets.nightMode.bg,
+            value: "none",
           },
         ],
       },
