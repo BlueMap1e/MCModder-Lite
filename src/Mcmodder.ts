@@ -510,10 +510,6 @@ export class Mcmodder {
   }
 
   main() {
-    if (this.configRepository.getSettings("forceV4") && this.href === `${this.hostname}/`) {
-      window.location.href = `${this.hostname}/v4/`;
-    }
-
     // v2.2- 自定义字体配置兼容
     const useNotoSans = this.configRepository.getSettings("useNotoSans");
     if (useNotoSans) {

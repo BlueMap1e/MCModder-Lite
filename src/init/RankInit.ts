@@ -6,11 +6,6 @@ interface UserRankData {
   rate: number;
 }
 
-export interface UserRankRecordData {
-  value: number;
-  user: number;
-}
-
 export class RankInit extends Init {
   canRun() {
     return !!(
@@ -111,46 +106,6 @@ export class RankInit extends Init {
     $(".popover").remove();
 
     // setTimeout(commentInit, 1e3);
-
-    // 保存贡献数据
-    if (this.configs.getSettings("byteChart")) {
-      const param = new URLSearchParams(window.location.search);
-      const startTime =
-        Utils.getStartTime(Math.floor(Number(param.get("starttime")) * 1e3), 0) / 1e3;
-      const endTime = Utils.getStartTime(Math.floor(Number(param.get("endtime")) * 1e3), 0) / 1e3;
-      const minimumRequestInterval = this.configs.getSettings("minimumRequestInterval") || 750;
-      if (!(startTime && endTime)) return;
-      const getRankData = (t: number) => {
-        if (this.configs.get("rankData", (t - 24 * 60 * 60).toString())) return; // 一天误差
-        this.parent.utils
-          .createRequest(
-            {
-              url: `${this.parent.hostname}/rank.html?starttime=${t}&endtime=${t}`,
-              method: "GET",
-              headers: { "Content-Type": "text/html; charset=UTF-8" },
-            },
-            "获取贡献数据",
-          )
-          .then((resp) => {
-            const rawData: UserRankRecordData[] = [];
-            const d = $("<html>").html(resp.responseText.replaceAll("src=", "data-src="));
-            d.find(".rank-list-block:nth-child(1) li").each((_, e) => {
-              rawData.push({
-                value: Number($(e).attr("data-content").split("字节")[0].replaceAll(",", "")),
-                user: Number($("a", e).attr("href").split("center.mcmod.cn/")[1].split("/")[0]),
-              });
-            });
-            const data = JSON.stringify(rawData);
-            this.configs.set("rankData", (t - 24 * 60 * 60).toString(), data);
-            Utils.commonMsg(
-              `成功保存${Utils.getFormattedChineseDate(new Date((t - 24 * 60 * 60) * 1e3))}的贡献数据~ (${Utils.getFormattedSize(data.length)})`,
-            );
-          });
-        if (t <= Math.min(endTime, Date.now() / 1e3 - 24 * 60 * 60))
-          setTimeout(() => getRankData(t + 24 * 60 * 60), minimumRequestInterval);
-      };
-      getRankData(Math.max(startTime, 1496332800)); // 字节贡献从 2017-06-02 开始记录
-    }
 
     ranklists
       .on("pointerover", "li", (e) => {

@@ -151,7 +151,6 @@ interface Settings {
   disableGradient: boolean;
   adaptableNightMode: boolean;
   bbsNightMode: boolean;
-  forceV4: boolean;
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;
   // unlockHeaderContainer: boolean,
@@ -203,9 +202,6 @@ interface Settings {
   favUserDisplayStyle: 0 | 1 | 2;
   rememberVisitedMods: boolean;
   centerMainExpand: boolean;
-  byteChart: boolean;
-  maxByteColorValue: number;
-  expCalculator: boolean;
   unlockComment: boolean;
   uploadFileButton: boolean;
   ignoreEmptyLine: boolean;

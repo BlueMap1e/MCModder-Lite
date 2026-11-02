@@ -1,6 +1,5 @@
 import { Values } from "../Values";
 import { CenterCardInit } from "./center/CenterCardInit";
-import { CenterRankInit } from "./center/CenterRankInit";
 import { CenterSettingInit } from "./center/CenterSettingInit";
 import { Init } from "./Init";
 
@@ -19,8 +18,6 @@ interface CenterPage {
 
 export class CenterInit extends Init {
   protected pageUID = -1;
-  totalExp?: number;
-  pageProfile?: Profile;
 
   canRun() {
     return this.parent.href.includes("center.mcmod.cn");
@@ -78,14 +75,6 @@ export class CenterInit extends Init {
         $("#center-page-card .loading").length === 0 &&
         $("#center-page-card .center-content.background").length > 0,
     });
-    if (this.configs.getSettings("expCalculator")) {
-      this.watchPage({
-        selector: "#center-page-rank",
-        init: () => new CenterRankInit(this).run(),
-        isReady: () => $(".center-main.lv").length > 0 && $(".lv-title").length > 0,
-      });
-    }
-
     // 快捷获取背景图像
     const bgImg = window
       .getComputedStyle(document.body)

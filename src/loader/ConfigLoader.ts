@@ -91,12 +91,6 @@ export const settings = [
             type: "checkbox",
           },
           {
-            id: "forceV4",
-            title: "强制v4",
-            description: "打开百科任意非v4主页时，自动跳转到v4主页。",
-            type: "checkbox",
-          },
-          {
             id: "backgroundAlpha",
             title: "背景透明度",
             description: "控制背景透明度，数值越小透明度越高。",
@@ -199,29 +193,6 @@ export const settings = [
             id: "centerMainExpand",
             title: "个人主页数据拓展",
             description: "显示平均字数和科龄，令模组区域并排显示，过长的模组区域默认压缩。",
-            type: "checkbox",
-          },
-          {
-            id: "byteChart",
-            title: "字数活跃图表",
-            description:
-              "决定是否在个人主页显示字数活跃图表，以及是否在贡献榜查看历史贡献数据时自动获取编辑字数数据。",
-            type: "checkbox",
-          },
-          {
-            id: "maxByteColorValue",
-            title: "字数活跃图表最大有效值",
-            description:
-              "决定字数活跃图表的总体颜色深度，当日编辑字节数大于该值时，对应字数图表中的色块始终为黑色。",
-            type: "number",
-            value: 30000,
-            range: [5000, 524984],
-            visible: (ctx) => ctx.configs.getSettings("byteChart"),
-          },
-          {
-            id: "expCalculator",
-            title: "经验计算器",
-            description: "决定是否在个人等级页显示当前等级相关数据。",
             type: "checkbox",
           },
         ],
