@@ -34,10 +34,10 @@ const devPrivateNetworkAccess: Plugin = {
 
 // 用户脚本元数据单独提出来：dev 期要用它算哈希给客户端模块打缓存戳（见下方说明）。
 const userscriptMeta = {
-  name: "Mcmodder-MC百科辅助工具",
-  author: "Charcoal-Black",
-  version: "2.4.1",
-  description: "Mcmodder",
+  name: "MCModder-Lite",
+  author: "BlueMap1e (based on Mcmodder by Charcoal-Black)",
+  version: "2.4.1-lite.1",
+  description: "MCModder-Lite：Mcmodder 的个人精简分支（AGPL-3.0）",
   license: "AGPL-3.0",
   icon: "https://www.mcmod.cn/static/public/images/favicon.ico",
   namespace: "http://www.mcmod.cn/",
