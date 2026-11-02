@@ -198,8 +198,6 @@ interface Settings {
   compactedVerifyEntry: boolean;
   advancedRanklist: boolean;
   advancedOredictPage: boolean;
-  rememberVisited: boolean;
-  favUserDisplayStyle: 0 | 1 | 2;
   rememberVisitedMods: boolean;
   centerMainExpand: boolean;
   unlockComment: boolean;
@@ -235,8 +233,6 @@ interface Settings {
   lastUid: number;
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
-  userFavList: string;
-  recentlyVisited: string;
   recentlyVisitedMods: RecentlyVisited[];
   myProfiles: string;
   guiLocker: number;

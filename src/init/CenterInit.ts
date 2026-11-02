@@ -27,11 +27,6 @@ export class CenterInit extends Init {
     return this.pageUID === this.parent.currentUID;
   }
 
-  isFavPage() {
-    const favList = this.configs.getSettingsAsNumberList("userFavList") ?? [];
-    return favList.includes(this.pageUID) && !this.isMyPage();
-  }
-
   getPageUID() {
     return this.pageUID;
   }

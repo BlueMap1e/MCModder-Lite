@@ -168,7 +168,7 @@ export class ConfigRepository {
    * 以数字数组的形式读取某个字段（一次性，非响应式）。
    *
    * 兼容两种存储格式：字符串按逗号（忽略空格）分隔后逐项转数字，或已是 `(number|string)[]`
-   * 的数组逐项转数字。用于 `userFavList`、`userBlacklist` 这类「逗号分隔 ID」配置。
+   * 的数组逐项转数字。用于 `userBlacklist` 这类「逗号分隔 ID」配置。
    *
    * @param item 存储键名。
    * @param key 字段名。

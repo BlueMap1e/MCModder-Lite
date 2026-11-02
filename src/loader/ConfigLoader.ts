@@ -583,30 +583,6 @@ export const settings = [
           },
         ],
       },
-      {
-        id: "userlist",
-        label: "快捷串门",
-        settings: [
-          {
-            id: "rememberVisited",
-            title: "最近串门追踪",
-            description: "自动记录我最近串门的用户。经常串门的用户会显示在“最近串门”当中。",
-            type: "checkbox",
-          },
-          {
-            id: "favUserDisplayStyle",
-            title: "收藏用户样式",
-            description: "决定“最近串门”列表中已收藏用户的头像显示样式。",
-            type: "dropdownMenu",
-            value: 0,
-            range: {
-              0: "星星",
-              1: "大头钉",
-              2: "爱心",
-            },
-          },
-        ],
-      },
     ],
   },
   {
