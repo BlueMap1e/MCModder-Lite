@@ -191,12 +191,6 @@ export const settings = [
         label: "个人中心",
         settings: [
           {
-            id: "customAdvancements",
-            title: "成就拓展",
-            description: "启用自定义成就及相关特性。",
-            type: "checkbox",
-          },
-          {
             id: "autoCheckin",
             title: "自动签到",
             description: "每日首次访问百科，或是本机时间为 00:00:00 时，自动执行签到操作。",
@@ -508,34 +502,9 @@ export const settings = [
         ],
       },
       {
-        id: "presubmit",
-        label: "预编辑",
-        settings: [
-          {
-            id: "preSubmitCheckInterval",
-            title: "预编辑检测间隔",
-            description:
-              "设置相邻两次自动检测预编辑资料是否具备可正式提交条件之间的最短冷却时间，单位为小时，设置为小于 0.1 以禁用所有预编辑相关特性。",
-            type: "number",
-            value: 0,
-            range: [0, null],
-          },
-        ],
-      },
-      {
         id: "verify",
         label: "后台管理",
         settings: [
-          {
-            id: "autoVerifyDelay",
-            title: "自动查询待审项",
-            description:
-              "当打开百科页面时，自动查询所管理模组的待审项，并弹出提示消息。设置相邻两次自动查询待审项之间的最短冷却时间，单位为小时，设置为小于 0.01 以禁用。",
-            type: "number",
-            value: 0,
-            range: [0, null],
-            visible: (ctx) => Utils.hasVerifyOperateAccess(ctx.permission),
-          },
           {
             id: "alwaysNotifyVerification",
             title: "实时更新审核项",
@@ -767,19 +736,6 @@ export const settings = [
           },
         ],
       },
-      {
-        id: "update",
-        label: "更新检查",
-        settings: [
-          {
-            id: "autoCheckUpdate",
-            title: "自动检查更新",
-            description: "每隔一段时间自动检查更新，并在有新更新可用时提醒。",
-            type: "checkbox",
-            value: true,
-          },
-        ],
-      },
     ],
   },
   {
@@ -935,12 +891,6 @@ export const settings = [
         id: "misc",
         label: "杂项",
         settings: [
-          {
-            id: "freezeAdvancements",
-            title: "冻结进度",
-            description: "使窗口右上角弹出的进度框不再自动消失。快截图留念吧！",
-            type: "checkbox",
-          },
           {
             id: "uploadFileButton",
             title: "上传文件按钮",

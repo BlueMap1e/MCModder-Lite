@@ -51,26 +51,7 @@
                     :configs="configs"
                     :matched-ranges="matchedRanges.get(key.id)"
                   >
-                    <template v-if="key.id === 'autoCheckUpdate'" #afterInput>
-                      <button
-                        id="mcmodder-update-check-manual"
-                        class="btn"
-                        @click="() => parent.scheduleRequestUtils.run('autoCheckUpdate')"
-                      >
-                        立即检查更新
-                      </button>
-                      <Countdown
-                        :parent="parent"
-                        :data-getter="
-                          TimerUtils.DATAGETTER_SCHEDULE(
-                            'autoCheckUpdate',
-                            null,
-                            parent.scheduleRequestUtils,
-                          )
-                        "
-                      />
-                    </template>
-                    <template v-else-if="key.id === 'useSupabase_v2'" #afterInput>
+                    <template v-if="key.id === 'useSupabase_v2'" #afterInput>
                       <span
                         v-show="configs.getSettingsRef('useSupabase_v2').value"
                         class="center-block-settings-authbinder"
@@ -196,9 +177,7 @@
   </div>
 
   <div class="center-setting-block">
-    <div class="setting-item">
-      <button class="btn" @click="emptyScheduleRequest">清除当前所有计划任务</button>
-    </div>
+    <div class="setting-item"></div>
     <p class="text-muted">这在某些时候很有用——也许吧？</p>
   </div>
 </template>
@@ -209,8 +188,6 @@ import { Mcmodder } from "../../Mcmodder";
 import { Values } from "../../Values";
 import { TableUtils } from "../../table/Table.ts";
 import ConfigInteractor from "./config/ConfigInteractor.vue";
-import Countdown from "./Countdown.vue";
-import { TimerUtils } from "../../widget/TimerUtils.ts";
 import SupabaseConfigLoader from "./supabase/SupabaseConfigLoader.vue";
 import ConfigResourceInteractor from "./config/ConfigResourceInteractor.vue";
 import { Utils } from "../../Utils.ts";
@@ -443,16 +420,6 @@ const configResourceFileListInteractorProps = [
     name: "已保存的合成表 JSON 文件（仅脚本存储）",
   } satisfies ConfigResourceFileListInteractorProps<"mcmodderRecipeJsonStorage">,
 ] as const;
-
-function emptyScheduleRequest() {
-  const list = props.parent.scheduleRequestUtils.get();
-  if (list.length) {
-    props.parent.scheduleRequestUtils.empty();
-    Utils.commonMsg(`${list.length.toLocaleString()} 项计划任务已被清除~`);
-  } else {
-    Utils.commonMsg("当前没有计划任务~");
-  }
-}
 
 /** 我上传的表态贴纸（图片存于百科图床，云端只登记归属） */
 const attitudeStickers = ref<SupabaseAttitudeSticker[]>([]);

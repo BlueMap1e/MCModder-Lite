@@ -1,6 +1,5 @@
 import { UEditor } from "../ueditor/UEditor";
 import { Utils } from "../Utils";
-import { InputListPopoverController } from "../widget/popover/InputListPopoverController";
 import { Init } from "./Init";
 
 abstract class EditorAlertLink {
@@ -458,111 +457,6 @@ export class EditorInit extends Init {
         $("<p>")
           .text("改动说明: " + desc)
           .appendTo(".edit-user-alert");
-
-        // 预提交
-        if (this.configs.getSettings("preSubmitCheckInterval")! >= 0.1) {
-          let strEditTypeName;
-          if (strEditType === "author")
-            strEditTypeName = $("#author-team").prop("checked")
-              ? PublicLangData[strEditType].alter.team
-              : PublicLangData[strEditType].alter.single;
-          else strEditTypeName = PublicLangData[strEditType].alter;
-          const submitButton = $(`
-          <div class="text">
-            <b>[预编辑] 改动附言:</b>
-            <textarea class="form-control" placeholder="改动附言.." id="mcmodder-presubmit-remark"></textarea>
-            <p>请填写改动附言，用于给审核留下信息，只有审核员会看到。</p>
-            <hr>
-            <b>[预编辑] 改动说明:</b>
-            <textarea class="form-control" placeholder="改动说明.." id="mcmodder-presubmit-reason"></textarea>
-            <p>
-              请填写大致修改了哪些地方，会在
-              <a target="_blank" href="/class/diff/list/2.html">改动对比</a>
-              中显示，所有人都能看到。
-            </p>
-            <hr>
-          </div>
-          <input type="button" id="edit-submit-button" class="btn btn-primary mcmodder-content-block mcmodder-presubmit" edit-id="" redo-id="" data-type="${strEditType}_edit" value="预${strEditTypeName}">
-        `);
-          $(".common-rowlist-block").last().append(submitButton);
-          $("#mcmodder-presubmit-remark, #mcmodder-presubmit-reason").each((_, e) => {
-            const textarea = $(e).get(0) as HTMLTextAreaElement;
-            InputListPopoverController.instance.add(textarea, {
-              type: "inputList",
-              delimiter: "；",
-              hideBeforeInput: true,
-              suggestionManager: {
-                configs: this.configs,
-                configKey: "editReasons",
-              },
-            });
-          });
-          $(document).on("click", ".mcmodder-presubmit", () => {
-            const popup = $(".swal2-popup");
-            popup
-              .find("#swal2-title")
-              .html(popup.find("#swal2-title").html().replace("编辑", "预编辑"));
-            popup
-              .find(".edit-dataverify-frame")
-              .after(
-                '<span class="mcmodder-slim-dark">预编辑内容将会被临时保存在本地，直到该用户的待审项被处理之后才会正式提交。已保存的预编辑项可在“审核列表 -> 只显示我提交的”看到，暂不支持重新修改，请知悉。',
-              );
-            (popup.find(".swal2-confirm").get(0) as HTMLButtonElement).onclick = null;
-            popup.find(".swal2-confirm").click(() => {
-              // if (error.length > 0) return;
-              const editorData = getEditorData(false);
-              editorData["edit-id"] ||= Utils.abstractLastFromURL(window.location.href, "edit");
-              editorData["redo-id"] ||= 0;
-              const remark = $("#mcmodder-presubmit-remark").val().trim();
-              const reason = $("#mcmodder-presubmit-reason").val().trim();
-              if (remark) editorData[strEditType + "-data"].remark = remark;
-              if (reason) editorData[strEditType + "-data"].reason = reason;
-              const config = {
-                url: "https://" + strEventUrl + "/action/edit/doEdit/",
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/x-www-form-urlencoded; charset=UTF-8",
-                  Origin: this.parent.hostname,
-                  Referer: `${this.parent.hostname}/`,
-                  Priority: "u=0",
-                  "Sec-Fetch-Dest": "empty",
-                  "Sec-Fetch-Mode": "cors",
-                  "Sec-Fetch-Site": "same-site",
-                },
-                // data: $.param({ data: editorData })
-              };
-              const timeStr = $(".locked")
-                .text()
-                .match(/\d{4}-\d{2}-\d{2}\s\d{2}:\d{2}:\d{2}/);
-              if (!timeStr) {
-                Utils.commonMsg("待审项提交时间获取失败...", false);
-                return;
-              }
-              let preSubmitEntry: PreSubmission | null = {
-                id: Utils.randStr(8),
-                title: this.parent.title,
-                lastSubmitTime: new Date(timeStr[0]).getTime(),
-                createTime: Date.now(),
-                url: window.location.href,
-                rawData: editorData,
-                config: config,
-              };
-              const preSubmitList = this.configs.getProfile("preSubmitList") ?? [];
-              for (const i in preSubmitList) {
-                if (preSubmitEntry && preSubmitEntry.url === preSubmitList[i].url) {
-                  preSubmitList[i] = Object.assign({}, preSubmitEntry);
-                  preSubmitEntry = null;
-                }
-              }
-              if (preSubmitEntry) preSubmitList.push(preSubmitEntry);
-              this.configs.setProfile("preSubmitList", preSubmitList);
-              Utils.commonMsg(
-                `预编辑内容${preSubmitEntry ? "保存" : "替换"}成功，将会在正式提交时提醒~`,
-              );
-              swal.close();
-            });
-          });
-        }
       }
 
       // 其他一堆并进 AdvancedUEditor 的小玩意儿

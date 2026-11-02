@@ -2,7 +2,6 @@ import { createApp } from "vue";
 import { Utils } from "../Utils";
 import { Values } from "../Values";
 import { Init } from "./Init";
-import { PreSubmitInit } from "./PreSubmitInit";
 import VerifyRowList from "../vue/components/VerifyRowList.vue";
 
 export class VerifyPageInit extends Init {
@@ -10,15 +9,6 @@ export class VerifyPageInit extends Init {
     return false;
   }
   run() {
-    const preSubmitCheckInterval = this.configs.getSettings("preSubmitCheckInterval");
-    if (
-      new URLSearchParams(window.location.search).get("selfonly") &&
-      preSubmitCheckInterval &&
-      preSubmitCheckInterval >= 0.1
-    ) {
-      new PreSubmitInit(this.parent);
-    }
-
     // 排版调整
     // if (this.configs.get("mcmodderUI")) {
     const p = $(".verify-list-frame .list-row-limit p").first();

@@ -182,7 +182,6 @@ interface Settings {
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;
   // unlockHeaderContainer: boolean,
-  customAdvancements: boolean;
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
   compactSupportedVersions: boolean;
@@ -240,7 +239,6 @@ interface Settings {
   byteChart: boolean;
   maxByteColorValue: number;
   expCalculator: boolean;
-  freezeAdvancements: boolean;
   unlockComment: boolean;
   uploadFileButton: boolean;
   ignoreEmptyLine: boolean;
@@ -250,13 +248,11 @@ interface Settings {
   commentExpandHeight: number;
   commentJumpRequestLimit: number;
   userBlacklist: string;
-  autoVerifyDelay: number;
   splitScreenOnVerify: boolean;
   itemListStylePreview: boolean;
   itemListStyleFix: boolean;
   alwaysNotify: number;
   alwaysNotifyVerification: number;
-  preSubmitCheckInterval: number;
   fastUrge: boolean;
   enableStructureEditor: boolean;
   enableJsonHelper: boolean;

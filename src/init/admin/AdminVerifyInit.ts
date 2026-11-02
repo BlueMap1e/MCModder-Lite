@@ -1,7 +1,5 @@
 import { createApp, ref, shallowRef, type App, type ShallowRef } from "vue";
 import { HorizontalDraggableFrame } from "../../widget/draggable/HorizontalDraggableFrame";
-import Countdown from "../../vue/components/Countdown.vue";
-import { TimerUtils } from "../../widget/TimerUtils.ts";
 import { Utils } from "../../Utils.ts";
 import type { Mcmodder } from "../../Mcmodder.ts";
 import { InputListPopoverController } from "../../widget/popover/InputListPopoverController.ts";
@@ -183,10 +181,6 @@ export class AdminVerifyInit extends AdminBaseInit {
       childList: true,
       subtree: true,
     });
-
-    if (!$("#mcmodder-check-verification").length) {
-      this.appendCheckButton();
-    }
 
     const interval = this.configs.getSettings("alwaysNotifyVerification") ?? 0;
     if (interval > 0.1) {
@@ -1219,34 +1213,6 @@ export class AdminVerifyInit extends AdminBaseInit {
   private rearrange() {
     const containerWidgets = $(".container-widget").children();
     containerWidgets.eq(1).insertAfter(containerWidgets.eq(-1));
-  }
-
-  /** 添加“一键查询待审项”快捷按钮 */
-  private appendCheckButton() {
-    $(
-      '<button class="btn" id="mcmodder-check-verification" data-toggle="tooltip" data-original-title="快捷统计全部所管理模组区域的待审项数目，并予以高亮提示！对资深编辑员不适用。">一键查询待审项</button>',
-    )
-      .insertAfter(".selectJump.bs3")
-      .click(() => this.getVerificationCount());
-    const autoVerifyDelay = this.configs.getSettings("autoVerifyDelay");
-    if (autoVerifyDelay && autoVerifyDelay >= 1e-2) {
-      const title = $(`<span style="margin-left: 10px;">距离自动查询: </span>`).insertAfter(
-        "#mcmodder-check-verification",
-      );
-      const text = $("<span>").appendTo(title).get(0);
-      createApp(Countdown, {
-        parent: this.parent,
-        dataGetter: TimerUtils.DATAGETTER_SCHEDULE(
-          "autoCheckVerify",
-          this.parent.currentUID,
-          this.parent.scheduleRequestUtils,
-        ),
-      }).mount(text);
-    }
-  }
-
-  private async getVerificationCount() {
-    this.parent.scheduleRequestUtils.run("autoCheckVerify");
   }
 
   /** 获取当前的待审列表是在何种配置下加载的 */

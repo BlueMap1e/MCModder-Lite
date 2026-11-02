@@ -1484,8 +1484,6 @@ export class Utils {
           logs.push(content);
           GM_setValue("mcmodderLogger", logs.join(";"));
         }
-        // 调试与监控：在所有可见的标签页上提示本次发包（须置于限速等待之后，否则排队中的请求会提前亮起）
-        if (!silent) this.parent.requestToastBroadcaster.send(config.method, config.url, message);
         // console.debug("Send Async request: ", config);
         GM_xmlhttpRequest(config);
       }, lastRequestTime - now);

@@ -1,16 +1,10 @@
 import { GM_getValue, GM_openInTab, GM_setValue } from "$";
-import { AdvancementID, AdvancementUtils } from "./advancement/AdvancementUtils";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { DraggableFrame } from "./widget/draggable/DraggableFrame";
-import { AdvancementLoader } from "./loader/AdvancementLoader";
 import { MemuCommandLoader } from "./loader/MenuCommandLoader";
-import { ScheduleRequestLoader } from "./loader/ScheduleRequestLoader";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
 import { StyleLoader } from "./loader/StyleLoader";
-import { ScheduleRequestUtils } from "./schedulerequest/ScheduleRequestUtils";
 import { StorageBuffer } from "./StorageBuffer";
-import { ModalBroadcaster } from "./modal/ModalBroadcaster";
-import { RequestToastBroadcaster } from "./widget/toast/RequestToastBroadcaster";
 import { AdvancedUEditor } from "./ueditor/AdvancedUEditor";
 import { UEditor } from "./ueditor/UEditor";
 import { Utils, type ThemeColorSet } from "./Utils";
@@ -23,7 +17,6 @@ import { Swiper } from "./widget/Swiper";
 import { SupabaseUtils } from "./supabase/SupabaseUtils";
 import { AttitudeSystem } from "./attitude/AttitudeSystem";
 import { Splash3D } from "./widget/Splash3D";
-import { EchartsUtils } from "./echarts/EChartsUtils";
 import { createApp } from "vue";
 import FavUser from "./vue/components/FavUser.vue";
 import ProfileSelector from "./vue/components/ProfileSelector.vue";
@@ -40,11 +33,7 @@ export class Mcmodder {
   configRepository: ConfigRepository;
   currentUID: number;
   currentUsername: string;
-  advutils: AdvancementUtils;
-  scheduleRequestUtils: ScheduleRequestUtils;
   storageBuffer: StorageBuffer;
-  modalBroadcaster: ModalBroadcaster;
-  requestToastBroadcaster: RequestToastBroadcaster;
   initList: Init[] = [];
   readonly isV4: boolean;
   readonly isMac: boolean;
@@ -56,7 +45,6 @@ export class Mcmodder {
   supabaseUtils: SupabaseUtils;
   /** 自定义表态系统（全站单例：短评页与消息中心共用同一份计数缓存与未读统计） */
   attitudeSystem: AttitudeSystem;
-  echartsUtils: EchartsUtils;
   styleColors: ThemeColorSet;
   splash3D?: Splash3D;
   preferredWiderScreen = false;
@@ -100,22 +88,11 @@ export class Mcmodder {
     this.storageBuffer = new StorageBuffer(this);
     StorageBufferLoader.run(this.storageBuffer);
 
-    this.modalBroadcaster = new ModalBroadcaster(this);
-    this.requestToastBroadcaster = new RequestToastBroadcaster(this);
-
     this.utils = new Utils(this);
     this.configRepository = this.utils.configs;
 
-    this.echartsUtils = new EchartsUtils(this);
-
     this.cfgutils = new ConfigUtils(this);
     this.styleColors = Utils.getThemeColors(this.configRepository);
-
-    this.advutils = new AdvancementUtils(this);
-    AdvancementLoader.run(this.advutils);
-
-    this.scheduleRequestUtils = new ScheduleRequestUtils(this);
-    ScheduleRequestLoader.run(this.scheduleRequestUtils);
 
     this.supabaseUtils = new SupabaseUtils(this);
 
@@ -581,7 +558,6 @@ export class Mcmodder {
       if ($("#item-cover-preview-img").first().attr("src") === Values.assets.mcmod.imagesNone) {
         $("#item-cover-preview-img").attr("src", Values.assets.nightMode.imagesNone);
       }
-      this.echartsUtils.enableNightStyle();
       $("html").addClass("dark");
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").addClass("dark");
@@ -596,7 +572,6 @@ export class Mcmodder {
       if ($("#item-cover-preview-img").first().attr("src") === Values.assets.nightMode.imagesNone) {
         $("#item-cover-preview-img").attr("src", Values.assets.mcmod.imagesNone);
       }
-      this.echartsUtils.disableNightStyle();
       $("html").removeClass("dark");
       this.ueditorFrame.forEach((e) => {
         e.$document?.find("html").removeClass("dark");
@@ -727,14 +702,6 @@ export class Mcmodder {
       this.splash3D = new Splash3D(this);
       this.splash3D.init();
     }
-    // 冻结进度
-    if (this.configRepository.getSettings("freezeAdvancements")) {
-      $(".common-task-tip").attr({
-        id: "task-mcmodder-frozen",
-        class: "mcmodder-task-tip",
-      });
-    }
-
     // 愚人节特性
     if (this.configRepository.getSettings("enableAprilFools")) {
       if (this.href.includes("/author/22957.html")) {
@@ -969,27 +936,6 @@ export class Mcmodder {
       window.dispatchEvent(new Event("resize"));
     }
 
-    if (this.isV4 && this.configRepository.getSettings("customAdvancements")) {
-      // 更新自定义成就
-      const completed = this.configRepository.getProfile("completed");
-      if (completed) {
-        completed.split(",")?.forEach((sid) => {
-          const id = Number(sid);
-          const data = this.advutils.getData(id);
-          Utils.showTaskTip(
-            data.image || "",
-            PublicLangData.center.task.list[data.lang].title,
-            PublicLangData.center.task.list[data.lang].content,
-            "",
-            data.range,
-            "",
-          );
-          // playSound();
-        });
-      }
-      this.configRepository.setProfile("completed", "");
-    }
-
     // 实时通讯
     const autoNotifyDelay = this.configRepository.getSettings("alwaysNotify");
     if (
@@ -1081,10 +1027,6 @@ export class Mcmodder {
         $.cookie("mcmodgirl_hide", null, { path: "/" });
         this.configRepository.setSettings("enableLive2D", false);
       });
-      if (this.configRepository.getSettings("customAdvancements"))
-        $(document).on("click", ".waifu", () => {
-          this.advutils.addProgress(AdvancementID.CLICK_GIRL_100_TIMES);
-        });
     }
 
     $(".common-background").remove();

@@ -1,10 +1,8 @@
 import { Values } from "../Values";
 import { CenterCardInit } from "./center/CenterCardInit";
 import { CenterCommentInit } from "./center/CenterCommentInit";
-import { CenterHomeInit } from "./center/CenterHomeInit";
 import { CenterRankInit } from "./center/CenterRankInit";
 import { CenterSettingInit } from "./center/CenterSettingInit";
-import { CenterTaskInit } from "./center/CenterTaskInit";
 import { Init } from "./Init";
 
 /** SPA 子页的挂载配置 */
@@ -67,11 +65,6 @@ export class CenterInit extends Init {
     this.pageUID = Number(this.parent.href.split("center.mcmod.cn/")[1].split("/")[0]);
 
     this.watchPage({
-      selector: "#center-page-home",
-      init: () => new CenterHomeInit(this).run(),
-      isReady: () => $("#center-page-home .center-total").length > 0,
-    });
-    this.watchPage({
       selector: "#center-page-setting",
       init: () => new CenterSettingInit(this).run(),
       isReady: () => $("#center-page-setting").children().length > 1,
@@ -86,16 +79,6 @@ export class CenterInit extends Init {
         $("#center-page-card .loading").length === 0 &&
         $("#center-page-card .center-content.background").length > 0,
     });
-    if (this.configs.getSettings("customAdvancements")) {
-      this.watchPage({
-        selector: "#center-page-task",
-        init: () => new CenterTaskInit(this).run(),
-        // 占位 loading 已移除且成就列表已渲染，否则无法解析已取得成就
-        isReady: () =>
-          $("#center-page-task .loading").length === 0 &&
-          $("#center-page-task .center-task-block").length > 0,
-      });
-    }
     if (this.configs.getSettings("expCalculator")) {
       this.watchPage({
         selector: "#center-page-rank",
