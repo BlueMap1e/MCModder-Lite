@@ -10,14 +10,14 @@
       >
         <button
           v-for="preset in group.colors"
-          :key="preset.color"
+          :key="preset"
           type="button"
           class="mcmodder-colorpicker-swatch"
-          :class="{ 'is-active': preset.color === activeColor }"
-          :style="{ background: preset.color }"
-          :title="`${group.name} ${preset.color}`"
-          :aria-label="`${group.name} ${preset.color}`"
-          @click="pick(preset.color)"
+          :class="{ 'is-active': preset === activeColor }"
+          :style="{ background: preset }"
+          :title="`${group.name} ${preset}`"
+          :aria-label="`${group.name} ${preset}`"
+          @click="pick(preset)"
         />
       </span>
       <!-- 原生取色器兜底：完全自定义时使用。做成文字标签以免被误认为预设色块 -->
