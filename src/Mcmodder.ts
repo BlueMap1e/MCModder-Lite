@@ -404,12 +404,27 @@ export class Mcmodder {
 
   updateNightMode() {
     // 以配置为唯一事实来源，把 isNightMode 同步回来。
-    // 夜间模式自适应（跟随系统）会在 main() 中直接写配置而不经过 switchNightMode()，
+    // 夜间模式偏好（跟随系统/手动）会在 main() 中直接写配置而不经过 cycleNightModePreference()，
     // 跨标签页同步也会只改配置；若此处不刷新字段，依赖 isNightMode 的代码
     // （UEditor iframe、部分图表回调）就会与页面实际的 dark 状态脱节。
     const nightMode = !!this.configRepository.getSettings("nightMode");
     this.isNightMode = nightMode;
+    const preference = this.configRepository.getSettings("nightModePreference") ?? 0;
     const icon = $("#mcmodder-night-switch i");
+    // 按钮三态图标：跟随系统（半圆）/ 手动夜间（月亮）/ 手动日间（灯泡）；
+    // .on（金色辉光）仍表示当前生效为日间
+    icon.attr(
+      "class",
+      `${preference === 0 ? "fa fa-adjust" : preference === 2 ? "fa fa-moon-o" : "fa fa-lightbulb-o"}${nightMode ? "" : " on"}`,
+    );
+    $("#mcmodder-night-switch").attr(
+      "data-original-title",
+      preference === 0
+        ? "夜间模式：跟随系统（点击切换）"
+        : preference === 2
+          ? "夜间模式：手动·夜间（点击切换）"
+          : "夜间模式：手动·日间（点击切换）",
+    );
     // UEditor 弹窗内容 iframe（挂在 #edui_fixedlayer 下）也一并同步，
     // 覆盖「弹窗开着时切换夜间模式」的情形；固定层尚不存在时选择结果为空，安全跳过
     const dialogIframeDocs = $("#edui_fixedlayer iframe")
@@ -462,11 +477,37 @@ export class Mcmodder {
     }
   }
 
-  switchNightMode() {
-    // 只写配置，由 updateNightMode() 依据配置同步 isNightMode 与页面状态；
-    // 这里显式再调一次，避免依赖 Vue watcher 的异步时机。
-    this.configRepository.setSettings("nightMode", !this.isNightMode);
+  /**
+   * 把夜间模式偏好（0 跟随系统 / 1 固定日间 / 2 固定夜间）解析为生效值 nightMode。
+   * 跟随系统时取 prefers-color-scheme，手动偏好下系统变化不再覆写；
+   * 仅在生效值将要变化时写入，避免无意义的跨标签页同步。
+   */
+  private resolveNightMode() {
+    const preference = this.configRepository.getSettings("nightModePreference") ?? 0;
+    const nightMode =
+      preference === 1
+        ? false
+        : preference === 2 || window.matchMedia("(prefers-color-scheme: dark)").matches;
+    if (this.configRepository.getSettings("nightMode") !== nightMode) {
+      this.configRepository.setSettings("nightMode", nightMode);
+    }
+  }
+
+  /** 循环切换夜间模式偏好：跟随系统 → 日间 → 夜间 → 跟随系统，并立即解析生效。 */
+  private cycleNightModePreference() {
+    const next = (((this.configRepository.getSettings("nightModePreference") ?? 0) + 1) % 3) as
+      0 | 1 | 2;
+    this.configRepository.setSettings("nightModePreference", next);
+    this.resolveNightMode();
+    // 显式再调一次，避免依赖 Vue watcher 的异步时机。
     this.updateNightMode();
+    Utils.commonMsg(
+      next === 0
+        ? "夜间模式：已恢复跟随系统"
+        : next === 1
+          ? "夜间模式：已固定为日间"
+          : "夜间模式：已固定为夜间",
+    );
   }
 
   copyright() {
@@ -483,6 +524,12 @@ export class Mcmodder {
    */
   private watchRef() {
     this.configRepository.watchSettingsRef("nightMode", () => this.updateNightMode());
+    // 跨标签页修改偏好时，本页重新解析生效值（nightMode 的写入由上面的 watcher 应用）；
+    // 图标与 tooltip 取决于偏好本身，故无论生效值是否变化都要刷新一次按钮外观
+    this.configRepository.watchSettingsRef("nightModePreference", () => {
+      this.resolveNightMode();
+      this.updateNightMode();
+    });
     this.configRepository.watchSettingsRef("preferredWiderScreen", () => this.updatePageWidth());
   }
 
@@ -492,6 +539,17 @@ export class Mcmodder {
     if (useNotoSans) {
       this.configRepository.deleteSettings("useNotoSans");
       this.configRepository.setSettings("customFont", 2);
+    }
+
+    // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
+    // 关闭过自适应的老用户按当时的生效值固定下来，避免升级后被系统配色突然改写外观。
+    const adaptableNightMode = this.configRepository.getSettings("adaptableNightMode");
+    if (adaptableNightMode !== undefined) {
+      this.configRepository.setSettings(
+        "nightModePreference",
+        adaptableNightMode ? 0 : this.configRepository.getSettings("nightMode") ? 2 : 1,
+      );
+      this.configRepository.deleteSettings("adaptableNightMode");
     }
 
     const customFont = this.configRepository.getSettings("customFont");
@@ -620,24 +678,22 @@ export class Mcmodder {
       });
     }
 
-    if (this.configRepository.getSettings("adaptableNightMode")) {
-      const scheme = window.matchMedia("(prefers-color-scheme: dark)");
-      this.configRepository.setSettings("nightMode", scheme.matches);
-      scheme.addEventListener("change", () => {
-        this.configRepository.setSettings("nightMode", scheme.matches);
-      });
-    }
+    // 夜间模式偏好解析为生效值；跟随系统时监听系统配色变化（手动偏好下回调不会覆写）
+    this.resolveNightMode();
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      this.resolveNightMode();
+    });
+
+    // 先挂载夜间按钮再同步外观：updateNightMode 会按偏好刷新图标与 tooltip，
+    // 若晚于挂载调用，手动偏好的用户首屏会一直显示跟随系统的默认图标
+    $(
+      '<button id="mcmodder-night-switch" data-toggle="tooltip" data-original-title="夜间模式"><i class="fa fa-adjust"></i></button>',
+    )
+      .appendTo(".header-container .header-search, .top-right")
+      .click(() => this.cycleNightModePreference());
 
     this.updateNightMode();
     this.updatePageWidth();
-
-    if (!this.configRepository.getSettings("adaptableNightMode")) {
-      $(
-        '<button id="mcmodder-night-switch" data-toggle="tooltip" data-original-title="夜间模式"><i class="fa fa-lightbulb-o"></i></button>',
-      )
-        .appendTo(".header-container .header-search, .top-right")
-        .click(() => this.switchNightMode());
-    }
 
     $(`<button id="mcmodder-profile-switch" data-toggle="tooltip" data-original-title="切换账号 (按住 Shift 快捷切换)">
       <i class="fa fa-low-vision"></i>

@@ -33,10 +33,16 @@ import bbsCss from "./css/bbs.css?raw";
       clearScreenCover();
       return;
     }
+    // 夜间模式偏好（0 跟随系统 / 1 日间 / 2 夜间）。旧版仅有 adaptableNightMode 布尔开关，
+    // 迁移发生前（首次访问 mcmod.cn 主站之前）的存储按旧语义解读，只读不改，
+    // 真正的键值迁移由主站页面的 Mcmodder.main() 完成。
+    const resolvePreference = (cfg: any) =>
+      cfg.nightModePreference ?? (cfg.adaptableNightMode === false ? (cfg.nightMode ? 2 : 1) : 0);
     const updateClass = (cfg: any) => {
-      const isNight = cfg.adaptableNightMode
-        ? window.matchMedia("(prefers-color-scheme: dark)").matches
-        : !!cfg.nightMode;
+      const preference = resolvePreference(cfg);
+      const isNight =
+        preference === 2 ||
+        (preference === 0 && window.matchMedia("(prefers-color-scheme: dark)").matches);
       if (isNight) {
         document.documentElement.classList.add("dark");
       } else {
@@ -53,14 +59,14 @@ import bbsCss from "./css/bbs.css?raw";
         } catch (e) {}
       },
     );
-    if (settings.adaptableNightMode) {
-      window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-        try {
-          const currentSettings = JSON.parse(GM_getValue("mcmodderSettings") || "{}");
-          updateClass(currentSettings);
-        } catch (e) {}
-      });
-    }
+    // 跟随系统偏好时系统深浅色变化需要即时反映；手动偏好下 matchMedia 结果不参与判定，
+    // 回调重算一次是无害的空操作，故不再按偏好分支注册
+    window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+      try {
+        const currentSettings = JSON.parse(GM_getValue("mcmodderSettings") || "{}");
+        updateClass(currentSettings);
+      } catch (e) {}
+    });
     const style = document.createElement("style");
     style.textContent = bbsCss;
     document.documentElement.appendChild(style);

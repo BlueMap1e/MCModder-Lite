@@ -133,7 +133,8 @@ interface Settings {
   moveAds: boolean;
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;
-  adaptableNightMode: boolean;
+  /** 夜间模式偏好：0 跟随系统 / 1 固定日间 / 2 固定夜间 */
+  nightModePreference: 0 | 1 | 2;
   dimCoverAtNight: boolean;
   bbsNightMode: boolean;
   // mcmodderUI: boolean,
@@ -225,6 +226,8 @@ interface Settings {
   // 以下为旧版遗留
   templateList?: Template[];
   useNotoSans?: boolean;
+  /** 旧版夜间模式自适应开关，已由 nightModePreference 取代（迁移后删除） */
+  adaptableNightMode?: boolean;
 }
 
 interface SettingsSection {

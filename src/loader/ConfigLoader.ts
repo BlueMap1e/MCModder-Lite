@@ -82,12 +82,17 @@ export const settings = [
             value: true,
           },
           {
-            id: "adaptableNightMode",
-            title: "夜间模式自适应",
+            id: "nightModePreference",
+            title: "夜间模式偏好",
             description:
-              "夜间模式将跟随当前浏览器偏好设置而自动开启或关闭。启用此配置也将隐藏页面右上角的夜间模式开关。",
-            type: "checkbox",
-            value: true,
+              "「跟随系统」时夜间模式随浏览器深浅色偏好自动开关；「日间」「夜间」则固定使用对应外观。页面右上角的夜间模式按钮同样可以在三种状态间切换。",
+            type: "dropdownMenu",
+            value: 0,
+            range: {
+              0: "跟随系统",
+              1: "日间",
+              2: "夜间",
+            },
           },
           {
             id: "dimCoverAtNight",
