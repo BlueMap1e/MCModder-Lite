@@ -36,7 +36,7 @@ const devPrivateNetworkAccess: Plugin = {
 const userscriptMeta = {
   name: "MCModder-Lite",
   author: "BlueMap1e (based on Mcmodder by Charcoal-Black)",
-  version: "2.4.1-lite.2",
+  version: "2.4.1-lite.3",
   description: "MCModder-Lite：Mcmodder 的个人精简分支（AGPL-3.0）",
   license: "AGPL-3.0",
   icon: "https://www.mcmod.cn/static/public/images/favicon.ico",

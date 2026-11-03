@@ -1,6 +1,24 @@
 # CHANGELOG
 
-# CHANGELOG
+## [2.4.1-lite.3] - 2026-11-03
+
+### 修复
+- 编辑器看门狗改为按需重算：长正文 + 未开 HTML 编辑器时不再每次光标移动/每 1.5 秒抛
+  `requestRefresh` 空指针；空闲时不再周期性序列化全文
+- `?mrid` 日志页的自动「Markdown → HTML」改为在内容灌入后执行，避免清空正文
+- 尾随行归一化改为最小改动（补 `<br>` / 清理 nowrap 声明，不重建段落），保留光标书签
+
+### 清理
+- 移除 16 个失效设置键（关注模组、结构编辑器、JSON 导入辅助、请求监控位置、
+  个人主页数据拓展等）及其设置界面
+- 移除已删功能的死类型、死常量与约 465 行死 CSS；`connect` 白名单收窄
+- 移除未使用的依赖（Supabase、three、opentype、emoji-picker、vue-virtual-scroller 等）
+  与失效的 `smoke:attitude` 脚本
+- 重写 `AGENTS.md`、更新 `README.md`
+
+### 变更
+- `itemRepository` 归入设置「数据存储」（供自动链接本地搜索使用），不再挂在已删除的
+  JSON 管理分组下
 
 ## [2.4.1-lite.2] - 2026-11-03
 
