@@ -353,10 +353,12 @@ export class ClassPageInit extends Init {
       $(".col-lg-12.common-rowlist-2 li, .mcmodder-class-info .col-lg-4").each((_, c) => {
         const t = c.textContent;
         const d = t.split(t.includes("：") ? "：" : ": ");
+        let htmlBuilt = false;
         if (!isNaN(Number(d[1]))) d[1] = Number(d[1]).toLocaleString();
         if (d[0] === "支持平台")
           d[1] = d[1].replace(" (JAVA Edition)", "").replace(" (Bedrock Edition)", "");
         else if (d[0] === "运作方式") {
+          htmlBuilt = true;
           const a = d[1].split(", ");
           let innerHTML = "";
           let tooltipHTML = "";
@@ -391,7 +393,10 @@ export class ClassPageInit extends Init {
                 svg = svgPlatformDefault;
             }
             const icon = `<img src="${svg}" />`;
-            const text = `<span class="mcmodder-loadername" style="color: var(--mcmodder-color-platform-${a[index].toLowerCase()})">${a[index]}</span>`;
+            // 运作方式取自页面文本，进 HTML / 内联样式前先转义
+            const loaderName = Utils.escapeHTML(a[index]);
+            const loaderKey = Utils.escapeHTML(a[index].toLowerCase());
+            const text = `<span class="mcmodder-loadername" style="color: var(--mcmodder-color-platform-${loaderKey})">${loaderName}</span>`;
             if (index < 3) {
               innerHTML += `<a class="mcmodder-modloader">${icon}${a.length === 1 ? text : ""}</a>`;
             } else if (index === 3) {
@@ -404,19 +409,26 @@ export class ClassPageInit extends Init {
         if (d[0] === "运行环境") {
           const a = d[1].split(", ");
           a.forEach((e) => {
-            let r = e.slice(3, 5);
+            const r = e.slice(3, 5);
+            let envHTML: string;
             if (r === "需装")
-              r = `<span class="mcmodder-class-env-required"><i class="fa fa-check" />${r}</span>`;
+              envHTML = `<span class="mcmodder-class-env-required"><i class="fa fa-check" />${Utils.escapeHTML(r)}</span>`;
             else if (r === "无效")
-              r = `<span class="mcmodder-class-env-invalid"><i class="fa fa-ban" />${r}</span>`;
+              envHTML = `<span class="mcmodder-class-env-invalid"><i class="fa fa-ban" />${Utils.escapeHTML(r)}</span>`;
             else if (r === "可选")
-              r = `<span class="mcmodder-class-env-optional"><i class="fa fa-circle-o" />${r}</span>`;
+              envHTML = `<span class="mcmodder-class-env-optional"><i class="fa fa-circle-o" />${Utils.escapeHTML(r)}</span>`;
+            else envHTML = Utils.escapeHTML(r);
             $(
-              `<li class="col-lg-6"><span class="title">${r}</span><span class="text">${e.slice(0, 3)}</span></li>`,
+              `<li class="col-lg-6"><span class="title">${envHTML}</span><span class="text">${Utils.escapeHTML(e.slice(0, 3))}</span></li>`,
             ).insertAfter($(c).prev());
           });
           c.remove();
-        } else c.innerHTML = `<span class="title">${d[1]}</span><span class="text">${d[0]}</span>`;
+        } else if (htmlBuilt) {
+          // 该列由本函数生成 HTML（已转义数据），不再是页面原始文本
+          c.innerHTML = d[1];
+        } else {
+          c.innerHTML = `<span class="title">${Utils.escapeHTML(d[1])}</span><span class="text">${Utils.escapeHTML(d[0])}</span>`;
+        }
         if (c.className === "col-lg-4") c.className = "col-lg-6";
       });
       $(".slider-block").remove();

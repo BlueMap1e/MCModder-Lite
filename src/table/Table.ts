@@ -29,10 +29,11 @@ export class TableUtils {
   static readonly DISPLAYRULE_NUMBER = (data: string | number) =>
     data ? Number(data).toLocaleString() : null;
   /** 数组元素以「, 」连接成一行文本 */
-  static readonly DISPLAYRULE_ARRAY = (data: (string | number)[]) => data.join(", ");
+  static readonly DISPLAYRULE_ARRAY = (data: (string | number)[]) =>
+    data.map((item) => Utils.escapeHTML(String(item))).join(", ");
   /** 等宽字体包裹文本（`mcmodder-monospace`） */
   static readonly DISPLAYRULE_MONOSPACE = (data: string) =>
-    data ? `<span class="mcmodder-monospace">${data}</span>` : null;
+    data ? `<span class="mcmodder-monospace">${Utils.escapeHTML(data)}</span>` : null;
   /** 毫秒时间戳 → 英文日期（`toLocaleDateString`） */
   static readonly DISPLAYRULE_DATE_MILLISEC_EN = (data: string | number) =>
     new Date(data).toLocaleDateString();
@@ -67,22 +68,25 @@ export class TableUtils {
   static readonly DISPLAYRULE_LINK_CENTER_ARRAY = (data: number[]) =>
     data.map(TableUtils.DISPLAYRULE_LINK_CENTER).join(", ");
   /** Base64 图片 → `<img>` 标签（加载失败时回退到百科默认的「空物品」32px 图标） */
-  static readonly DISPLAYRULE_IMAGE_BASE64 = (data: string) =>
-    data
-      ? `<img src="${Utils.appendBase64ImgPrefix(data)}" onerror="this.src='${Values.assets.mcmod.emptyItemIcon32x}'; this.onerror=null;">`
+  static readonly DISPLAYRULE_IMAGE_BASE64 = (data: string) => {
+    const src = Utils.appendBase64ImgPrefix(data);
+    return src
+      ? `<img src="${Utils.escapeHTML(src)}" onerror="this.src='${Values.assets.mcmod.emptyItemIcon32x}'; this.onerror=null;">`
       : null;
+  };
   /** 字节数 → 人类可读的体积文本（`Utils.getFormattedSize`） */
   static readonly DISPLAYRULE_SIZE = (data: string | number) =>
     Utils.getFormattedSize(Number(data));
   /** `"id,名称"` 字符串 → 带名称的个人中心外链（展示列综合了 id + 名称两个来源） */
   static readonly DISPLAYRULE_LINK_CENTER_WITH_NAME = (data: string) => {
     const row = data.split(",");
-    return `<a target="_blank" href="${Utils.getCenterURL(Number(row[0]))}">${row[1]}`;
+    return `<a target="_blank" href="${Utils.getCenterURL(Number(row[0]))}">${Utils.escapeHTML(row[1] ?? "")}`;
   };
   /** 长文本悬停展示全文：超 10 字符截断加「..」，悬停 tooltip 里放原文（换行转 `<br>`） */
   static readonly DISPLAYRULE_HOVER = (data: string) => {
-    const omittedText = data.length > 10 ? `${data.slice(0, 10)}..` : data;
-    return `<a data-toggle="tooltip" data-html="true" data-original-title="${data.replaceAll('"', '\\"').replaceAll(/\n+/g, "<br>")}">${omittedText}</a>`;
+    const safeText = Utils.escapeHTML(data);
+    const omittedText = data.length > 10 ? `${Utils.escapeHTML(data.slice(0, 10))}..` : safeText;
+    return `<a data-toggle="tooltip" data-html="true" data-original-title="${safeText.replaceAll(/\n+/g, "<br>")}">${omittedText}</a>`;
   };
 
   /**

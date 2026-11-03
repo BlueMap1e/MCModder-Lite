@@ -535,23 +535,24 @@ function getUnitElement(index: number, key: string) {
  * 渲染单个单元格的展示 HTML：优先取未保存编辑值（`edited`），否则取 `content` 原值；
  * 有展示规则时用 `displayRule(rawContent, 整行)` 加工（展示列可综合多个字段），否则原样输出；
  * 内容为空时显示灰色「∅」占位。返回值直接 `v-html` 注入。
+ *
+ * 安全边界：`displayRule` 的契约是「返回可安全注入的 HTML」（规则由代码写死，数据需自行转义）；
+ * 没有展示规则时，原始值一律当纯文本转义，避免远端文件名 / 导入 JSON 变成标签。
  */
 function renderUnit(data: TableRowData<T>, key: string) {
   const rawContent = data.edited?.[key] ?? data.content[key];
   const displayRule = columnOptions[key].displayRule;
+  const hasDisplayRule = !!displayRule && displayRule.length >= 2;
   let content;
-  if (
-    (!displayRule || displayRule.length < 2) &&
-    (rawContent === undefined || rawContent === null)
-  ) {
+  if (!hasDisplayRule && (rawContent === undefined || rawContent === null)) {
     content = null;
   } else {
-    content = displayRule?.(rawContent, data.content) ?? rawContent;
+    content = hasDisplayRule ? displayRule!(rawContent, data.content) : rawContent;
   }
   if (content === undefined || content === null) {
     return '<span class="text-muted">∅</span>';
   }
-  return content;
+  return hasDisplayRule ? content : Utils.escapeHTML(String(content));
 }
 
 /** 刷新整表：手动 `triggerRef(currentData)` 触发视图更新、结束加载态、重置渲染区间并发 `refresh` 事件 */

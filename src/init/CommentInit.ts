@@ -208,19 +208,8 @@ export class CommentInit extends Init {
       this.setReplyLink(e);
       if (!autoLink) return;
       const replyContent = e.find("div.comment-reply-row-text-content.common-text.font14").first();
-      const rawContent = replyContent.html().replaceAll("<br>", " ");
-      let newContent = "";
-      for (let i = 0; i < rawContent.length; i++) {
-        newContent += rawContent[i].charCodeAt(0) <= 0xff ? rawContent[i] : " ";
-      }
-      const urlList = newContent.match(/https?:\/\/(?:www\.)?[^\s/$.?#].[^\s]*/g) || [];
-      urlList.forEach((item) => {
-        replyContent.html(
-          replyContent
-            .html()
-            .replace(item, '<a href="' + item + '" target="_blank">' + item + "</a>"),
-        );
-      });
+      // 评论由用户撰写：只在文本节点上原地生成 <a>，不把序列化后的 HTML 再解析一次
+      Utils.linkifyTextNodes(replyContent);
     });
   }
 

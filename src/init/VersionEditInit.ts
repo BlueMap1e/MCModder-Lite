@@ -1,4 +1,6 @@
 import { AdvancedUEditor } from "../ueditor/AdvancedUEditor";
+import { Utils } from "../Utils";
+import { sanitizeHTML } from "../vue/composables/useSanitizedHTML";
 import { GeneralEditInit } from "./GeneralEditInit";
 import { Init } from "./Init";
 
@@ -63,6 +65,8 @@ export class VersionEditInit extends Init {
           "从 CF 获取日志内容",
         );
         data = JSON.parse(resp.responseText).changelogBody;
+        // 日志正文来自 CurseForge（模组作者可控），进编辑器前按白名单清洗
+        if (data) data = sanitizeHTML(String(data));
       } else if (source === 2) {
         resp = await this.parent.utils.createRequest(
           {
@@ -88,7 +92,9 @@ export class VersionEditInit extends Init {
             $(w)
               .find("h" + i)
               .each((_, e) => {
-                $(e).replaceWith(`<p>[h${i}=${e.textContent}]</p>`);
+                // 标题文本可能是作者可控内容，重组成百科标记前先转义
+                const headingText = Utils.escapeHTML(e.textContent ?? "");
+                $(e).replaceWith(`<p>[h${i}=${headingText}]</p>`);
                 f = true;
               });
           if (f) $(w).append("<p>[ban:title_menu]</p>");

@@ -55,8 +55,8 @@ const columnOptions = {
   releaseType: [
     "发布状态",
     (data) => {
-      const state = (data as string).toLowerCase();
-      return `<span class="badge versiontag versiontag-${state}">${data}</span>`;
+      const state = String(data).toLowerCase();
+      return `<span class="badge versiontag versiontag-${Utils.escapeHTML(state)}">${Utils.escapeHTML(String(data))}</span>`;
     },
   ],
   displayName: "文件名称",
@@ -80,10 +80,20 @@ const columnOptions = {
     "操作",
     (_, data) => {
       if (data.mcmodDate || !data.displayName || !data.releaseTime) return null;
-      if (data.platform === 1)
-        return `<a href="/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/?cfid=${data.cfid}&fileid=${data.fileID}&ver=${parseCFFileName(data.displayName)}&mcver=${data.gameVersions}&date=${data.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
-      if (data.platform === 2)
-        return `<a href="/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/?mrid=${data.mrid}&fileid=${data.fileID}&ver=${parseMRFileName(data.displayName)}&mcver=${data.gameVersions}&date=${data.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
+      // 文件名 / 版本号来自 CurseForge / Modrinth，进 URL 查询串前必须编码
+      const mcver = encodeURIComponent(
+        Array.isArray(data.gameVersions)
+          ? data.gameVersions.join(",")
+          : String(data.gameVersions ?? ""),
+      );
+      if (data.platform === 1) {
+        const ver = encodeURIComponent(parseCFFileName(data.displayName));
+        return `<a href="/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/?cfid=${data.cfid}&fileid=${data.fileID}&ver=${ver}&mcver=${mcver}&date=${data.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
+      }
+      if (data.platform === 2) {
+        const ver = encodeURIComponent(parseMRFileName(data.displayName));
+        return `<a href="/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/?mrid=${data.mrid}&fileid=${data.fileID}&ver=${ver}&mcver=${mcver}&date=${data.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
+      }
     },
   ],
 } satisfies ColumnOptionsInitializer<GameVersionCompareEntry>;

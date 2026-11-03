@@ -214,17 +214,26 @@ export class Mcmodder {
             .insertBefore(previewFrame.children().first())
             .find("h5")
             .each((_, h5) => {
-              const keywords = doc.find("meta[name=keywords]").attr("content").split(",");
-              let textContent = h5.textContent;
-              if (keywords[1]) {
-                textContent = ("<a>" + textContent).replace(
-                  ` (${keywords[1]})`,
-                  `</a> <span class="item-h5-ename"><a>${keywords[1]}</a></span>`,
-                );
-              } else {
-                textContent = `<a>${textContent}</a>`;
+              const keywords = (doc.find("meta[name=keywords]").attr("content") ?? "").split(",");
+              const english = keywords[1];
+              const raw = h5.textContent ?? "";
+              const suffix = english ? ` (${english})` : "";
+              const hasEnglish = !!english && raw.endsWith(suffix);
+              const chinese = hasEnglish ? raw.slice(0, -suffix.length) : raw;
+              // 资料名来自远端页面，用 DOM 组装，避免被当成 HTML 解析
+              h5.textContent = "";
+              const chineseAnchor = document.createElement("a");
+              chineseAnchor.textContent = chinese;
+              h5.appendChild(chineseAnchor);
+              if (hasEnglish) {
+                h5.appendChild(document.createTextNode(" "));
+                const enSpan = document.createElement("span");
+                enSpan.className = "item-h5-ename";
+                const enAnchor = document.createElement("a");
+                enAnchor.textContent = english;
+                enSpan.appendChild(enAnchor);
+                h5.appendChild(enSpan);
               }
-              h5.innerHTML = textContent;
             });
         } else if (sourceUrl.includes("class/")) {
           doc.find(".class-title").first().insertBefore(previewFrame.children().first());
@@ -281,9 +290,9 @@ export class Mcmodder {
   updateTitleNode(count = this.msgAlertCount) {
     if (count) {
       const text = count.toLocaleString();
-      this.titleNode.html(`[${text} 条新消息!] ${this.title} - MC 百科`);
+      this.titleNode.text(`[${text} 条新消息!] ${this.title} - MC 百科`);
     } else {
-      this.titleNode.html(this.title + " - MC 百科");
+      this.titleNode.text(this.title + " - MC 百科");
     }
   }
 

@@ -616,7 +616,9 @@ export class TabEditInit extends Init {
       $("<td>")
         .appendTo(recipeTr)
         .attr("align", "right")
-        .html(`<strong>${extra[i].id}: ${extra[i].unit}</strong>`);
+        .html(
+          `<strong>${Utils.escapeHTML(String(extra[i].id))}: ${Utils.escapeHTML(String(extra[i].unit))}</strong>`,
+        );
 
       $("<td>").appendTo(recipeTr);
 

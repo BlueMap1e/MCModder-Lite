@@ -86,17 +86,8 @@ export class VerifyPageInit extends Init {
       $(".table i.fa-lightbulb-o")
         .parent()
         .each((_, c) => {
-          const rawContent = $(c).text();
-          let newContent = "";
-          for (let i = 0; i < rawContent.length; i++)
-            newContent += rawContent[i].charCodeAt(0) <= 0xff ? rawContent[i] : " ";
-          const urlList = newContent.match(/https?:\/\/(?:www\.)?[^\s/$.?#].[^\s]*/g) || [];
-          urlList.forEach((item) => {
-            c.innerHTML = rawContent.replace(
-              item,
-              '<a href="' + item + '" target="_blank">' + item + "</a>",
-            );
-          });
+          // 附言由提交者撰写：只在文本节点上原地生成 <a>，不重新解析 HTML
+          Utils.linkifyTextNodes(c);
         });
 
       // 筛选索引

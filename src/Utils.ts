@@ -1040,6 +1040,111 @@ export class Utils {
       .replace(/[&<>"']/g, (char) => Utils.escapeHTMLMap[char as keyof typeof Utils.escapeHTMLMap]);
   }
 
+  /**
+   * 校验外部数据里的 URL，返回可安全写入 `href` / `src` 的值。
+   *
+   * 只放行 http(s) 与站内相对路径；`javascript:`、`data:`、`vbscript:` 等协议一律返回空串。
+   * 调用方拿到空串时应退化为纯文本，而不是把原始值写进属性。
+   */
+  static safeURL(url: string | null | undefined): string {
+    const raw = String(url ?? "").trim();
+    if (!raw) return "";
+    // 去掉控制字符，避免 `java\nscript:` 之类的绕过（字符级过滤，避免正则控制字符告警）
+    const cleaned = Array.from(raw)
+      .filter((char) => {
+        const code = char.charCodeAt(0);
+        return code > 31 && code !== 127;
+      })
+      .join("");
+    if (!cleaned) return "";
+    // 站内相对路径：单个 `/`、锚点、查询串，以及 `./`、`../`
+    if (/^\/(?!\/)/.test(cleaned) || /^[?#]/.test(cleaned) || /^\.\.?\//.test(cleaned)) {
+      return cleaned;
+    }
+    try {
+      const parsed = new URL(cleaned, window.location.href);
+      if (parsed.protocol === "http:" || parsed.protocol === "https:") return parsed.href;
+    } catch {
+      // 非法 URL，按不安全处理
+    }
+    return "";
+  }
+
+  /** 文本节点里的 URL 匹配规则（不跨越空白与 HTML 定界符） */
+  private static readonly textURLPattern = /https?:\/\/[^\s"'<>]+/g;
+
+  /** 请求失败提示的去抖间隔（毫秒） */
+  private static lastRequestErrorAt = 0;
+
+  /** 请求失败统一提示：多个并发请求同时失败时只提示一次，避免刷屏 */
+  private static notifyRequestError(reason: string) {
+    const now = Date.now();
+    if (now - Utils.lastRequestErrorAt < 5000) return;
+    Utils.lastRequestErrorAt = now;
+    Utils.commonMsg(`${reason}（详见控制台）`, false);
+  }
+
+  /**
+   * 把元素**文本节点**里的 URL 就地转成 `<a>`，不改动任何标签与属性。
+   *
+   * 与「先取 `.html()` 再字符串替换」相比，这条路径不会把用户文本重新解析成 HTML，
+   * 也不会误改已有标签的属性，是处理短评 / 附言这类外部内容的唯一安全做法。
+   *
+   * @returns 转换出的链接数量
+   */
+  static linkifyTextNodes(root: Node | JQuery): number {
+    const node: Node | undefined =
+      root && typeof (root as JQuery).get === "function" ? (root as JQuery).get(0) : (root as Node);
+    if (!node) return 0;
+    const doc = node.ownerDocument ?? document;
+    const walker = doc.createTreeWalker(node, NodeFilter.SHOW_TEXT, {
+      acceptNode: (textNode) => {
+        const parent = textNode.parentElement;
+        if (!parent) return NodeFilter.FILTER_REJECT;
+        if (parent.closest("a, script, style, textarea")) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      },
+    });
+    const textNodes: Text[] = [];
+    while (walker.nextNode()) textNodes.push(walker.currentNode as Text);
+
+    let count = 0;
+    for (const textNode of textNodes) {
+      const text = textNode.nodeValue ?? "";
+      const matches = [...text.matchAll(Utils.textURLPattern)];
+      if (!matches.length) continue;
+      const fragment = doc.createDocumentFragment();
+      let cursor = 0;
+      for (const match of matches) {
+        const matchText = match[0];
+        // 与旧实现一致：URL 在第一个非 Latin-1 字符（中文/全角标点）处截断
+        const chars = Array.from(matchText);
+        const asciiEnd = chars.findIndex((char) => char.charCodeAt(0) > 0xff);
+        const bounded = asciiEnd === -1 ? matchText : chars.slice(0, asciiEnd).join("");
+        // 句末标点不属于 URL
+        const url = bounded.replace(/[),.;!?，。；！？、]+$/, "");
+        const start = match.index ?? 0;
+        if (start > cursor) fragment.append(text.slice(cursor, start));
+        const safe = Utils.safeURL(url);
+        if (safe) {
+          const anchor = doc.createElement("a");
+          anchor.href = safe;
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.textContent = url;
+          fragment.append(anchor);
+        } else {
+          fragment.append(url);
+        }
+        cursor = start + url.length;
+        count++;
+      }
+      if (cursor < text.length) fragment.append(text.slice(cursor));
+      textNode.replaceWith(fragment);
+    }
+    return count;
+  }
+
   /** 获取元素相对文档的绝对坐标（含滚动偏移） */
   static getAbsolutePos(node: Element) {
     const rect = node.getBoundingClientRect();
@@ -1442,46 +1547,76 @@ export class Utils {
       Utils.commonMsg(errorMsg + "（详见控制台）", false);
       return Promise.reject(new Error(errorMsg));
     }
-    return new Promise((resolve) => {
+    return new Promise((resolve, reject) => {
+      let settled = false;
+      const succeed = (resp: GmResponseEvent<R, unknown>) => {
+        if (settled) return;
+        settled = true;
+        resolve(resp);
+      };
+      const fail = (reason: string) => {
+        if (settled) return;
+        settled = true;
+        console.warn(`[MCModder-Lite] 请求失败：${reason}`, config.url);
+        Utils.notifyRequestError(reason);
+        reject(new Error(reason));
+      };
       setTimeout(() => {
         config.onload = (resp) => {
+          if (settled) return;
           // 二进制响应（`responseType: "arraybuffer"` 等）下 responseText 未必是字符串，不能直接 trim
           const str = typeof resp.responseText === "string" ? resp.responseText.trim() : "";
-          if (str.startsWith("<script>") && str.endsWith("</script>")) {
-            const yxdTokenList = str.match(/'yxd_token=[0-9a-f]+'/);
-            if (yxdTokenList) {
-              const url = new URL(resp.finalUrl);
-              const hostname = url.hostname;
-              const pathname = url.pathname;
-              const index = pathname.lastIndexOf("/");
-              const path = "/" + pathname.slice(1, index);
-              const yxdToken = yxdTokenList[0].slice(11, -1);
-              GM_cookie.set(
-                {
-                  name: "yxd_token",
-                  value: yxdToken,
-                  domain: hostname,
-                  path: path,
-                },
-                (err) => {
-                  if (err) {
-                    console.warn("Failed to set `yxd_token!`");
-                  } else {
-                    this.createRequest(config, message, silent, log).then((resp) => resolve(resp));
-                  }
-                },
-              );
-            }
-          } else {
-            resolve(resp);
+          const yxdTokenList =
+            str.startsWith("<script>") && str.endsWith("</script>")
+              ? str.match(/'yxd_token=[0-9a-f]+'/)
+              : null;
+          if (!yxdTokenList) {
+            // 普通响应，或形如 <script> 但并非 token 校验：交回调用方
+            succeed(resp);
+            return;
           }
+          // 未授予 cookie 权限（部分管理器 / Firefox）时无法写入 token，直接交回原响应
+          if (typeof GM_cookie === "undefined" || typeof GM_cookie.set !== "function") {
+            succeed(resp);
+            return;
+          }
+          const url = new URL(resp.finalUrl);
+          const hostname = url.hostname;
+          const pathname = url.pathname;
+          const index = pathname.lastIndexOf("/");
+          const path = "/" + pathname.slice(1, index);
+          const yxdToken = yxdTokenList[0].slice(11, -1);
+          GM_cookie.set(
+            {
+              name: "yxd_token",
+              value: yxdToken,
+              domain: hostname,
+              path: path,
+            },
+            (err) => {
+              if (err) {
+                console.warn("Failed to set `yxd_token!`", err);
+                // 写入失败也要交回响应，避免调用方永久挂起
+                succeed(resp);
+                return;
+              }
+              this.createRequest(config, message, silent, log).then(succeed, (error: unknown) =>
+                fail(error instanceof Error ? error.message : String(error)),
+              );
+            },
+          );
         };
+        config.onerror = () => fail("网络请求失败（请检查网络、代理或站点封禁）");
+        config.ontimeout = () => fail("网络请求超时");
+        config.onabort = () => fail("网络请求已取消");
+        if (!config.timeout) config.timeout = 30000;
         if (log) {
           const logs = GM_getValue("mcmodderLogger")?.split(";") || [];
           if (logs.length >= Values.MAX_REQUEST_COUNT / 10) logs.shift();
           let content = `A${lastRequestTime}:${config.url}`;
           if (message) content += ` (${message})`;
-          if (config.data) content += `(${config.data})`;
+          // 请求体可能含编辑正文 / 搜索词，只保留截断片段，避免调试导出泄露全文
+          if (config.data) content += `(${String(config.data).slice(0, 200)})`;
           logs.push(content);
           GM_setValue("mcmodderLogger", logs.join(";"));
         }

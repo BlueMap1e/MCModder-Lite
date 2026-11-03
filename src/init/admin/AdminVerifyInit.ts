@@ -614,14 +614,28 @@ export class AdminVerifyInit extends AdminBaseInit {
     相关链接: (content, data) => {
       const addLink = (node: JQuery) => {
         node.find("p").each((index, p) => {
-          const text = p.textContent;
+          const text = p.textContent ?? "";
           const split = text.indexOf("]");
           const bracket = text.lastIndexOf(" (");
           const name = text.slice(1, split);
           const link =
             bracket === -1 ? text.slice(split + 1).trim() : text.slice(split + 1, bracket).trim();
           const desc = bracket === -1 ? "" : ` (${text.slice(bracket + 2, -1)})`;
-          p.innerHTML = `[${name}] <a target="_blank" href="${link}">${link}</a>${desc}`;
+          // 提交者可控的文本一律走 DOM / 文本节点，不能拼 innerHTML 再解析
+          p.textContent = "";
+          p.appendChild(document.createTextNode(`[${name}] `));
+          const safeLink = Utils.safeURL(link);
+          if (safeLink) {
+            const anchor = document.createElement("a");
+            anchor.target = "_blank";
+            anchor.rel = "noopener noreferrer";
+            anchor.href = safeLink;
+            anchor.textContent = link;
+            p.appendChild(anchor);
+          } else {
+            p.appendChild(document.createTextNode(link));
+          }
+          p.appendChild(document.createTextNode(desc));
 
           data.link ??= {};
           const isCustom = !Utils.isKeyOfObject(Values.siteMap, name);
@@ -1006,10 +1020,14 @@ export class AdminVerifyInit extends AdminBaseInit {
           return;
         }
         if (this.verifyClassID) {
-          e.innerHTML = `<a target="_blank" href="${Utils.getItemTypeURL(
-            this.verifyClassID,
-            type.typeID,
-          )}">${text}</a>`;
+          // 资料类型文本由提交者可控：DOM 组装，不拼 innerHTML
+          e.textContent = "";
+          const anchor = document.createElement("a");
+          anchor.target = "_blank";
+          anchor.rel = "noopener noreferrer";
+          anchor.href = Utils.safeURL(Utils.getItemTypeURL(this.verifyClassID, type.typeID)) || "#";
+          anchor.textContent = text;
+          e.appendChild(anchor);
           data.category = { 0: type.typeID.toString() };
         }
       });
