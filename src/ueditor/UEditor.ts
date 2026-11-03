@@ -154,42 +154,76 @@ export class UEditor {
     window.addEventListener("resize", () => this.widthAutoResize());
     window.dispatchEvent(new Event("resize"));
 
+    // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），先补一次，
+    // 让紧随其后的统计与高度计算看到最终 DOM
+    this.ensureTrailingParagraph();
     this.updateEditorStats();
 
-    this.editor.addListener("contentChange", () => {
-      this.ensureTrailingParagraph();
-      this.updateEditorStats();
-    });
+    // 正常路径：正文变化后统一走「归一化尾随行 +（需要时）重算统计」的微任务
+    this.editor.addListener("contentChange", () => this.scheduleBodySync(true));
     // contentchange 并不在所有正文变更路径上触发：UEditor 的按键处理（如 Firefox 下
     // Backspace 合并删除尾随空段落）会拦截默认行为后直接改 DOM，部分路径不 fire 事件，
     // 导致补段落失效、高度滞留。挂 MutationObserver 兜底保证始终跟随真实 DOM；
     // subtree 必须开：删掉尾随行内部的 <br>（墙的形态 2）只改 p 的子节点，body 层
     // childList 看不见（诊断日志实证）。归一化自身幂等，不会形成循环。
-    this.bodyObserver = new MutationObserver(() => this.scheduleBodySync());
+    // 观察器只在真实 DOM 变更时触发，属于「内容确实变了」的信号，按强制重算处理。
+    this.bodyObserver = new MutationObserver(() => this.scheduleBodySync(true));
     this.bodyObserver.observe(this.body!, { childList: true, subtree: true });
     this.attachTableEscapeKeyHandler();
     // 兜底的兜底：contentchange / MutationObserver 这类事件路径在个别环境下存在
     // 无法本地复现的失效（Tampermonkey 沙箱 realm 与页面 realm 的调度差异，
     // 实机中高频退格可击穿，而本地 Playwright 无法复现）。selectionchange 是浏览器
-    // 原生事件（光标移动/选区变化必发，不经过 UEditor），配合低频 watchdog 轮询，
-    // 二者都只做幂等修复：即使事件路径全部失守，状态最迟在下一次光标移动或 1.5s 内自愈。
+    // 原生事件（光标移动/选区变化必发，不经过 UEditor），配合低频 watchdog 轮询。
+    // 注意这两条只做**廉价的幂等检查**：只有真的改了 DOM 才重算统计，避免每次光标
+    // 移动 / 每 1.5s 都整篇序列化正文（长文编辑时开销可观）。
     this.document!.addEventListener("selectionchange", () => this.scheduleBodySync());
-    window.setInterval(() => this.scheduleBodySync(), 1500);
-    // 初次就绪时正文可能就以表格结尾（如 Markdown → HTML 重写后的资料），补一次
-    this.ensureTrailingParagraph();
+    this.startWatchdog();
+    // bfcache 会让页面进入冻结状态：暂停轮询，恢复时重启（观察器/监听器无需移除）
+    window.addEventListener("pagehide", () => this.stopWatchdog());
+    window.addEventListener("pageshow", (e) => {
+      if (e.persisted) this.startWatchdog();
+    });
   }
 
-  /** body 直接子节点变化后的同步任务是否已在队列中（微任务去重） */
+  /** body 同步任务是否已排队（微任务去重） */
   private bodySyncQueued = false;
 
-  /** 在微任务里去重执行补段落 + 高度重算，同一批连续 DOM 变更只处理一次 */
-  private scheduleBodySync() {
+  /** 已排队的同步任务是否需要「无条件重算统计」（正文真的变了），区别于只做尾随行检查 */
+  private bodySyncForceStats = false;
+
+  /** 低频兜底轮询的句柄；页面进入 bfcache 时暂停，恢复时重启 */
+  private bodySyncTimer?: number;
+
+  /** 启动低频兜底轮询（页面从 bfcache 恢复时会重新启动） */
+  private startWatchdog() {
+    if (this.bodySyncTimer !== undefined) return;
+    this.bodySyncTimer = window.setInterval(() => this.scheduleBodySync(), 1500);
+  }
+
+  /** 暂停低频兜底轮询（页面进入 bfcache / 卸载时） */
+  private stopWatchdog() {
+    if (this.bodySyncTimer === undefined) return;
+    clearInterval(this.bodySyncTimer);
+    this.bodySyncTimer = undefined;
+  }
+
+  /**
+   * 把「补尾随行 + 重算统计」合并到同一次微任务里，同一批连续事件只处理一次。
+   *
+   * @param forceStats 正文确实发生了变化（contentchange / body 子树变更），即使尾随行
+   *   无需修改也要重算；否则（selectionchange / watchdog）只在尾随行真的被改动时重算——
+   *   这几条路径触发频率很高，而 `updateEditorStats` 会整篇序列化正文并强制布局。
+   */
+  private scheduleBodySync(forceStats = false) {
+    if (forceStats) this.bodySyncForceStats = true;
     if (this.bodySyncQueued) return;
     this.bodySyncQueued = true;
     queueMicrotask(() => {
       this.bodySyncQueued = false;
-      this.ensureTrailingParagraph();
-      this.updateEditorStats();
+      const force = this.bodySyncForceStats;
+      this.bodySyncForceStats = false;
+      const changed = this.ensureTrailingParagraph();
+      if (changed || force) this.updateEditorStats();
     });
   }
 
@@ -265,27 +299,43 @@ export class UEditor {
    *
    * 早期版本只处理形态 1，2、3 正是用户实机"高频删除后墙再现且无解"的残留形态。
    * 这里统一归一化为干净的 `<p><br></p>`（等价于原版体验的"最后一行自动换行符"）。
-   * 有文字/媒体内容的尾随行不动。幂等：归一化结果本身不满足任何触发条件，无循环。
+   *
+   * 处理方式是**最小改动**：补一个 `<br>`、只摘掉污染元素上的 nowrap 声明，
+   * 不重建整段 innerHTML —— 尾随行里可能有 UEditor 的光标书签，重建会让光标跳走。
+   * 有文字/媒体内容的尾随行不动。幂等：处理结果不再满足触发条件，无循环。
+   *
+   * @returns 是否真的改动了 DOM（供调用方决定要不要重算高度/统计）
    */
-  private ensureTrailingParagraph() {
-    if (!this.body || !this.document) return;
+  private ensureTrailingParagraph(): boolean {
+    if (!this.body || !this.document) return false;
     const last = this.body.lastElementChild;
-    if (!last) return;
+    if (!last) return false;
     if (last.tagName === "TABLE") {
       const p = this.document.createElement("p");
       p.innerHTML = "<br/>";
       this.body.appendChild(p);
-      return;
+      return true;
     }
-    if (last.tagName !== "P") return;
-    if (last.querySelector("img,iframe,video,table")) return;
-    const text = last.textContent?.trim() ?? "";
-    if (text !== "") return;
-    const needsBr = !last.querySelector("br");
-    const nowrapPolluted = !!last.querySelector("[style*='nowrap']");
-    if (needsBr || nowrapPolluted) {
-      last.innerHTML = "<br/>";
+    if (last.tagName !== "P") return false;
+    // 有文字/媒体内容的尾随行不动
+    if (last.querySelector("img,iframe,video,table")) return false;
+    if ((last.textContent ?? "").trim() !== "") return false;
+
+    let changed = false;
+    // nowrap 污染：只摘掉相关声明（可能落在 p 自身，也可能在内部 span 上），保留其余节点
+    const styled = [last as HTMLElement, ...last.querySelectorAll<HTMLElement>("[style]")];
+    for (const node of styled) {
+      if (!/nowrap/i.test(node.style.cssText)) continue;
+      node.style.removeProperty("text-wrap-mode");
+      node.style.removeProperty("white-space");
+      if (!node.getAttribute("style")) node.removeAttribute("style");
+      changed = true;
     }
+    if (!last.querySelector("br")) {
+      last.appendChild(this.document.createElement("br"));
+      changed = true;
+    }
+    return changed;
   }
 
   /** 是否已给宿主文档挂上「弹窗 iframe 样式注入」监听（监听本身与具体编辑器实例无关） */
