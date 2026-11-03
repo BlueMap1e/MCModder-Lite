@@ -100,7 +100,7 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/widget/Splash3D.ts", "src/main.ts"], // 祖传代码，重构前豁免
+    files: ["src/main.ts"], // 祖传代码，重构前豁免
     rules: {
       "no-empty": "off",
       "@typescript-eslint/no-explicit-any": "off",
@@ -111,9 +111,6 @@ export default defineConfig([
   {
     files: [
       "src/Mcmod.d.ts", // MCMOD
-      "src/echarts/EChartsUtils.ts", // ECharts
-      "src/requestqueue/*.ts", // 网络通信
-      "src/init/center/CenterHomeInit.ts", // 依旧 ECharts
       "src/ueditor/AdvancedUEditor.ts", // UEditor
       "src/ueditor/UEditor.ts", // 依旧 UEditor
       "src/vue/mount.ts", // Vue

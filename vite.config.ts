@@ -64,19 +64,7 @@ const userscriptMeta = {
     "GM_addValueChangeListener",
     "GM_xmlhttpRequest",
   ],
-  connect: [
-    "mcmod.cn",
-    "www.curseforge.com",
-    "api.modrinth.com",
-    "raw.githubusercontent.com",
-    "hub.gitmirror.com",
-    "supabase.co",
-    "kjghwgrbawdtatyrrxin.supabase.co",
-    "mcmodder.114514256.xyz",
-    "fastly.jsdelivr.net",
-    "cdn.jsdelivr.net",
-    "cdn.jsdelivr.net.cn",
-  ],
+  connect: ["mcmod.cn", "www.curseforge.com", "api.modrinth.com", "cdn.jsdelivr.net"],
   require: ["https://registry.npmmirror.com/turndown/7.2.4/files/dist/turndown.js"],
 } as const;
 
