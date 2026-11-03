@@ -523,6 +523,11 @@ export class AdvancedUEditor extends UEditor {
               const converted = this.turndownSurvice.turndown(content.html());
               this.mdEditor!.setValue(converted);
             }
+            // Modrinth 日志以 Markdown 存储：等正文灌进 MD 编辑器后再自动执行
+            // 「Markdown → HTML」。不能放回 readyMarkdownEditor() 的同步段——
+            // 那里早于本回调（onLoad 延后一拍），会拿空内容调用 performMarkdownIt
+            // 覆盖原生正文。
+            if (this.isModrinthVer) $("#mcmodder-tool-md").click();
           },
         }).mount(this.mdEditorContainer!.get(0)) as InstanceType<typeof MainTextEditor>;
         this.mdEditor!.on(
@@ -533,7 +538,7 @@ export class AdvancedUEditor extends UEditor {
         );
       }
 
-      if (this.isModrinthVer) $("#mcmodder-tool-md").click();
+      // ?mrid 的自动转换在 onLoad 里执行（见上），此处只负责显示
       $("#mcmodder-tool-md").show();
       this.mdEditorContainer?.show();
       $(this.verticalOption![0]).show();
@@ -1146,7 +1151,9 @@ export class AdvancedUEditor extends UEditor {
       this.pullHtmlFromNative();
     } else {
       this.refreshTextNode?.show();
-      this.htmlEditorApp!.requestRefresh();
+      // 没开 HTML 编辑器时没有可刷新的对象；此时统计栏仍显示「轻触刷新」，
+      // 用户手动触发会走 manualTriggerStatsUpdate() 重新统计
+      this.htmlEditorApp?.requestRefresh();
     }
   }
 
