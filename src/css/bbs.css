@@ -1295,3 +1295,62 @@ html.dark .ntc_l {
   border-color: var(--mcmodder-color-alert-warning-3);
   color: var(--mcmodder-color-alert-warning-1);
 }
+
+/* ===== 个人中心：用户组 / 勋章 / 积分 / 任务页（home.php?mod=spacecp&ac=usergroup、
+   mod=medal、mod=spacecp&ac=credit 与 mod=task）的站点遗留浅色底。
+   页面文字色经 body 继承已是浅色，以下背景不压暗即浅字浅底（探针实测）。 ===== */
+
+/* Discuz 全站斑马行工具类（common.css .alt, .alt th, .alt td 浅灰） */
+html.dark .alt,
+html.dark .alt th,
+html.dark .alt td {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+
+/* 用户组权限页（home_spacecp.css）：.tfx 单元格奶油底与 .tfx .alt 深奶油底 */
+html.dark .tfx th,
+html.dark .tfx td,
+html.dark .tfx .alt,
+html.dark .tfx .alt th,
+html.dark .tfx .alt td {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+
+/* 用户组权限页分节表头：tb.png 浅色贴图 + #666 文字，整体改主题深底 */
+html.dark .tdats .h th {
+  background: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text-dark1);
+}
+
+/* 用户组权限页单元格白色分隔线，压暗后与底色融合 */
+html.dark .tdats th,
+html.dark .tdats td {
+  border-color: var(--mcmodder-color-background-dark1);
+}
+
+/* 积分页记录表头（.dt th 浅灰）与浅色分隔线 */
+html.dark .dt th {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .dt td,
+html.dark .dt th {
+  border-bottom-color: var(--mcmodder-color-background-dark3);
+}
+
+/* 任务/勋章页内容盒：common.css 第二条 .ptm 规则写死白底；透明化跟随父级深底 */
+html.dark .ptm {
+  background-color: transparent;
+}
+
+/* 回到顶部浮层与隐藏式通知（#ip_notice.focus），论坛页已有 body#nv_forum 专属规则 */
+html.dark #scrolltop {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark #scrolltop a {
+  background-image: none;
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .focus {
+  background-color: var(--mcmodder-color-background-dark1);
+}
