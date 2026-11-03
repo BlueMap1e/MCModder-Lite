@@ -1,6 +1,8 @@
 import { GM_openInTab } from "$";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { MemuCommandLoader } from "./loader/MenuCommandLoader";
+import { ScheduleRequestLoader } from "./loader/ScheduleRequestLoader";
+import { ScheduleRequestUtils } from "./schedulerequest/ScheduleRequestUtils";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
 import { StyleLoader } from "./loader/StyleLoader";
 import { StorageBuffer } from "./StorageBuffer";
@@ -37,6 +39,8 @@ export class Mcmodder {
   ueditorFrame: UEditor[];
   screenAttachedFrame: ScreenAttachedFrameData[];
   cfgutils: ConfigUtils;
+  /** 计划任务调度器（自动签到等；装配见构造器，勿删 ScheduleRequestLoader.run 的调用） */
+  scheduleRequestUtils: ScheduleRequestUtils;
   styleColors: ThemeColorSet;
   preferredWiderScreen = false;
   isNightMode = false;
@@ -79,6 +83,11 @@ export class Mcmodder {
 
     this.utils = new Utils(this);
     this.configRepository = this.utils.configs;
+
+    // 计划任务调度器：注册全部定时任务（自动签到等）并启动每秒轮询。
+    // 这行曾在 lite.2 移除预编辑轮询时被连带删除，导致自动签到静默失效——勿再删除。
+    this.scheduleRequestUtils = new ScheduleRequestUtils(this);
+    ScheduleRequestLoader.run(this.scheduleRequestUtils);
 
     this.cfgutils = new ConfigUtils(this);
     this.styleColors = Utils.getThemeColors(this.configRepository);
@@ -753,7 +762,17 @@ export class Mcmodder {
         Math.max(autoNotifyDelay * 1e3 * 60, 6e3),
       );
 
-    this.initList.filter((init) => init.canRun()).forEach((init) => init.run());
+    // 单个 Init 的异常只记日志不中断循环：document-start 时页面 DOM 残缺，
+    // 任何 init 都可能踩到未就绪的结构，不能让一个 init 带死其余全部功能
+    this.initList
+      .filter((init) => init.canRun())
+      .forEach((init) => {
+        try {
+          init.run();
+        } catch (e) {
+          console.error(`[MCModder-Lite] ${init.constructor.name}.run() 异常：`, e);
+        }
+      });
 
     const areaLeft = $(".left");
     const areaRight = $(".class-info-right");
