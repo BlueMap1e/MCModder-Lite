@@ -7,7 +7,13 @@ import { Init } from "./Init";
 
 export class CommentInit extends Init {
   canRun() {
-    return !!$(".common-comment-block.lazy").length;
+    // 主站短评块为服务端渲染，启动时即存在；中心 / 作者页的留言板是动态渲染的，
+    // 启动时多半还不存在，因此对这两种宿主页直接放行，由 run() 里的等待逻辑接管
+    return (
+      !!$(".common-comment-block.lazy").length ||
+      this.parent.href.includes("center.mcmod.cn") ||
+      this.parent.href.includes("/author/")
+    );
   }
 
   /** 短评跨页跳转：查找、翻页与 loading 都由它负责 */
@@ -103,25 +109,29 @@ export class CommentInit extends Init {
   private readonly commentObserver = new MutationObserver((mutationList) => {
     // 防广告误触发：站点的广告楼层始终单独插入，遇到即跳过整批
     if (mutationList.some((mutation) => CommentInit.isAdFloor(mutation))) return;
-    for (const mutation of mutationList) {
-      if (mutation.addedNodes.length === 0) continue;
-      const commentFloor = $(mutation.target);
-      // 投递到我们手上时，该楼层可能已被站点重渲染或整块替换
-      if (!commentFloor.get(0)?.isConnected) continue;
-      const className = commentFloor.prop("class");
-      if (className === "comment-floor" || className === "comment-reply-floor") {
-        // 显示短评发布时间：顶层楼与楼中楼都要处理
-        this.displayPublishTime(commentFloor);
-        if (className === "comment-floor") {
-          this.processCommentFloor(commentFloor);
-        } else {
-          this.processCommentReplyFloor(commentFloor);
-        }
-      } else if (className === "common-comment-block lazy") {
-        this.unlockComment();
-      }
+    // 只要有新增节点就可能带来未处理的楼层/回复。不做逐一的目标类名匹配——
+    // 楼层与回复的插入形态（目标容器的类名）因页面形态（主站 / 中心页）与站点行为
+    // （追加 / 整块重渲染）而异，精确匹配曾经漏掉中心页的楼中楼。
+    // 统一走防抖补扫：各处理器以标记属性保证幂等，重复触发几乎零成本；
+    // 站点重渲染把已注入的锚点冲掉时，新渲染出的节点同样会被补处理。
+    if (mutationList.some((mutation) => mutation.addedNodes.length > 0)) {
+      this.scheduleSweep();
     }
   });
+
+  /** 补扫防抖标记 */
+  private sweepScheduled = false;
+
+  /** 防抖合并的补扫：全量处理短评块内未标记的楼层与回复 */
+  private scheduleSweep() {
+    if (this.sweepScheduled) return;
+    this.sweepScheduled = true;
+    setTimeout(() => {
+      this.sweepScheduled = false;
+      this.unlockComment();
+      this.catchUpExistingFloors();
+    }, 200);
+  }
 
   /** 站点单独插入的广告楼层 */
   private static isAdFloor(mutation: MutationRecord) {
@@ -249,12 +259,34 @@ export class CommentInit extends Init {
     this.jump.notifyCommentRendered(target);
   }
 
+  /** 把 MutationObserver 挂到短评块上；块尚未渲染时返回 false */
+  private attachCommentObserver() {
+    const commentContainer = $(".common-comment-block.lazy");
+    if (!commentContainer.length) return false;
+    this.commentObserver.observe(commentContainer.get(0), {
+      childList: true,
+      subtree: true,
+    });
+    return true;
+  }
+
+  /** 对挂载观察者之前已渲染的楼层做一次补处理（各处理器以标记属性保证幂等） */
+  private catchUpExistingFloors() {
+    $(".comment-floor").each((_, f) => this.processCommentFloor($(f)));
+    $(".comment-reply-floor").each((_, f) => this.processCommentReplyFloor($(f)));
+    // 发布时间倒计时：顶层楼与楼中楼都要处理，逐节点幂等
+    this.displayPublishTime($(".common-comment-block.lazy"));
+  }
+
   run() {
     if (this.configs.getSettings("commentExpandHeight")) {
       const commentHeight = this.configs.getSettings("commentExpandHeight") || "300";
       Utils.addStyle(`.comment-row-text {max-height: ${commentHeight}px;}`);
     }
-    if (this.parent.href.includes("center.mcmod.cn") || this.parent.href.includes("/author/")) {
+    const onBoardHost =
+      this.parent.href.includes("center.mcmod.cn") || this.parent.href.includes("/author/");
+    if (onBoardHost && $(".comment-close").length) {
+      // 关闭状态的留言板：关闭提示已渲染，维持「无限制留言板」的原有强开语义
       this.unlockComment();
     }
     if (this.jump.start()) {
@@ -263,11 +295,24 @@ export class CommentInit extends Init {
         block: "center",
       });
     }
-    const commentContainer = $(".common-comment-block.lazy");
-    if (commentContainer.length)
-      this.commentObserver.observe(commentContainer.get(0), {
-        childList: true,
-        subtree: true,
+    if (!this.attachCommentObserver() && onBoardHost) {
+      // 留言板晚于脚本启动渲染（中心 / 作者页动态内容）：先在文档级等待它出现，
+      // 出现后换回窄观察者，并对渲染时已存在的楼层补处理。
+      // 注意不可在等待阶段盲目调 unlockComment——开放留言板随后会原生渲染，
+      // 提前注入会造出重复留言板。
+      // 观察目标用 documentElement 而非 body：document-start 时 <body> 尚未解析，
+      // observe(document.body) 会抛 TypeError（harness 后注入场景测不出这一差异）。
+      const waiter = new MutationObserver(() => {
+        if (this.attachCommentObserver()) {
+          waiter.disconnect();
+          this.catchUpExistingFloors();
+        } else if ($(".comment-close").length && this.configs.getSettings("unlockComment")) {
+          waiter.disconnect();
+          this.unlockComment();
+          this.attachCommentObserver();
+        }
       });
+      waiter.observe(document.documentElement, { childList: true, subtree: true });
+    }
   }
 }
