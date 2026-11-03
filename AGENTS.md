@@ -44,7 +44,11 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
   the feature off leaves a half-applied layout that is worse than vanilla. Prefer styling the
   feature's own namespaced DOM (`.mcmodder-*`) over overriding host class names. This leak was
   inherited from upstream's 2.0.1 monolith → repo refactor, which moved feature CSS into the
-  static stylesheet while gating only the JS.
+  static stylesheet while gating only the JS. Note that `mcmodderUI.css` is a legacy
+  appearance layer injected **unconditionally** (its `mcmodderUI` setting is dead), so the
+  same rule applies inside it: any block restyling site-native DOM must carry a feature
+  marker class — an unscoped oredict block there broke the vanilla list layout until it was
+  scoped (fixed 2026-11-04).
 - `eslint.config.ts` exemptions are closed lists (legacy `src/main.ts`, host integrations
   that cannot avoid `any`). Never add new files to silence your own code.
 - `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
@@ -146,7 +150,8 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
 
 - Bump `version` in both `package.json` and `vite.config.ts` (userscript metadata) together.
 - Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` (user-owned; only with explicit
-  instruction); the release job extracts that section into the GitHub release notes.
+  instruction); the release job extracts that section into the GitHub release notes — the
+  version in the section title must match `package.json`, or the extraction finds nothing.
 - CI (`.github/workflows/build.yaml`) builds every push. A commit message containing
   `[release]` uploads `dist/mcmodder-lite.user.js` and creates tag `v<version>` (suffixed
   `_N` if the tag already exists).
