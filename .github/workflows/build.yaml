@@ -33,7 +33,8 @@ jobs:
     # 公共页 smoke：把构建产物注入真实 mcmod.cn 页面（无需登录态与密钥）。
     # 站点对数据中心来源可能弹「安全验证」，此时 smoke 按 SKIPPED 退出（不判失败），
     # 详见 scripts/smoke-public.mjs。编辑页 E2E 依赖登录态，仍留在本地 harness。
-    runs-on: ubuntu-latest
+    # ubuntu-latest 已滚到 26.04，Playwright 1.60 尚不支持其系统依赖安装，故钉在 24.04
+    runs-on: ubuntu-24.04
     needs: build
     steps:
       - uses: actions/checkout@v5
