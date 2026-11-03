@@ -31,6 +31,76 @@ export class CenterInit extends Init {
     return this.pageUID;
   }
 
+  /** 夜间改写前捕获的原始 option 片段（日间还原用） */
+  private chartOriginalOption?: string;
+
+  /**
+   * 夜间模式下的活跃度热力图（个人中心首页 `#center-editchart-obj`，ECharts 日历图）重主题化：
+   * 站点建图代码把空白格子的 `itemStyle.color` 硬编码为 "#fff"、日/月标签为 "#000"，
+   * tooltip 也是白底（canvas 绘制，CSS 无法覆盖），夜间模式下是一块白格子拼图。
+   *
+   * 时序要点：`_echarts_instance_` 属性在 `echarts.init()` 时就会出现，而站点自己的
+   * `setOption`（携带 "#fff"）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
+   * 还要在若干延时点复检，被覆盖就重新应用；日间按首次捕获的原始 option 片段
+   * （`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
+   * （站点随后到达的 setOption 本身就是日间样式）。`html` 的 `dark` 类切换同样触发。
+   * 实现模式与 `ClassPageInit.setupNightChartFix`（评分雷达图）一致。
+   */
+  private setupNightChartFix() {
+    const apply = () => {
+      const el = document.getElementById("center-editchart-obj");
+      if (!el) return;
+      if (typeof echarts === "undefined") return;
+      const chart = echarts.getInstanceByDom(el);
+      if (!chart) return;
+      const night = document.documentElement.classList.contains("dark");
+      const current = chart.getOption();
+      if (night) {
+        if (current?.calendar?.[0]?.itemStyle?.color !== "#3330") {
+          if (current?.calendar?.length && !this.chartOriginalOption) {
+            this.chartOriginalOption = JSON.stringify({
+              tooltip: current.tooltip,
+              calendar: current.calendar,
+            });
+          }
+          // 强调色取自用户当前主题（夜档）
+          const accent =
+            getComputedStyle(document.documentElement)
+              .getPropertyValue("--mcmodder-color-accent")
+              .trim() || "#35c1fd";
+          chart.setOption({
+            tooltip: { backgroundColor: "#222", textStyle: { color: "#aaa" } },
+            calendar: {
+              itemStyle: { color: "#3330", borderColor: "#444" },
+              dayLabel: { color: "#fff" },
+              monthLabel: { color: "#fff" },
+              yearLabel: { color: accent },
+            },
+          });
+          // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
+          for (const delay of [100, 300, 800, 2000]) {
+            setTimeout(apply, delay);
+          }
+        }
+      } else if (this.chartOriginalOption) {
+        chart.setOption(JSON.parse(this.chartOriginalOption));
+        this.chartOriginalOption = undefined;
+      }
+    };
+    // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）
+    new MutationObserver(apply).observe(document.documentElement, {
+      subtree: true,
+      attributes: true,
+      attributeFilter: ["_echarts_instance_"],
+    });
+    // 夜间开关：dark 类切换时重新应用
+    new MutationObserver(apply).observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
+    apply();
+  }
+
   /**
    * 挂载一个 SPA 子页：子页 DOM 有可能在本脚本注入之前就已渲染完成（bFCache 恢复、注入偏晚等），
    * 此时 MutationObserver 不会再补发之前的变更记录，所以先同步检测一次「当前是否已就绪」。
@@ -54,6 +124,9 @@ export class CenterInit extends Init {
 
   run() {
     this.pageUID = Number(this.parent.href.split("center.mcmod.cn/")[1].split("/")[0]);
+
+    // 活跃度热力图的夜间重主题化（图表在首页 tab，SPA 切换后重建也能被观察者接住）
+    this.setupNightChartFix();
 
     this.watchPage({
       selector: "#center-page-setting",

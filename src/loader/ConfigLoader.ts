@@ -69,7 +69,8 @@ export const settings = [
           {
             id: "disableGradient",
             title: "禁用文字渐变",
-            description: "勾选此项可能有助于提升性能。",
+            description:
+              "将脚本提供的渐变文字（编辑统计、金色提示等）与流光动画（自动链接图标、下拉框/搜索框描边）改为纯色静态显示。这些效果对性能的影响通常可以忽略，仅在低性能设备出现卡顿或对功耗敏感时才需要勾选。",
             type: "checkbox",
           },
           {
@@ -101,6 +102,7 @@ export const settings = [
             title: "社群夜间模式兼容",
             description: "(Beta!) 对社群应用夜间模式配色。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "backgroundAlpha",
@@ -176,6 +178,7 @@ export const settings = [
             title: "矿词/标签页重排版",
             description: "减小矿词/标签页中单个物品所占用的页面空间，并将各物品按所属模组分类。",
             type: "checkbox",
+            value: true,
           },
         ],
       },
@@ -232,6 +235,7 @@ export const settings = [
             title: "快速提交修复",
             description: "修复百科本体 Bug：快速提交时编辑框意外换行。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "anonymousUknowtoomuch",
@@ -246,6 +250,7 @@ export const settings = [
             description:
               "在合成表编辑界面中搜索物品时，显示每个物品的详细信息，并将属于当前模组的物品置顶。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "autoCloseSwal",
@@ -258,6 +263,7 @@ export const settings = [
             title: "快速催审",
             description: "在待审列表中显示“一键催审”按钮。",
             type: "checkbox",
+            value: true,
           },
         ],
       },
@@ -425,6 +431,7 @@ export const settings = [
             description:
               "打开模组主页时，自动记忆该模组的前置、拓展信息。配合“物品搜索详情”配置项使用时，属于当前所编辑模组的前置或拓展模组的物品也会在搜素结果中被置顶。",
             type: "checkbox",
+            value: true,
           },
           {
             id: "hoverDescription",
@@ -652,7 +659,8 @@ export const settings = [
           {
             id: "minimumRequestInterval",
             title: "最短发包间隔",
-            description: "设置脚本全局发送请求的最短间隔，单位为 ms。",
+            description:
+              "限制脚本所有网络请求（含实时通知轮询、自动展开等批量操作）发往百科的最短间隔，单位为 ms，避免请求过于密集。保持默认即可；调大会使批量操作变慢。",
             type: "number",
             value: 750,
             range: [500, null],

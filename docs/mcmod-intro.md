@@ -19,7 +19,7 @@ MCModder-Lite 是一款开源的 MC 百科编审辅助脚本，基于 Mcmodder 2
 
 MCModder-Lite 是一款运行在 MC 百科（mcmod.cn）上的用户脚本，装好篡改猴后打开百科页面即可使用。它给百科编辑与审核流程加了一层更顺手的界面：夜间模式、编辑器增强、自动链接、表格修复、待审列表重排等等。
 
-它源自 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder) 2.4.1，但不是简单地「复制一份」：我按自己每天编资料、审条目的实际用法做了取舍，删掉了用不上的模块，也修掉了几个一直在影响正文编辑的问题。项目以 AGPL-3.0 开源，源码在 [GitHub](https://github.com/BlueMap1e/Mcmodder-Lite)。
+它源自 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder) 2.4.1，但不是简单地「复制一份」：我按自己每天编资料、审条目的实际用法做了取舍，删掉了用不上的模块，也修掉了几个一直在影响正文编辑的问题。项目以 AGPL-3.0 开源，源码在 [GitHub](https://github.com/BlueMap1e/MCModder-Lite)。
 
 ### 它想解决什么问题
 
@@ -83,7 +83,7 @@ Lite 是 Mcmodder 的硬分叉，与上游团队没有隶属关系，也不会�
 ### 安装
 
 1. 先给浏览器装[篡改猴](https://www.tampermonkey.net/)（Tampermonkey）。
-2. 打开[一键安装地址](https://github.com/BlueMap1e/Mcmodder-Lite/releases/latest/download/mcmodder-lite.user.js)，在安装页点「安装」。
+2. 打开[一键安装地址](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)，在安装页点「安装」。
 3. 打开任意百科页面即可生效。设置入口：篡改猴图标 →「打开设置」，或个人中心 →「设置」。
 
 主测环境是 Firefox / Zen，Chrome / Edge 同源可用。脚本不内置自动更新，发新版后重新打开安装地址覆盖安装即可，设置与数据会保留。
@@ -108,8 +108,8 @@ Lite 是 Mcmodder 的硬分叉，与上游团队没有隶属关系，也不会�
 ### 更新与反馈
 
 - 当前版本：v2.4.1-lite.3（2026-11-03），已进入维护模式：只修 bug、按需移植上游修复，不再主动加功能。
-- 源码与更新：[BlueMap1e/Mcmodder-Lite](https://github.com/BlueMap1e/Mcmodder-Lite)
-- 问题反馈：[Issues](https://github.com/BlueMap1e/Mcmodder-Lite/issues)（请附版本、浏览器、复现步骤）
+- 源码与更新：[BlueMap1e/MCModder-Lite](https://github.com/BlueMap1e/MCModder-Lite)
+- 问题反馈：[Issues](https://github.com/BlueMap1e/MCModder-Lite/issues)（请附版本、浏览器、复现步骤）
 
 ### 许可
 
@@ -133,11 +133,11 @@ Lite 是 Mcmodder 的硬分叉，与上游团队没有隶属关系，也不会�
 8. 自动签到、用户切换、设置多标签页同步。
 
 安装：先装篡改猴，再打开安装地址
-https://github.com/BlueMap1e/Mcmodder-Lite/releases/latest/download/mcmodder-lite.user.js
+https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js
 在安装页点「安装」，然后打开任意百科页面即可。设置入口在个人中心「设置」或篡改猴菜单。
 
 注意：与上游 Mcmodder 功能重叠，请勿同时安装。本项目是硬分叉，与上游团队无隶属关系；上游版权归 Charcoal-Black 及其贡献者，本项目同样以 AGPL-3.0 开源，源码与反馈见
-https://github.com/BlueMap1e/Mcmodder-Lite
+https://github.com/BlueMap1e/MCModder-Lite
 
 当前版本 v2.4.1-lite.3，已进入维护模式：只修 bug，按需移植上游修复。
 

@@ -10,6 +10,9 @@ export class OredictPageInit extends Init {
   }
 
   run() {
+    // 标记类：base.css 中重排专用的 .oredict-item-list 规则以此限定作用域，
+    // 设置关闭（JS 未运行）时不劫持站点原生列表布局
+    document.documentElement.classList.add("mcmodder-oredict-advanced");
     $("div.icon-128x img").remove();
     const sortFrame = $(`<div class="mcmodder-mod-sort">`).appendTo(".oredict-frame");
     const sortInput = $(

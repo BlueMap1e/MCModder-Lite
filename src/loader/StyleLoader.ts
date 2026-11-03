@@ -45,6 +45,30 @@ export class StyleLoader {
    * @returns 多行 CSS 变量声明，形如
    *          `--mcmodder-color-primary: #xxx;`、`--mcmodder-color-primary-dark2: #xxx;`。
    */
+  /**
+   * 反解「带透明度的发光色」：求一个颜色 c，使 `c @ alpha` 叠在 `backdrop` 上混合后
+   * 恰为 `target`（逐通道解 `c = (target - backdrop * (1 - alpha)) / alpha`，越界截断）。
+   * 用于让带 backgroundAlpha 透明度的变量（如内容面 `background-transparent`）的
+   * 有效渲染色不受透明度档位影响——透明度只控制底色的透出程度。
+   *
+   * @param target 期望的有效渲染色（`#rrggbb`）。
+   * @param backdrop 变量实际叠放的底色（`#rrggbb`）。
+   * @param alpha 发光色的 alpha（0-1）。
+   * @returns `#rrggbbaa` 形式的发光色。
+   */
+  static alphaBlendTo(target: string, backdrop: string, alpha: number): string {
+    const t = Utils.colorToRGB(target);
+    const b = Utils.colorToRGB(backdrop);
+    const mix = (tv: number, bv: number) =>
+      Math.round(Math.min(255, Math.max(0, (tv - bv * (1 - alpha)) / alpha)));
+    return Utils.RGBToColor({
+      r: mix(t.r, b.r),
+      g: mix(t.g, b.g),
+      b: mix(t.b, b.b),
+      a: alpha,
+    } as RGBA);
+  }
+
   static applyPaletteModifier(palette: Palette, schedule: PaletteModifierSchedule) {
     // 递归大手子
     const work = (
@@ -132,9 +156,6 @@ export class StyleLoader {
     const splitScreenOnVerifyCss = importCSS("splitScreenOnVerify");
     const codemirrorCss = importCSS("codemirror");
     const reducedMotionCss = importCSS("reducedMotion");
-    // 弹窗专用样式不进宿主样式表，单独存放在 parent.ueditorDialogCss 上，
-    // 由 UEditor 的弹窗 iframe 样式注入负责分发（见 UEditor.attachDialogStyleListener）
-    const ueditorDialogCss = importCSS("ueditorDialog");
 
     const basePalette: Palette = {
       background: "#fff",
@@ -411,7 +432,18 @@ export class StyleLoader {
     );
     const otherPaletteNightCss = this.applyPaletteModifier(
       {
-        "background-transparent": Utils.setColorAlpha(nightPalette.background, backgroundAlpha),
+        // 内容面（.class-text / .center-block / .item-list-table 等约 119 个容器共用的
+        // 「面」原语）取 tier1 抬升面而非页底色：媒体密集页面上图文直接贴在最深底色上
+        // 会产生强亮度断层（同时对比），让内容「坐在」稍亮的面上。
+        // 目标是「有效面色」稳定落在 tier1（与 background-dark1 的 tier 换算一致）：
+        // 该变量带 backgroundAlpha 透明度、叠在页底色上渲染，若直接用 tier1 色值，
+        // alpha < 1 时会被页底色稀释（0.8 档实际只得 #1b1b1b），故按 alpha 反解出发光色。
+        // 反解后「背景透明度」设置只控制底图/底色的透出程度，不再改变面色亮度。
+        "background-transparent": StyleLoader.alphaBlendTo(
+          Utils.adjustColorBrightness(nightPalette.background, 1.05),
+          nightPalette.background,
+          backgroundAlpha,
+        ),
         "text-shadow": Utils.setColorAlpha(nightPalette.background, textShadowAlpha),
         "text-shadow-strong": "#0004",
         "box-shadow": "#0008",
@@ -503,7 +535,6 @@ export class StyleLoader {
       tabSelectorInfo: tabSelectorInfoCss,
       splitScreenOnVerify: splitScreenOnVerifyCss,
       codemirrorCss: codemirrorCss,
-      ueditorDialogCss: ueditorDialogCss,
       // 末尾追加：减弱动效规则需要压过同选择器的静态样式
       reducedMotion: reducedMotionCss,
     };
@@ -543,7 +574,6 @@ export class StyleLoader {
     style += css.reducedMotion;
 
     parent.css = style;
-    parent.ueditorDialogCss = css.ueditorDialogCss;
     Utils.addStyle(style);
 
     const radiusRatio: number | undefined = configs.getSettings("radiusRatio");

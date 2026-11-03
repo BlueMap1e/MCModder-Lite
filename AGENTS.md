@@ -20,8 +20,10 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
   locals/parameters fail it (`strict`, `noUnusedLocals`, `noUnusedParameters`,
   `verbatimModuleSyntax`).
-- There is no test suite inside the repo. Validate with `npm run verify` + `npm run build`,
-  then exercise behavior in a browser on mcmod.cn. A local Playwright harness may exist
+- There is no unit test suite inside the repo. Validate with `npm run verify` + `npm run build`,
+  then exercise behavior in a browser on mcmod.cn. CI runs a committed public-page smoke
+  (`scripts/smoke-public.mjs`, Chromium + GM shim, no login needed; skipped when mcmod.cn's
+  CAPTCHA blocks the runner). A local Playwright harness with richer editor E2E may exist
   outside the repo (not committed); it injects `dist/mcmodder-lite.user.js` into real pages
   with a GM shim.
 - The shippable artifact is `dist/mcmodder-lite.user.js` (copy into Tampermonkey).
@@ -35,6 +37,14 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
 - **Every setting must be read by code.** Before adding a setting, add the reader; before
   removing a feature, delete its setting from `ConfigLoader.ts` and `Settings`. Dead toggles
   that do nothing were a known regression in this fork.
+- **A setting must gate its entire behavior surface — CSS included.** Rules that restyle
+  site-native DOM for a gated feature (e.g. compact layouts in `base.css` targeting
+  `.oredict-item-list` / `.rank-list-block`) must be scoped under a marker class that the
+  feature's `run()` adds to `<html>` (see `OredictPageInit` / `RankInit`); otherwise turning
+  the feature off leaves a half-applied layout that is worse than vanilla. Prefer styling the
+  feature's own namespaced DOM (`.mcmodder-*`) over overriding host class names. This leak was
+  inherited from upstream's 2.0.1 monolith → repo refactor, which moved feature CSS into the
+  static stylesheet while gating only the JS.
 - `eslint.config.ts` exemptions are closed lists (legacy `src/main.ts`, host integrations
   that cannot avoid `any`). Never add new files to silence your own code.
 - `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
@@ -111,8 +121,10 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
   through `src/vue/composables/usePopoverHost.ts`.
 - **Global CSS** -> `src/css/*.css`, collected by `src/loader/StyleLoader.ts` into the
   `--mcmodder-*` palette plus one injected `<style>`. Component CSS is auto-collected by the
-  `cssSideEffects` hook into `<style data-mcmodder-vue-css>`. `src/css/ueditorDialog.css` is
-  injected only into UEditor dialog iframes (see `UEditor.attachDialogStyleListener`).
+  `cssSideEffects` hook into `<style data-mcmodder-vue-css>`. UEditor dialog iframes get the
+  same `parent.css` injected (see `UEditor.attachDialogStyleListener`) after their `<html>` is
+  tagged with the `mcmodder-ueditor-dialog` marker class; dialog-specific rules live in
+  `base.css` scoped by that class.
 
 ## Key files
 

@@ -33,7 +33,7 @@ export interface UsePopoverHostOptions {
    * 显示状态由别处决定时（如候选列表的显隐取决于匹配结果）传自己的 ref 进来。
    */
   visible?: Ref<boolean>;
-  /** 刚打开时的额外动作（如表态面板要重新定位页签指示器） */
+  /** 刚打开时的额外动作（如重定位页签指示器） */
   onOpen?: () => void;
   /** 最大高度限制（`null` = 不限） */
   maxHeight?: number | null;
@@ -42,10 +42,10 @@ export interface UsePopoverHostOptions {
 /**
  * 弹出框宿主（`Popover` 组件）的通用接线。
  *
- * 三个弹出框组件（候选列表 `InputList`、表态面板 `AttitudePicker`、贴纸查看器 `StickerPopover`）
+ * 弹出框组件（如候选列表 `InputList`）
  * 长成同一个样子：根节点是 `<Popover>`，要把锚点等属性透传给它，并且都要对外提供
  * `updatePos`（跟随锚点重新定位）与 `close`（收起）两个接口——控制器正是这样调用它们的。
- * 这部分接线集中在这里，三个组件各自只留自己的业务逻辑。
+ * 这部分接线集中在这里，各组件只留自己的业务逻辑。
  *
  * 用法：
  * ```ts

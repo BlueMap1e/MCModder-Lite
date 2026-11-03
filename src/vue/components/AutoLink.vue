@@ -99,23 +99,46 @@
         :on-successful-change="(info) => configs.setSettings('autolinkStyleSpace', info.final)"
       />
     </div>
-    <div v-show="localItemCount" class="edit-autolink-source">
-      <CheckboxInput
-        id="edit-autolink-source-local"
-        ref="sourceInputLocal"
-        title="本地搜索"
-        with-label
-        :value="configs.getSettings('autolinkSourceLocal') ?? false"
-        :on-successful-change="(info) => configs.setSettings('autolinkSourceLocal', info.final)"
+    <div class="edit-autolink-source">
+      <template v-if="localItemCount">
+        <CheckboxInput
+          id="edit-autolink-source-local"
+          ref="sourceInputLocal"
+          title="本地搜索"
+          with-label
+          :value="configs.getSettings('autolinkSourceLocal') ?? false"
+          :on-successful-change="(info) => configs.setSettings('autolinkSourceLocal', info.final)"
+        />
+        <CheckboxInput
+          id="edit-autolink-source-online"
+          ref="sourceInputOnline"
+          title="联机搜索"
+          with-label
+          :value="configs.getSettings('autolinkSourceOnline') ?? false"
+          :on-successful-change="(info) => configs.setSettings('autolinkSourceOnline', info.final)"
+        />
+      </template>
+      <!--
+        本地 JSON 导入入口：旧版 JSON 管理面板精简后保留的残余入口。
+        从本地选择 JSON 文件（支持条目数组，或每行一个条目的 NDJSON）写入
+        `itemRepository` 选定的仓储，并把文件名登记进 `jsonDatabase_v2`；
+        登记后 linkings 变化，watch 会自动把新文件读入 localItems。
+      -->
+      <input
+        ref="importInput"
+        class="edit-autolink-import-file"
+        type="file"
+        accept=".json,.txt,application/json,text/plain"
+        @change="onImportFileChange"
       />
-      <CheckboxInput
-        id="edit-autolink-source-online"
-        ref="sourceInputOnline"
-        title="联机搜索"
-        with-label
-        :value="configs.getSettings('autolinkSourceOnline') ?? false"
-        :on-successful-change="(info) => configs.setSettings('autolinkSourceOnline', info.final)"
-      />
+      <button
+        class="edit-autolink-import"
+        type="button"
+        title="导入本地 JSON 文件，供自动链接的本地搜索使用"
+        @click="onImportClick"
+      >
+        导入 JSON
+      </button>
     </div>
   </div>
 </template>
@@ -134,6 +157,8 @@
  * - **本地搜索**：在 `itemRepository`（GM Storage / IndexedDB 两种形态，见
  *   `jsonframe/repository/`）导入的条目上按关键词打分筛选，只包含物品条目
  *   （模组、整合包、个人作者与开发团队不会出现，这些只在联机搜索时返回）。
+ *   本地数据通过面板右下角的「导入 JSON」按钮从本地文件导入（旧版 JSON 管理面板
+ *   精简后保留的入口，见模板处注释）；本地库为空时该区只显示导入按钮，搜索强制联机。
  *
  * # 交互改进（相比原生）
  * - 方向键 ↑/↓ 与 Alt+数字 快捷键选择结果；
@@ -199,24 +224,102 @@ const linkings = computed(() => {
   return files ?? [];
 });
 
-// 监听文件名列表变化：逐个文件读取检索面并合并进 localItems（immediate 保证初次即加载）
-watch(
-  () => linkings.value,
-  async (files) => {
-    const allItems = await Promise.all(
-      files.map((filename) => itemRepository.value.readSearchText(filename)),
-    );
-    allItems.forEach((items) => localItems.value.push(...items.filter((item) => item.id)));
-    localItemCount.value = localItems.value.length;
-    triggerRef(localItems);
-  },
-  {
-    immediate: true,
-  },
-);
+// 监听文件名列表变化：逐个文件读取检索面并合并进 localItems（immediate 保证初次即加载）。
+// 每次先清空再重建：导入新文件 / 切换仓储形态都会触发本回调，不能在旧结果上追加。
+watch(() => linkings.value, reloadLocalItems, {
+  immediate: true,
+});
 
 /** 本地库条目总数；为 0 时强制走联机搜索 */
 const localItemCount = ref(0);
+
+/** 按 linkings 重建 localItems：跨文件读取检索面、合并并过滤掉无 id 的条目 */
+async function reloadLocalItems() {
+  const allItems = await Promise.all(
+    linkings.value.map((filename) => itemRepository.value.readSearchText(filename)),
+  );
+  localItems.value.length = 0;
+  allItems.forEach((items) => localItems.value.push(...items.filter((item) => item.id)));
+  localItemCount.value = localItems.value.length;
+  triggerRef(localItems);
+}
+
+/** 仓储形态名（与设置里 `itemRepository` 的 range 文案一致，仅用于提示语） */
+const REPOSITORY_NAMES = ["脚本存储", "IndexedDB"] as const;
+
+/** 点击「导入 JSON」：转发到隐藏的文件选择框 */
+function onImportClick() {
+  importInput.value?.click();
+}
+
+/**
+ * 解析导入的 JSON 文本：优先按整体 JSON 解析（条目数组；单个条目对象也接受），
+ * 失败则退回 NDJSON（每行一个条目，旧版「保存为通用批量导入格式」的文件形态）。
+ */
+function parseItemFile(text: string): Item[] {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    return text
+      .split(/\r?\n/)
+      .map((line) => line.trim())
+      .filter((line) => line.length)
+      .map((line, index) => {
+        try {
+          return JSON.parse(line) as Item;
+        } catch (error) {
+          throw new Error(`第 ${index + 1} 行不是合法 JSON`, { cause: error });
+        }
+      });
+  }
+  if (Array.isArray(parsed)) {
+    return parsed.filter((entry): entry is Item => typeof entry === "object" && entry !== null);
+  }
+  if (typeof parsed === "object" && parsed !== null) {
+    return [parsed as Item];
+  }
+  throw new Error("文件内容不是条目数组");
+}
+
+/** 「导入 JSON」的文件选择回调：解析 → 写入当前仓储形态 → 登记文件名（语义见模板处注释） */
+async function onImportFileChange(event: Event) {
+  const input = event.target as HTMLInputElement;
+  const file = input.files?.[0];
+  input.value = ""; // 清空选择，允许下次导入同一个文件
+  if (!file) {
+    return;
+  }
+  try {
+    const items = parseItemFile(await file.text());
+    if (!items.length) {
+      Utils.commonMsg("文件中没有可用的条目~", false);
+      return;
+    }
+    const filename = Utils.regulateFileName(file.name);
+    await itemRepository.value.write(filename, items);
+    const files = jsonDatabase.value?.[repoIndex.value] ?? [];
+    if (files.includes(filename)) {
+      // 同名文件为整体覆写：文件名登记不变，watch 不会触发，需手动重读
+      await reloadLocalItems();
+    } else {
+      // 新文件：登记进 jsonDatabase_v2，由 watch 自动重读
+      configs.value.setSettings("jsonDatabase_v2", {
+        ...jsonDatabase.value,
+        [repoIndex.value]: [...files, filename],
+      });
+    }
+    Utils.commonMsg(
+      `已导入 ${items.length.toLocaleString()} 个条目（${filename}）到${REPOSITORY_NAMES[repoIndex.value]}，本地搜索现已可用~`,
+    );
+  } catch (error) {
+    console.error("[MCModder-Lite] 导入 JSON 失败：", error);
+    Utils.commonMsg(
+      `导入失败：${error instanceof Error ? error.message : "未知错误"}（详见控制台）`,
+      false,
+    );
+  }
+}
 
 const keyInput = useTemplateRef("keyInput");
 const submitButton = useTemplateRef("submitButton");
@@ -224,6 +327,7 @@ const insertSpace = useTemplateRef("insertSpace");
 const sourceInputLocal = useTemplateRef("sourceInputLocal");
 const sourceInputOnline = useTemplateRef("sourceInputOnline");
 const resultFrame = useTemplateRef("resultFrame");
+const importInput = useTemplateRef<HTMLInputElement>("importInput");
 
 /**
  * 链接文本样式（0/1/2，对应 `styles`）。

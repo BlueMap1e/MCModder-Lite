@@ -29,6 +29,35 @@ jobs:
         with:
           name: dist
           path: dist/
+  smoke-public:
+    # 公共页 smoke：把构建产物注入真实 mcmod.cn 页面（无需登录态与密钥）。
+    # 站点对数据中心来源可能弹「安全验证」，此时 smoke 按 SKIPPED 退出（不判失败），
+    # 详见 scripts/smoke-public.mjs。编辑页 E2E 依赖登录态，仍留在本地 harness。
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v5
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v5
+        with:
+          node-version: 24
+          cache: "npm"
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Download Build Artifact
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+
+      - name: Install Playwright Chromium
+        run: npx playwright install --with-deps chromium
+
+      - name: Run public-page smoke
+        run: node scripts/smoke-public.mjs
   release:
     runs-on: ubuntu-latest
     needs: build

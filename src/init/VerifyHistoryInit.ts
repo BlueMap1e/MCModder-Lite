@@ -13,6 +13,10 @@ export class VerifyHistoryInit extends Init {
       const maxPage = parseInt($(".pagination span").text().split(" / ")[1]?.split(" 页")[0]);
       const param = window.location.href.split("verify.html?")[1]?.split("&page=")[0];
       if (!param || !maxPage || $(".badge-secondary").text().includes("最近100条")) {
+        // 带时间范围搜索但结果不足一页：告知用户而非静默跳过（日常访问无搜索参数时不打扰）
+        if (param && !maxPage && !$(".badge-secondary").text().includes("最近100条")) {
+          Utils.commonMsg("该时间范围内的结果不足一页，无需展开~");
+        }
         new VerifyPageInit(this.parent).run();
         return;
       }
@@ -27,8 +31,13 @@ export class VerifyHistoryInit extends Init {
             "展开历史审核记录",
           )
           .then((resp) => {
-            if (!resp.responseXML) return;
-            const d = $(resp.responseXML);
+            if (!resp.responseText) {
+              Utils.commonMsg("加载历史审核记录失败...", false);
+              return;
+            }
+            // 不依赖油猴的 responseXML（不同实现/版本对 HTML 响应是否填充行为不一），
+            // 统一用 responseText 自行解析，确定性执行
+            const d = $(new DOMParser().parseFromString(resp.responseText, "text/html"));
             d.find(".verify-list-list-table tbody")
               .children()
               .appendTo(".verify-list-list-table tbody");

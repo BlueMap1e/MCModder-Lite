@@ -36,11 +36,17 @@ const devPrivateNetworkAccess: Plugin = {
 const userscriptMeta = {
   name: "MCModder-Lite",
   author: "BlueMap1e (based on Mcmodder by Charcoal-Black)",
-  version: "2.4.1-lite.3",
+  version: "2.4.1-lite.4",
   description: "MCModder-Lite：MC 百科轻量编审脚本（AGPL-3.0）",
   license: "AGPL-3.0",
-  homepageURL: "https://github.com/BlueMap1e/Mcmodder-Lite",
-  supportURL: "https://github.com/BlueMap1e/Mcmodder-Lite/issues",
+  homepageURL: "https://github.com/BlueMap1e/MCModder-Lite",
+  supportURL: "https://github.com/BlueMap1e/MCModder-Lite/issues",
+  // 指向 GitHub Release 的「最新版」附件，篡改猴据此自动检查/下载更新；
+  // CI 的 release job 会把构建产物以固定文件名 mcmodder-lite.user.js 传到每个 Release。
+  updateURL:
+    "https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js",
+  downloadURL:
+    "https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js",
   icon: "https://www.mcmod.cn/static/public/images/favicon.ico",
   namespace: "http://www.mcmod.cn/",
   "run-at": "document-start",

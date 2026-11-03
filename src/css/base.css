@@ -801,6 +801,13 @@ html.mcmodder-config-disable-gradient .mcmodder-slim-danger {
 html.mcmodder-config-disable-gradient .mcmodder-chroma {
   color: red;
 }
+/* 流光描边（下拉框/搜索框）同样受「禁用文字渐变」控制：停掉循环动画后固定为主色描边。
+   与 reducedMotion.css 的处理一致（animation: none + 固定 border-color），仅门控来源不同 */
+html.mcmodder-config-disable-gradient .common-select,
+html.mcmodder-config-disable-gradient .header-search form {
+  animation: none !important;
+  border-color: var(--mcmodder-color-primary) !important;
+}
 .common-center .item-table i {
   background-image: url(//i.mcmod.cn/editor/upload/20241019/1729313235_179043_fNWH.png);
   background-position: -0px -0px;
@@ -1797,6 +1804,22 @@ body .arrow {
   justify-content: center;
   font-size: 16px;
 }
+/* 「导入 JSON」入口：文本按钮形态，隐藏真正的文件选择框 */
+.edit-autolink-import-file {
+  display: none;
+}
+.edit-autolink-import {
+  margin-left: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--mcmodder-color-link);
+  cursor: var(--mcmodder-cursor-hand);
+  font-size: 14px;
+}
+.edit-autolink-import:hover {
+  text-decoration: underline;
+}
 .edit-autolink-list li {
   position: relative;
 }
@@ -1994,16 +2017,18 @@ body .center-header .user-icon .user-icon-img.tapped {
 .rank-list-block:first-child {
   border-right-color: var(--mcmodder-color-background-dark2);
 }
-.rank-list-block li {
+/* 以下三条是「贡献榜重排版」的配套规则，必须以 RankInit.run() 打上的标记类限定：
+   它们直接改写站点原生 .rank-list-block 的布局，无标记类（设置关闭）时不能劫持原生排版 */
+html.mcmodder-ranklist-advanced .rank-list-block li {
   width: auto;
   display: block;
   margin: 0;
   padding: 6px;
 }
-.rank-list-block li.hover {
+html.mcmodder-ranklist-advanced .rank-list-block li.hover {
   background-color: var(--mcmodder-color-danger-transparent1);
 }
-.rank-list-block .progress {
+html.mcmodder-ranklist-advanced .rank-list-block .progress {
   border-radius: 0rem;
 }
 .mcmodder-ranklist-container {
@@ -2799,15 +2824,17 @@ kbd {
 .mcmodder-mod-container legend a {
   color: var(--mcmodder-color-text-dark2);
 }
-.oredict-item-list ul {
+/* 以下三条是「矿词/标签页重排版」的配套规则，必须以 OredictPageInit.run() 打上的
+   标记类限定：无标记类（设置关闭）时不能劫持站点原生列表布局 */
+html.mcmodder-oredict-advanced .oredict-item-list ul {
   display: grid;
   grid-column-gap: 0.375em;
 }
-.oredict-item-list li {
+html.mcmodder-oredict-advanced .oredict-item-list li {
   margin: 0.2em var(--mcmodder-width-padding-2);
   padding: 0;
 }
-.oredict-item-list {
+html.mcmodder-oredict-advanced .oredict-item-list {
   margin: 0;
 }
 .table > tbody > tr > td,
@@ -2986,15 +3013,103 @@ html.dark .news_block .right .addArea {
    只改父级 .edui-button-body 的颜色无法覆盖它。反转后标签即呈浅色。 */
 html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-button-body,
 html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-label {
-  color: #111;
+  color: var(--mcmodder-color-background);
 }
 html.dark .edui-default .edui-tablepicker .edui-pickarea,
 html.dark .edui-default .edui-tablepicker .edui-pickarea .edui-overlay {
   filter: invert(80%);
 }
+/* ===== UEditor 弹窗内容 iframe =====
+   弹窗（插入图片/链接等）的正文是挂在 #edui_fixedlayer 下的独立文档，宿主样式与
+   编辑器正文 iframe 的样式都够不到它。脚本在弹窗加载后给该文档的 <html> 加上
+   `mcmodder-ueditor-dialog` 标记类并注入本样式表（见 UEditor.attachDialogStyleListener），
+   因此以下规则只在弹窗文档内生效，不会波及宿主页或编辑器正文 iframe。
+   选择器依据 UEditor 1.4.3 的 dialogs/*.html 与 image.css 结构，站点升级后需复查。 */
+html.mcmodder-ueditor-dialog.dark body {
+  background-color: var(--mcmodder-color-background);
+  color: var(--mcmodder-color-text);
+}
+/* 链接 / 锚点等弹窗的内联样式里有 `* { color: #838383 }`，会直接命中 label、td、var，
+   只给 body 设色压不住它，必须把这些元素也一并点名 */
+html.mcmodder-ueditor-dialog.dark body label,
+html.mcmodder-ueditor-dialog.dark body td,
+html.mcmodder-ueditor-dialog.dark body var {
+  color: var(--mcmodder-color-text);
+}
+
+/* 标签页按钮（插入图片 / 本地上传 …），焦点态与面板底色衔接 */
+html.mcmodder-ueditor-dialog.dark body .tabhead span {
+  border-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+html.mcmodder-ueditor-dialog.dark body .tabhead span.focus {
+  border-bottom-color: var(--mcmodder-color-background);
+  background-color: var(--mcmodder-color-background);
+}
+
+html.mcmodder-ueditor-dialog.dark body .tabbody {
+  border-color: var(--mcmodder-color-background-dark2);
+}
+
+html.mcmodder-ueditor-dialog.dark body .tabbody .panel {
+  background-color: var(--mcmodder-color-background);
+}
+
+/* 远程图片预览区 */
+html.mcmodder-ueditor-dialog.dark body #remote #preview {
+  border-color: var(--mcmodder-color-background-dark2);
+  background-color: var(--mcmodder-color-background-dark1);
+}
+
+/* 本地上传：占位虚线框、已选文件格子与状态栏文字 */
+html.mcmodder-ueditor-dialog.dark body #upload .placeholder {
+  border-color: var(--mcmodder-color-background-dark2);
+}
+/* 「添加文件」的格子（.filePickerBlock）靠背景图显示图标，不能把底图清掉 */
+html.mcmodder-ueditor-dialog.dark body #upload .filelist li:not(.filePickerBlock) {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .info {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+/* 在线图片 / 图片搜索标签页：图墙底色、卡片边框与链接条 */
+html.mcmodder-ueditor-dialog.dark body #online li,
+html.mcmodder-ueditor-dialog.dark body #search .searchList li p {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.mcmodder-ueditor-dialog.dark body #search .searchList li {
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.mcmodder-ueditor-dialog.dark body #search .searchList li a {
+  border-top-color: var(--mcmodder-color-background-dark2);
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text-dark2);
+}
+/* 搜索标签页的输入框、下拉框与「重置」按钮：站点把底色写死成白 */
+html.mcmodder-ueditor-dialog.dark body #search input.text,
+html.mcmodder-ueditor-dialog.dark body #search .searchType,
+html.mcmodder-ueditor-dialog.dark body #search #searchReset {
+  border-color: var(--mcmodder-color-background-dark2);
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
 html.dark .common-comment-block textarea,
 html.dark .common-comment-block input {
   color: var(--mcmodder-color-text) !important;
+}
+/* 资料列表页（/item/list/…）的表头标题链接：站点在页面内联样式里按
+   `.item-list-table.item-list-table-<classID>-<n> .title a` 硬编码了日间文字色
+   （color:#222、hover #000，固定值不随资料变化），特异性 (0,3,1) 压过通用夜间链接
+   规则，夜间模式下几乎不可见。这里以更高的特异性 (0,3,2) 反压回去。 */
+html.dark .item-list-table .title a {
+  color: var(--mcmodder-color-link);
+}
+html.dark .item-list-table .title a:hover {
+  color: var(--mcmodder-color-link);
 }
 html .edui-default .edui-editor-toolbarboxouter,
 .banner .m_menu .m_center,

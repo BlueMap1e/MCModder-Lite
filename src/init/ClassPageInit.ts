@@ -52,34 +52,67 @@ export class ClassPageInit extends Init {
    * "#FFF"、数据多边形为深灰 `#555`、填充为黑色半透明（canvas 绘制，CSS 无法覆盖），
    * 夜间模式下是一块白底 + 低对比暗线的刺眼图形。
    *
+   * 同时处理贡献统计弹窗里的两个饼图（`#chart-edit` / `#chart-word`）：站点把标题、
+   * 图例文字（`legend.textStyle.color: "#333"`）与 tooltip 全部写成日间配色，弹窗在
+   * 夜间模式下对比度极低。
+   *
    * 时序要点：`_echarts_instance_` 属性在 `echarts.init()` 时就会出现，而站点自己的
-   * `setOption`（携带 `#FFF`）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
-   * 还要在若干延时点复检背景是否仍为 transparent，被覆盖就重新应用；日间按首次捕获的
+   * `setOption`（携带日间配色）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
+   * 还要在若干延时点复检背景是否仍为夜间值，被覆盖就重新应用；日间按首次捕获的
    * 原始 option 片段（`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
    * （站点随后到达的 setOption 本身就是日间样式）。`html` 的 `dark` 类切换同样触发。
+   * 贡献统计的图表在弹窗首次打开时才创建，同样被属性观察者接住。
    */
   private setupNightChartFix() {
-    const apply = () => {
-      const el = document.getElementById("class-rating");
-      if (!el) return;
-      if (typeof echarts === "undefined") return;
+    /** 雷达图是否已是夜间配色（幂等标记） */
+    const isRadarNight = (chart: ReturnType<typeof echarts.getInstanceByDom>) =>
+      chart.getOption()?.backgroundColor === "transparent";
+    /** 饼图是否已是夜间配色（幂等标记） */
+    const isPieNight = (chart: ReturnType<typeof echarts.getInstanceByDom>) =>
+      chart.getOption()?.legend?.[0]?.textStyle?.color === "#999";
+
+    const applyChart = (
+      id: string,
+      isNightStyle: (chart: ReturnType<typeof echarts.getInstanceByDom>) => boolean,
+      applyNightStyle: (chart: NonNullable<ReturnType<typeof echarts.getInstanceByDom>>) => void,
+      // 捕获片段必须是 JSON 安全的纯数据：饼图的 itemStyle.color 是图案节点（内含 DOM 引用），
+      // 整份 getOption() 直接 stringify 会失败，只能按需摘字段
+      captureFragment: (chart: NonNullable<ReturnType<typeof echarts.getInstanceByDom>>) => object,
+    ) => {
+      const el = document.getElementById(id);
+      if (!el || typeof echarts === "undefined") return;
       const chart = echarts.getInstanceByDom(el);
       if (!chart) return;
       const night = document.documentElement.classList.contains("dark");
       if (night) {
+        if (isNightStyle(chart)) return;
         const current = chart.getOption();
-        if (current?.backgroundColor !== "transparent") {
-          if (current && !this.chartOriginalOptions.has(el)) {
-            this.chartOriginalOptions.set(
-              el,
-              JSON.stringify({
-                backgroundColor: current.backgroundColor,
-                color: current.color,
-                radar: current.radar,
-                series: current.series,
-              }),
-            );
-          }
+        if (current && !this.chartOriginalOptions.has(el)) {
+          this.chartOriginalOptions.set(el, JSON.stringify(captureFragment(chart)));
+        }
+        applyNightStyle(chart);
+        // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
+        for (const delay of [100, 300, 800, 2000]) {
+          setTimeout(() => {
+            if (document.documentElement.classList.contains("dark") && !isNightStyle(chart)) {
+              applyNightStyle(chart);
+            }
+          }, delay);
+        }
+      } else {
+        const original = this.chartOriginalOptions.get(el);
+        if (original) {
+          chart.setOption(JSON.parse(original));
+          this.chartOriginalOptions.delete(el);
+        }
+      }
+    };
+
+    const apply = () => {
+      applyChart(
+        "class-rating",
+        isRadarNight,
+        (chart) => {
           // 强调色取自用户当前主题（夜档），线条与填充随之联动取色器
           const accent =
             getComputedStyle(document.documentElement)
@@ -103,17 +136,45 @@ export class ClassPageInit extends Init {
               },
             ],
           });
-          // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
-          for (const delay of [100, 300, 800, 2000]) {
-            setTimeout(apply, delay);
-          }
-        }
-      } else {
-        const original = this.chartOriginalOptions.get(el);
-        if (original) {
-          chart.setOption(JSON.parse(original));
-          this.chartOriginalOptions.delete(el);
-        }
+        },
+        (chart) => {
+          const current = chart.getOption();
+          return {
+            backgroundColor: current.backgroundColor,
+            color: current.color,
+            radar: current.radar,
+            series: current.series,
+          };
+        },
+      );
+      for (const id of ["chart-edit", "chart-word"]) {
+        applyChart(
+          id,
+          isPieNight,
+          (chart) => {
+            // 夜间配色与上游 EChartsUtils.setClassUserChartNightStyle 一致
+            chart.setOption({
+              title: [
+                {
+                  textStyle: { color: "#ccc" },
+                  subtextStyle: { color: "#aaa" },
+                },
+              ],
+              legend: [{ textStyle: { color: "#999" } }],
+              tooltip: [{ backgroundColor: "#333", textStyle: { color: "#aaa" } }],
+              series: [{ itemStyle: { borderColor: "#000" } }],
+            });
+          },
+          (chart) => {
+            const current = chart.getOption();
+            return {
+              title: current.title,
+              legend: current.legend,
+              tooltip: current.tooltip,
+              series: [{ itemStyle: { borderColor: current.series[0].itemStyle.borderColor } }],
+            };
+          },
+        );
       }
     };
     // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）
@@ -132,9 +193,8 @@ export class ClassPageInit extends Init {
 
   run() {
     $(".common-center").addClass("mcmodder-class-page");
-    if ($(".class-rating-block").length) {
-      this.setupNightChartFix();
-    }
+    // 夜间图表重主题化（评分雷达图 + 贡献统计饼图；图表缺失时 apply 内部自行跳过）
+    this.setupNightChartFix();
     this.isClassPage = ClassPageInit.classPageRegExp.test(this.parent.href);
     this.pageTypeName = this.isClassPage ? "模组" : "整合包";
 

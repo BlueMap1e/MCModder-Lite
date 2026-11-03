@@ -85,6 +85,9 @@ export class RankInit extends Init {
   }
 
   run() {
+    // 标记类：base.css 中重排专用的 .rank-list-block 规则以此限定作用域，
+    // 设置关闭（JS 未运行）时不劫持站点原生贡献榜布局
+    document.documentElement.classList.add("mcmodder-ranklist-advanced");
     const ranklists = $(".rank-list-block");
     const total1 = this.work(ranklists.eq(0).addClass("edit-byte"));
     const total2 = this.work(ranklists.eq(1).addClass("edit-num"));

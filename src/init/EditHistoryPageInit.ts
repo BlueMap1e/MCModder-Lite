@@ -20,11 +20,13 @@ export class EditHistoryPageInit extends Init {
         "展开历史编辑记录",
       )
       .then((resp) => {
-        if (!resp.responseXML) {
+        if (!resp.responseText) {
           Utils.commonMsg("加载历史编辑记录失败...", false);
           return;
         }
-        const d = $(resp.responseXML);
+        // 不依赖油猴的 responseXML（不同实现/版本对 HTML 响应是否填充行为不一），
+        // 统一用 responseText 自行解析，确定性执行
+        const d = $(new DOMParser().parseFromString(resp.responseText, "text/html"));
         d.find(".history-list-frame ul").children().appendTo(".history-list-frame ul");
         Utils.commonMsg(`成功加载第 ${id} / ${maxPage} 页~`);
         if (id < maxPage && !this.stopExpand)
@@ -64,7 +66,11 @@ export class EditHistoryPageInit extends Init {
       const param = new URLSearchParams(window.location.search);
       this.startTime = param.get("starttime") || "";
       this.endTime = param.get("endtime") || "";
-      if (!maxPage) return;
+      if (!maxPage) {
+        // 带时间范围搜索但结果不足一页：告知用户而非静默跳过（日常访问无搜索参数时不打扰）
+        if (param.get("starttime")) Utils.commonMsg("该时间范围内的结果不足一页，无需展开~");
+        return;
+      }
       Utils.commonMsg(`准备自动展开，可随时按 ${Utils.keyToString(abortKey)} 取消~`);
       $("html").bind("keydown", (e) => {
         if (Utils.isKeyMatch(abortKey, e)) this.stopExpand = true;

@@ -11,8 +11,7 @@ import type { PopoverExpose } from "../../types/props";
  * 2. 在 `window` 上以**捕获阶段**监听事件，命中已登记的元素时调组件的 `setOption` 切换服务对象，
  *    或把事件转交给组件的 `inputEvents` 处理函数。
  *
- * 每种弹出框组件各有一个控制器（`InputListPopoverController` / `AttitudePickerPopoverController` /
- * `StickerViewerPopoverController`），它们共享本基类提供的上述机制，彼此只在三处不同：
+ * 每种弹出框组件各有一个控制器（如 `InputListPopoverController`），它们共享本基类提供的上述机制，彼此只在三处不同：
  * **组件类型**、**触发方式**（点击 / 悬停）、**如何把选项交给组件**（`applyOption`）。
  *
  * # 交互元素 ≠ 输入元素

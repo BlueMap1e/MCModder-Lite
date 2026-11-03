@@ -42,12 +42,10 @@ export class Mcmodder {
   isNightMode = false;
   title = "";
   css = "";
-  /** UEditor 弹窗内容 iframe 专用的夜间样式（见 `src/css/ueditorDialog.css`），不并入宿主样式 */
-  ueditorDialogCss = "";
   itemTypeList?: ItemCustomTypeList;
   readonly hostname: string;
   private msgAlertCount = 0;
-  /** 站点自身的未读消息数（页头铃铛的基底，自定义表态数在此之上叠加） */
+  /** 站点自身的未读消息数（页头铃铛与标签页标题的基底） */
   private msgSiteCount = 0;
   private readonly titleNode = $("title");
   private readonly linkPendingSet = new Set<string>();
@@ -743,7 +741,7 @@ export class Mcmodder {
                 const siteCount =
                   data.state || !data.user.login || !data.user.msg_count ? 0 : data.user.msg_count;
                 this.msgSiteCount = siteCount;
-                // 站点刷新消息数时叠加已缓存的新表态数，不额外请求云端
+                // 站点刷新消息数时同步页头铃铛
                 this.applyBellNotify();
               } catch (e) {
                 if (e instanceof SyntaxError) {

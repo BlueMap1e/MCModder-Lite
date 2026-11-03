@@ -85,7 +85,7 @@ export class CommentInit extends Init {
     });
   }
 
-  /** 已完成注入的顶层短评行标记：MutationObserver 会因我们自己的异步写入（表态计数、贴纸解析等）再次回调，靠它保证不重复注入 */
+  /** 已完成注入的顶层短评行标记：MutationObserver 会因我们自己的异步写入（倒计时挂载、链接解析等）再次回调，靠它保证不重复注入 */
   private static readonly PROCESSED_ATTR = "data-mcmodder-comment-processed";
   /** 楼中楼行标记：与顶层楼分用，避免嵌套结构下两级标记互相干扰 */
   private static readonly REPLY_PROCESSED_ATTR = "data-mcmodder-comment-reply-processed";
