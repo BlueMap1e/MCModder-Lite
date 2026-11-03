@@ -28,3 +28,7 @@ smoke/
 *.njsproj
 *.sln
 *.sw?
+
+# ZCode 会话插件标记（本机路径，不入库）
+.v2c/
+.video_agent/
