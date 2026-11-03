@@ -1,69 +1,141 @@
 **This file MUST be written and edited in English.**
 
+# MCModder-Lite agent notes
+
+A trimmed hard fork of [Mcmodder](https://github.com/Charcoal-Black/Mcmodder) (AGPL-3.0).
+Features that do not pull their weight (attitudes/Supabase, GIF editor, ECharts dashboards,
+achievements, GTCEu, request queues, JSON import UI, structure editor, entertainment extras)
+have been removed. Do not reintroduce them without an explicit request.
+
 ## Commands
 
 ```bash
-npm run dev      # vite-plugin-monkey dev server; install the served script into Tampermonkey to get HMR
-npm run build    # vue-tsc (type check) && vite build  ->  dist/mcmodder.user.js
+npm run dev      # vite-plugin-monkey dev server; install the served script into Tampermonkey for HMR
+npm run build    # vue-tsc (type check) && vite build  ->  dist/mcmodder-lite.user.js
 npm run lint     # eslint src
 npm run format   # prettier --write src
+npm run verify   # lint + lint:config + format:check (the full local gate)
 ```
 
-- `npm run build` is the only gate. `vue-tsc` runs first, so type errors and unused locals/parameters fail the build (`strict`, `noUnusedLocals`, `noUnusedParameters`, `verbatimModuleSyntax`).
-- No test suite exists (`playwright` is not wired to anything). Validate with build + lint, then exercise runtime behavior in a browser on mcmod.cn.
-- The shippable artifact is `dist/mcmodder.user.js`, installed by copy-pasting into Tampermonkey.
+- `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
+  locals/parameters fail it (`strict`, `noUnusedLocals`, `noUnusedParameters`,
+  `verbatimModuleSyntax`).
+- There is no test suite inside the repo. Validate with `npm run verify` + `npm run build`,
+  then exercise behavior in a browser on mcmod.cn. A local Playwright harness may exist
+  outside the repo (not committed); it injects `dist/mcmodder-lite.user.js` into real pages
+  with a GM shim.
+- The shippable artifact is `dist/mcmodder-lite.user.js` (copy into Tampermonkey).
 
 ## Working rules
 
-- **Reuse the existing mechanism.** Every feature area has an established entry point (see "Where to change what"); do not introduce a second convention for the same job.
-- **`CHANGELOG.md` is user-owned.** Never edit it unless explicitly instructed; do not add entries for your own work on your own initiative.
-- Comments, config titles/descriptions, and UI copy are Chinese in the existing house style. Keep it that way.
-- `eslint.config.ts` exemptions are closed lists: legacy files (`src/main.ts`, `src/widget/Splash3D.ts`) and host integrations that cannot avoid `any` (UEditor, ECharts, request queues, `ConfigRepository`, ...). Do not refactor legacy code on sight, and never add new files to these lists to silence your own code.
-- `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused locals/parameters instead of keeping them; the build fails on them.
+- **Reuse the existing mechanism.** Each feature area has one established entry point
+  (see "Where to change what"); do not add a second convention for the same job.
+- **`CHANGELOG.md` is user-owned.** Never edit it unless explicitly instructed.
+- Comments, config titles/descriptions, and UI copy are Chinese, matching the existing style.
+- **Every setting must be read by code.** Before adding a setting, add the reader; before
+  removing a feature, delete its setting from `ConfigLoader.ts` and `Settings`. Dead toggles
+  that do nothing were a known regression in this fork.
+- `eslint.config.ts` exemptions are closed lists (legacy `src/main.ts`, host integrations
+  that cannot avoid `any`). Never add new files to silence your own code.
+- `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
+  locals/parameters; the build fails on them.
 
 ## Host-page constraints
 
-- The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery, `editor`, `swal`, `PublicLangData`, `echarts`, `structure_browser`, ...) are declared in `src/Mcmod.d.ts` but only exist on real pages: touch them only inside `Init.run()` or event callbacks, never at module scope. Nothing in `src/` is runnable under plain Node.
-- GM APIs go through the `$` alias (`import { GM_getValue } from "$"`, i.e. `vite-plugin-monkey/client`). Never use `localStorage`/`sessionStorage` for app data.
-- All network traffic goes through `Utils.createRequest` (spacing via `minimumRequestInterval`, logging to `mcmodderLogger`, automatic `yxd_token` cookie retry). Never call `GM_xmlhttpRequest` directly.
-- External libraries are not bundled:
-  - CDN libraries from `vite.config.ts` (`require:` + `externalGlobals`): `codemirror`, `turndown`, `js-beautify`, `@supabase/supabase-js`, `three`, `opentype.js`. Consume them as the mapped globals (e.g. `window.THREE`) and rely on their npm `@types` packages for type-checking. The CDN `three` is used only by `Splash3D`.
-  - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`), ECharts (`echarts`), `structure_browser`, and the site's Three.js — use page globals or lazy-load via `Utils.loadScript(..., Values.assets.mcmod.js.*)` as `StructureEditor.vue` does.
-  - Exception: `turndown-plugin-gfm` is bundled from npm (dev and build). The dev-mode entry runs in the page realm, so a CDN `@require` global (Tampermonkey sandbox) is invisible there — a bare global reference like `turndownPluginGfm` would only work in the built userscript.
-  - Do not upgrade the intentionally old pins (jQuery, SweetAlert) or swap host libraries for npm packages; compatibility with the legacy site is the reason for both.
+- The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery,
+  `editor`, `swal`, `PublicLangData`, `echarts`, ...) are declared in `src/Mcmod.d.ts` but
+  only exist on real pages: touch them only inside `Init.run()` or event callbacks, never at
+  module scope. Nothing in `src/` runs under plain Node.
+- GM APIs go through the `$` alias (`import { GM_getValue } from "$"`,
+  `vite-plugin-monkey/client`). Never use `localStorage`/`sessionStorage` for app data.
+- All network traffic goes through `Utils.createRequest` (rate limit via
+  `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token` retry). Never call
+  `GM_xmlhttpRequest` directly.
+- External libraries:
+  - CDN `@require` from `vite.config.ts`: only `turndown` (mapped to `TurndownService`).
+  - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
+    `pinyin-match`, `turndown-plugin-gfm`.
+  - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
+    ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
+  - Do not upgrade the intentionally old pins (jQuery, SweetAlert) or swap host libraries for
+    npm packages; compatibility with the legacy site is the reason for both.
 
 ## Where to change what
 
-- **Page-specific feature** -> new `Init` subclass in `src/init/` (`canRun()` = URL/DOM gate, `run()` = DOM work), registered in `src/loader/InitLoader.ts`. Never put page logic in `src/main.ts`.
-- **SPA-like pages** (center, admin) -> sub-inits in `src/init/center/` / `src/init/admin/` dispatched by `MutationObserver`, following `CenterInit`/`AdminInit`. `AdminBaseInit` subclasses are matched by their `h1.title` and called on every navigation to that page: put repeatable rendering in `run()`, and one-time side effects (`window`/`document` listeners, timers) in `firstRun()`.
-- **Editor behavior** -> `GeneralEditInit.canRun()` always returns `false`; `Mcmodder.editorLoad()` instantiates it directly when an editor exists. Host UEditor wrappers live in `src/ueditor/`.
-- **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), register it with an `add*Config` call in `src/loader/ConfigLoader.ts` (id, title, description, default, optional `Permission`), and reuse the matching control in `src/vue/components/input/`.
-- **Persisted state** -> `ConfigRepository` (`getSettings`/`setSettings`, reactive `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid, `*Class` per classID). Prefer it over raw `GM_*Value` calls for keys it covers.
-- **Reactive/storage-cached keys** -> register with `StorageBuffer.addCacheableItem` in `src/loader/StorageBufferLoader.ts`; global config-to-behavior watchers (night mode, page width) live in `Mcmodder.watchRef()`.
-- **Batch, pausable network work** -> `src/requestqueue/*`; **scheduled tasks** (auto check-in, update check, pre-edit polling) -> `src/schedulerequest/*`.
-- **Short-comment custom reactions** (自定义表态: built-in `devil-angry` + arbitrary emoji) -> `src/attitude/`: `AttitudeSystem` is the page-wide singleton (row injection, batched count cache, unread stats, writes), `AttitudePickerState` + `src/vue/components/attitude/AttitudePicker.vue` render the emoji picker panel. `devil-angry` is not an emoji: it is appended to the site's native attitude list (`.comment-attitude-list-hover`) and its result item stays in `.comment-attitude-result`. Page hooks: `src/init/CommentInit.ts` (short-comment rows), `src/init/MessagePageInit.ts` (sub-tab badge + total row on every message-center page, inbox list, per-message counts), `src/init/center/CenterCommentInit.ts` (stats panel), `Mcmodder.main()` (unread merged into the header bell / tab title via `notifyUnreadMessage`). Cloud side lives in `supabase/`; the `mcmodder_attitudes` / `mcmodder_attitude_stickers` tables are service-role only (RLS enabled, no policies, `anon` revoked) — never touch them with `supabase.from(...)` from the client. **Reads** go through the `mcmodder_attitude_*` PostgREST RPCs (`SupabaseUtils.rpc`, SECURITY DEFINER, granted to `anon`, added by the `*_attitude_read_rpc.sql` migration) so they do not spend the free tier's Edge Function invocation quota; they return row sets whose order is meaningful (`order by min(id)` = first-reaction order) — build display objects in row order, never re-sort. **Writes** stay on the `attitude-put` / `attitude-sticker` Edge Functions, and all three `attitude-*` Edge Functions must keep serving old script versions unchanged (no deletion, no response reshaping).
-- **Notification that must appear in a visible tab exactly once** (currently the auto-verify reminder) -> `src/modal/*`. Add a `ModalType` subclass under `src/modal/types/`, register it in `ModalTypeTypes` (`src/types/types.d.ts`), and trigger it with `Mcmodder.modalBroadcaster.send("newVerification", payload)`. Payload must be plain JSON data: the class (and thus `preConfirm`/`interceptEvents` callbacks) is rebuilt in the receiving tab. `Utils.createModal` stays for modals bound to the current page's own interaction.
-- **JSON import/export** -> pluggable `AppRepository<T>` backends in `src/jsonframe/repository/` (GM storage vs Dexie/IndexedDB, switched by the `itemRepository` setting); UI in `src/vue/components/jsonframe/`.
-- **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop. `src/vue/mount.ts` (`mountVueApp`, Shadow DOM isolation) exists but has no call sites yet. Read the vendored skills under `.agents/skills/` (`vue-best-practices`, `vue-debug-guides`, ...) before Vue work.
-- **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames, logger, `Splash3D`, `Swiper`, `toast/RequestToastBroadcaster` for the cross-tab request toasts). **Editable tables** -> `src/table/*`, command/undo pattern (`Command` + `src/table/command/`). **GTCEu integration** -> `src/integration/`.
-- **Popovers** (`Popover`-rooted components mounted outside the Vue tree) -> `src/widget/popover/`: `PopoverController.ts` holds the type-agnostic machinery (registration incl. lazy options, `window` event delegation, active target), and each component type has its own singleton subclass (`InputListPopoverController`, `AttitudePickerPopoverController`, `StickerViewerPopoverController`) declaring only its type, its trigger (`click` / `pointerover`) and how the option reaches the component. Register a host element with `XxxPopoverController.instance.add(element, option)`. The Vue side of a popover (root `<Popover>`, anchor / z-index passthrough, visibility sync, `updatePos` / `close`) is shared through `src/vue/composables/usePopoverHost.ts` — new popover components should use it instead of re-wiring `<Popover>` by hand.
-- **Global CSS** -> `src/css/*.css`, collected by `src/loader/StyleLoader.ts` into the `--mcmodder-*` palette plus one injected `<style>`. Component CSS is auto-collected by the `cssSideEffects` hook into `<style data-mcmodder-vue-css>`.
+- **Page-specific feature** -> new `Init` subclass in `src/init/` (`canRun()` = URL/DOM gate,
+  `run()` = DOM work), registered in `src/loader/InitLoader.ts`. Never put page logic in
+  `src/main.ts`.
+- **SPA-like pages** (center, admin) -> sub-inits in `src/init/center/` / `src/init/admin/`
+  dispatched by `MutationObserver`, following `CenterInit` / `AdminInit`. `AdminBaseInit`
+  subclasses are matched by their `h1.title` and run on every navigation: repeatable
+  rendering in `run()`, one-time listeners/timers in `firstRun()`.
+- **Editor behavior** -> `src/ueditor/`: `UEditor` (DOM unwrap, styles, table-wall
+  normalization, dialog styling) and `AdvancedUEditor` (Markdown/HTML editors, stats,
+  autolink, tools). `Mcmodder.editorLoad()` instantiates them; there is no `Init` subclass
+  for the editor.
+  - **Table-wall watchdog invariants** (`UEditor.init` / `scheduleBodySync`):
+    `contentChange` and the body `MutationObserver` are "content really changed" signals and
+    must call `scheduleBodySync(true)`; `selectionchange` and the 1.5 s watchdog must call
+    `scheduleBodySync()` so they only run the cheap, idempotent trailing-paragraph check.
+    `updateEditorStats()` serializes the whole body and forces layout — never call it from the
+    cheap path.
+  - `ensureTrailingParagraph()` must return whether it changed the DOM, must be idempotent,
+    and must **not** rebuild the trailing paragraph's `innerHTML` (UEditor bookmarks/caret
+    live there). Add a `<br>`, strip `nowrap` declarations, leave other nodes alone.
+- **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), register it with an
+  `add*Config` call in `src/loader/ConfigLoader.ts` (id, title, description, default, optional
+  `visible`), and reuse the matching control in `src/vue/components/input/`. Add the reader in
+  the same change.
+- **Persisted state** -> `ConfigRepository` (`getSettings`/`setSettings`, reactive
+  `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid, `*Class` per
+  classID). Prefer it over raw `GM_*Value` calls for keys it covers.
+- **Reactive/storage-cached keys** -> register with `StorageBuffer.addCacheableItem` in
+  `src/loader/StorageBufferLoader.ts`; global config-to-behavior watchers (night mode, page
+  width) live in `Mcmodder.watchRef()`.
+- **Scheduled tasks** -> `src/schedulerequest/` (only auto check-in remains). Add a
+  `ScheduleRequestType` in `src/schedulerequest/types/` and register it in
+  `src/loader/ScheduleRequestLoader.ts`.
+- **JSON storage layer** -> `src/jsonframe/repository/` (`ItemRepository`: GM storage vs
+  Dexie/IndexedDB, switched by the `itemRepository` setting under 数据存储). It feeds the
+  auto-link local search in `src/vue/components/AutoLink.vue`; the JSON import UI that used to
+  live next to it is gone.
+- **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
+  `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
+  `src/vue/mount.ts` (`mountVueApp`, Shadow DOM isolation) exists but has no call sites yet.
+  Read the vendored skills under `.agents/skills/` before Vue work.
+- **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames, logger,
+  `Swiper`, `TimerUtils`). **Editable tables** -> `src/table/*`, command/undo pattern
+  (`Command` + `src/table/command/`). **Field indexes** -> `src/fieldindex/`.
+- **Popovers** (`Popover`-rooted components mounted outside the Vue tree) ->
+  `src/widget/popover/`: `PopoverController.ts` is the type-agnostic machinery,
+  `InputListPopoverController.ts` is the remaining singleton subclass. The Vue side is shared
+  through `src/vue/composables/usePopoverHost.ts`.
+- **Global CSS** -> `src/css/*.css`, collected by `src/loader/StyleLoader.ts` into the
+  `--mcmodder-*` palette plus one injected `<style>`. Component CSS is auto-collected by the
+  `cssSideEffects` hook into `<style data-mcmodder-vue-css>`. `src/css/ueditorDialog.css` is
+  injected only into UEditor dialog iframes (see `UEditor.attachDialogStyleListener`).
 
 ## Key files
 
-- `src/main.ts` — `document-start` bootstrap: anti-flash overlay, `bbs.mcmod.cn` night mode, waits for host jQuery, then constructs `Mcmodder`.
-- `src/Mcmodder.ts` — composition root: builds services and loaders, runs `InitLoader`, then `main()` and `initList.filter(i => i.canRun()).forEach(i => i.run())`.
-- `src/loader/*` — `ConfigLoader`, `StyleLoader`, `StorageBufferLoader`, `AdvancementLoader`, `ScheduleRequestLoader`, `MenuCommandLoader`, `InitLoader`.
-- `src/config/` — `ConfigUtils` (option registration) and `ConfigRepository` (typed GM-storage facade).
-- `src/StorageBuffer.ts` — GM key -> Vue `shallowRef` cache with cross-tab sync via `GM_addValueChangeListener`.
-- `src/modal/` — cross-tab modal broadcast: `ModalType` base, `ModalBroadcaster` (single-slot GM Storage channel, `Values.MODAL_BROADCAST_EXPIRE` TTL), `types/NewVerificationModal`; receiver side is `ModalBroadcastInit` in `src/init/`.
-- `src/widget/toast/RequestToastBroadcaster.ts` — cross-tab request toasts: every dispatched `Utils.createRequest` appends a `RequestToastRecord` to a GM Storage array and shows an iziToast on every visible tab (`Values.REQUEST_TOAST_*`); unlike `src/modal/` it does **not** claim or dedupe across tabs, only locally by record id. Receiver side is `RequestToastInit` in `src/init/`.
-- `src/types/types.d.ts` — global types: `AppStorage`, `Settings`, `Profile`, `Class`, `Item`, `KeysOfType`, `IndexedType`, table types; `src/types/props.d.ts` / `emits.d.ts` hold component contracts.
-- `supabase/` — **local-only (git-ignored)** cloud resources: `migrations/*` (schema changes, applied with `npx supabase db push`) and `functions/<slug>/index.ts` (Edge Function sources, deployed with `npx supabase functions deploy <slug>`).
+- `src/main.ts` — `document-start` bootstrap: anti-flash overlay, `bbs.mcmod.cn` night mode,
+  waits for host jQuery, then constructs `Mcmodder`.
+- `src/Mcmodder.ts` — composition root: services, `InitLoader`, `StyleLoader`, `main()`.
+- `src/loader/*` — `ConfigLoader`, `StyleLoader`, `StorageBufferLoader`,
+  `ScheduleRequestLoader`, `MenuCommandLoader`, `InitLoader`.
+- `src/config/` — `ConfigUtils` (option registration) and `ConfigRepository` (typed GM-storage
+  facade).
+- `src/StorageBuffer.ts` — GM key -> Vue `shallowRef` cache with cross-tab sync via
+  `GM_addValueChangeListener`.
+- `src/types/types.d.ts` — global types: `AppStorage`, `Settings`, `Profile`, `Class`, `Item`,
+  table types; `src/types/props.d.ts` / `emits.d.ts` hold component contracts.
 - `src/Values.ts` — constants: hostname, asset URLs, menu commands, defaults.
+- `src/editrule/` — item/class/tab edit rules used by the editor init flow.
 
 ## Versioning and release
 
 - Bump `version` in both `package.json` and `vite.config.ts` (userscript metadata) together.
-- Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md`; the release job extracts exactly that section into the GitHub release notes.
-- CI (`.github/workflows/build.yaml`) builds every push. A commit message containing `[release]` uploads `dist/mcmodder.user.js` and creates tag `v<version>` (suffixed `_N` if the tag already exists).
+- Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` (user-owned; only with explicit
+  instruction); the release job extracts that section into the GitHub release notes.
+- CI (`.github/workflows/build.yaml`) builds every push. A commit message containing
+  `[release]` uploads `dist/mcmodder-lite.user.js` and creates tag `v<version>` (suffixed
+  `_N` if the tag already exists).
