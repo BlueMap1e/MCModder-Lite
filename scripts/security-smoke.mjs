@@ -121,7 +121,11 @@ await runScenario(
       hasPayloadElement: !!document.querySelector(".mcmodder-ranklist-container img[onerror]"),
     }));
     check("贡献榜：payload 未执行", state.xss === 0, JSON.stringify(state));
-    check("贡献榜：payload 以纯文本显示", state.text.includes("<img"), state.text.slice(0, 80));
+    check(
+      "贡献榜：payload 以纯文本显示",
+      state.text.includes("<img"),
+      state.text.trim().slice(0, 40),
+    );
     check("贡献榜：未生成 img[onerror]", state.hasPayloadElement === false);
   },
 );
