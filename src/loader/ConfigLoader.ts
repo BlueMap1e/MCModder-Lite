@@ -183,7 +183,7 @@ export const settings = [
             title: "矿词/标签页重排版",
             description: "减小矿词/标签页中单个物品所占用的页面空间，并将各物品按所属模组分类。",
             type: "checkbox",
-            value: true,
+            value: false,
           },
         ],
       },

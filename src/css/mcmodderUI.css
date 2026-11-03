@@ -1235,24 +1235,27 @@ body .edui-default .edui-toolbar .edui-for-mcmodderupload.mcmodder-edui-uploadin
 .center .main .nav {
   right: -25px;
 }
-.oredict-item-list li .name .sub {
+/* 以下五条是旧版「mcmodderUI」的矿词紧凑流样式，现为「矿词/标签页重排版」的配套规则：
+   li 全宽 + .name 子元素行内化会彻底破坏站点原生的 inline-block 多列布局，
+   必须以 OredictPageInit.run() 打上的标记类限定作用域，设置关闭时不劫持原生排版 */
+html.mcmodder-oredict-advanced .oredict-item-list li .name .sub {
   height: 20px;
   margin-left: 5px;
   display: inline-block;
 }
-.oredict-item-list li .name {
+html.mcmodder-oredict-advanced .oredict-item-list li .name {
   line-height: 20px;
 }
-.oredict-item-list li .name .main {
+html.mcmodder-oredict-advanced .oredict-item-list li .name .main {
   height: 20px;
   display: inline-block;
 }
-.oredict-item-list li {
+html.mcmodder-oredict-advanced .oredict-item-list li {
   width: 100%;
   margin-bottom: unset;
   height: unset;
 }
-.oredict-item-list {
+html.mcmodder-oredict-advanced .oredict-item-list {
   margin-left: 0.75rem;
   margin-right: 0.75rem;
 }
