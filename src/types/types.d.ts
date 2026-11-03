@@ -108,7 +108,6 @@ type Template = {
 interface AppStorage {
   mcmodderSettings?: Settings;
   userProfile?: Record<string, string>;
-  mcmodderSplashList_v2?: string;
   templateList?: Template[];
   mcmodderLogger?: string;
   mcmodderJsonStorage?: Record<string, ItemList>;
@@ -127,20 +126,6 @@ interface AppStorage {
   classData?: Record<string, string>;
   inputList?: Record<string, InputSimplifiedSuggestion[]>;
   assistantViewed?: Record<string, (number | [id: number, refund: number])[]>;
-  /**
-   * 跨标签页弹窗广播槽：仅存放**当前唯一一条**待弹记录（键不存在即表示无挂起）。
-   *
-   * 一次性协调通道，不登记为可缓存键，读写均直接走 GM Storage。
-   * 结构见 {@link ModalBroadcastRecord}。
-   */
-  mcmodderModalBroadcast?: ModalBroadcastRecord;
-  /**
-   * 跨标签页请求提示通道的记录数组：按时间先后存放最近的若干条请求，**只增不删**。
-   *
-   * 与 {@link AppStorage.mcmodderModalBroadcast} 一样属一次性协调通道，不登记为可缓存键，
-   * 读写均直接走 GM Storage。结构见 {@link RequestToastRecord}。
-   */
-  mcmodderRequestToasts?: RequestToastRecord[];
 }
 
 interface Settings {
@@ -157,7 +142,6 @@ interface Settings {
   // unlockHeaderContainer: boolean,
   disableClassDataTypesetting: boolean;
   fastCopyName: boolean;
-  splashStyle: 0 | 1;
   autoCheckin: boolean;
   defaultBackground: string;
   defaultNightBackground: string;
@@ -165,7 +149,6 @@ interface Settings {
   textShadowAlpha: number;
   radiusRatio: number;
   classAddHelper: boolean;
-  editorAutoResize: boolean;
   noSubmitWarningDelay: boolean;
   autoSaveFix: boolean;
   fastSubmitFix: boolean;
@@ -179,9 +162,6 @@ interface Settings {
   autoExpandPage: boolean;
   autoCloseSwal: boolean;
   versionHelper: boolean;
-  versionEditorHelper: boolean;
-  subscribeDelay: number;
-  subscribeComment: boolean;
   hoverDescription: boolean;
   hoverImage: boolean;
   imageLocalizedCheck: boolean;
@@ -195,11 +175,9 @@ interface Settings {
   compactedChild: boolean;
   // compactedTablist: boolean,
   compactedVerifylist: boolean;
-  compactedVerifyEntry: boolean;
   advancedRanklist: boolean;
   advancedOredictPage: boolean;
   rememberVisitedMods: boolean;
-  centerMainExpand: boolean;
   unlockComment: boolean;
   uploadFileButton: boolean;
   ignoreEmptyLine: boolean;
@@ -215,11 +193,8 @@ interface Settings {
   alwaysNotify: number;
   alwaysNotifyVerification: number;
   fastUrge: boolean;
-  enableStructureEditor: boolean;
-  enableJsonHelper: boolean;
   itemRepository: 0 | 1;
   minimumRequestInterval: number;
-  requestMonitorPosition: 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7;
   keybindFastLink: Key;
   keybindFastSubmit: Key;
   keybindVerifyPass: Key;
@@ -246,17 +221,11 @@ interface Settings {
   autolinkSourceOnline: boolean;
   autolinkStyleSpace: boolean;
   preferredAutolinkStyle: 1 | 2;
-  structureSelected: number;
   preferredDragPos: Record<string, number>;
-  preferredGIFViewerRatioLock: boolean;
-  preferredStickerPlazaSort: 0 | 1;
 
   // 以下为旧版遗留
   templateList?: Template[];
   useNotoSans?: boolean;
-  jsonDatabase?: string[];
-  useSupabase?: boolean;
-  customAttitude?: boolean;
 }
 
 interface SettingsSection {
@@ -716,49 +685,9 @@ interface Profile {
   lastUpdated?: number;
 
   /**
-   * 用户已完成但尚未弹出过提示的成就 ID 列表，以单个 `,` 分隔
-   */
-  completed?: string;
-
-  /**
-   * 用户所有成就的完成情况的序列化
-   */
-  advancements?: string;
-
-  /**
    * 关注模组列表
    */
   subscribeModlist?: number[];
-
-  /**
-   * 预编辑列表
-   */
-  preSubmitList?: PreSubmission[];
-
-  /**
-   * 最近一次周年庆祝时，账号自注册至今所过去的年份数
-   */
-  annualCelebration?: number;
-}
-
-interface Advancement {
-  lang: string;
-  category: import("../advancement/AdvancementUtils").AdvancementType;
-  id: import("../advancement/AdvancementUtils").AdvancementID;
-  range: number;
-  exp: number;
-  image?: string | null;
-  reward?: number | null;
-  tier?: number;
-  isCustom: boolean;
-  prev?: Advancement;
-  next?: Advancement;
-  level?: number;
-}
-
-interface AdvancementProgression {
-  id: import("../advancement/AdvancementUtils").AdvancementID;
-  progress: number;
 }
 
 interface VerifyContent {
@@ -1553,17 +1482,6 @@ interface ConfigOption extends InputOption {
   readonly suggestion?: InputSimplifiedSuggestion[];
 }
 
-interface PreSubmission {
-  id: string;
-  createTime: number;
-  lastSubmitTime: number;
-  title: string;
-  url: string;
-  rawData: string;
-  config: import("$").GmXmlhttpRequestOption<"text", unknown>;
-  errState?: number;
-}
-
 interface GameVersion {
   date: Date;
   name: string;
@@ -1666,58 +1584,6 @@ interface AnimatedTexture {
 type EditorAlertHTMLModifier = (e: HTMLElement) => void;
 type EditorAlertForm = () => JQuery;
 
-/** 已预定义的跨标签页弹窗类型：`键 → 弹窗类`，新增弹窗时在此登记（参见 `src/modal/ModalType.ts`） */
-interface ModalTypeTypes {
-  newVerification: import("../modal/types/NewVerificationModal").NewVerificationModal;
-}
-
-/**
- * 跨标签页弹窗广播记录（判别联合）。
- *
- * GM Storage 只能传 JSON，弹窗的 `preConfirm`、`interceptEvents` 等回调无法序列化，
- * 故跨标签页传递的只是「**弹窗类型 + 该类型的业务字段**」，由接收标签页用
- * {@link ModalTypeTypes} 中登记的类重建出真正的弹窗，回调因此得以存活。
- *
- * - `id` —— 本条记录的随机标识，用于日志与去重；
- * - `tabID` —— 发送方标签页标识，「只弹一次」的认领环节需要区分写入者；
- * - `createdAt` —— 发送时间戳（毫秒），超过 `Values.MODAL_BROADCAST_EXPIRE` 即视为过期丢弃；
- * - `type` —— 判别字段，接收端据此收窄出对应的 `payload` 类型。
- */
-type ModalBroadcastRecord = {
-  [K in keyof ModalTypeTypes]: {
-    id: string;
-    tabID: string;
-    createdAt: number;
-    type: K;
-    payload: ModalOption<ModalTypeTypes[K]>;
-  };
-}[keyof ModalTypeTypes];
-
-/** 某个弹窗类型的 payload 类型：取其 `option` 字段（各弹窗类自行声明，如 `NewVerificationModalOption`） */
-type ModalOption<T> = T["option"];
-
-/**
- * 跨标签页请求提示记录。
- *
- * 每次 {@link Utils.createRequest} 真正派发请求时写一条，用于让**所有可见的标签页**各自显示一条
- * iziToast 气泡（请求方法 + URL），便于调试与监控。
- *
- * - `id` —— 随机标识，接收端据此本地去重（同一 `id` 只弹一次）；
- * - `tabID` —— 发送方标签页标识，仅用于日志排查；
- * - `createdAt` —— 发送时间戳（毫秒），比 {@link Values.REQUEST_TOAST_EXPIRE} 更旧的记录直接丢弃；
- * - `method` —— 已大写的请求方法名，缺省为 `GET`；
- * - `url` —— 请求地址（原样透传，不做转义）。
- * - `message` —— 请求的附加信息，在启用“网络请求监控”时显示在 URL 旁。
- */
-interface RequestToastRecord {
-  id: string;
-  tabID: string;
-  createdAt: number;
-  method: string;
-  url: string;
-  message: string;
-}
-
 interface ScheduleRequestTypes {
   autoCheckin: import("../schedulerequest/types/AutoCheckinScheduleRequest").AutoCheckinScheduleRequest;
 }
@@ -1747,12 +1613,6 @@ type JsDiffResult = {
 };
 
 type JsDiffResultList = JsDiffResult[];
-
-interface Splash {
-  time: number;
-  content: string;
-  num: number;
-}
 
 interface ClassRelation {
   id: number;

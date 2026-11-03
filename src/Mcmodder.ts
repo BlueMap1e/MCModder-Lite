@@ -1,4 +1,4 @@
-import { GM_getValue, GM_openInTab, GM_setValue } from "$";
+import { GM_openInTab } from "$";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { MemuCommandLoader } from "./loader/MenuCommandLoader";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
@@ -37,7 +37,6 @@ export class Mcmodder {
   ueditorFrame: UEditor[];
   screenAttachedFrame: ScreenAttachedFrameData[];
   cfgutils: ConfigUtils;
-  /** 自定义表态系统（全站单例：短评页与消息中心共用同一份计数缓存与未读统计） */
   styleColors: ThemeColorSet;
   preferredWiderScreen = false;
   isNightMode = false;
@@ -308,13 +307,6 @@ export class Mcmodder {
     }
   }
 
-  static readonly ID_SPLASH_COMPARE = "mcmodder-splash-compare";
-  static readonly URL_PUBLIC_SPLASH_LIST =
-    "https://github.com/Charcoal-Black/Mcmodder/blob/master/splashes.json";
-  static readonly URL_PUBLIC_SPLASH_LIST_RAW =
-    "https://raw.githubusercontent.com/Charcoal-Black/Mcmodder/master/splashes.json";
-  static readonly URL_ALTERNATIVE_PUBLIC_SPLASH_LIST_RAW =
-    "https://hub.gitmirror.com/raw.githubusercontent.com/Charcoal-Black/Mcmodder/master/splashes.json";
   static readonly URL_JSON_POST = "https://bbs.mcmod.cn/forum.php?mod=viewthread&tid=1281";
 
   updateScreenAttachedFrame(node: HTMLElement) {
@@ -368,27 +360,6 @@ export class Mcmodder {
       }).mount(this.profileSelectorContainer.get(0)) as InstanceType<typeof ProfileSelector>;
     }
     this.profileSelectorContainer.appendTo(".profile-option-container");
-  }
-
-  updateSplashListData() {
-    const splashes_old: string[] = GM_getValue("mcmodderSplashList").split("\n");
-    const splashes: string[] = [],
-      count: [string, number][] = [];
-    let flag: boolean;
-    splashes_old.pop();
-    for (let i = 1; i < splashes_old.length; i++) {
-      flag = true;
-      count.forEach((e, f) => {
-        if (e[0] === splashes_old[i]) {
-          flag = false;
-          count[f][1]++;
-        }
-      });
-      if (flag) count.push([splashes_old[i], 1]);
-    }
-    count.forEach((e) => splashes.push(`0,${e[0]},${e[1]}`));
-    GM_setValue("mcmodderSplashList_v2", splashes.join("\n"));
-    GM_setValue("mcmodderSplashList", "");
   }
 
   applyCustomFont(font: number) {
@@ -537,11 +508,6 @@ export class Mcmodder {
       this.itemTypeList = Values.itemCustomTypeList;
     }
     this.itemTypeList = this.itemTypeList!.concat(Values.itemDefaultTypeList);
-
-    // 闪烁标语追踪系统升级
-    if (GM_getValue("mcmodderSplashList")) {
-      this.updateSplashListData();
-    }
 
     // 表格修复
     if (this.configRepository.getSettings("tableFix")) {

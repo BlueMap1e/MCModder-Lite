@@ -261,25 +261,6 @@ const configResourceInteractorProps: ConfigResourceInteractorProps<
 >[] = [
   {
     parent: props.parent,
-    id: "mcmodderSplashList_v2",
-    name: "已记录的闪烁标语",
-    columnOptions: {
-      time: ["时间", (data: number) => (data ? new Date(data).toLocaleString() : "未知")],
-      content: "记录内容",
-      num: ["次数", TableUtils.DISPLAYRULE_NUMBER],
-    },
-    configParser: (config) => config?.split("\n") || [], // 最后一项是空，不考虑
-    dataParser: (_, data) => {
-      const list = (data as string).split(",");
-      return {
-        time: Number(list[0]),
-        content: list[1],
-        num: Number(list[2]),
-      } as Splash;
-    },
-  } satisfies ConfigResourceInteractorProps<"mcmodderSplashList_v2", string[], Splash>,
-  {
-    parent: props.parent,
     id: "modDependences_v2",
     name: "已记录的模组前置信息",
     columnOptions: {

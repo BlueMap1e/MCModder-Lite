@@ -53,8 +53,6 @@ declare global {
   }
   var swal: SweetAlertStatic;
 
-  var iziToast: any;
-
   /* MCMOD */
   function common_msg(title: string, message: string, state: string): void;
 
@@ -73,7 +71,6 @@ declare global {
   const editor: any;
   const PublicLangData: any;
   const echarts: any;
-  const structure_browser: any;
 
   var fuc_topmenu_v4: any;
   var SearchOn: any;

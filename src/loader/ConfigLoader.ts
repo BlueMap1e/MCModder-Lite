@@ -165,13 +165,6 @@ export const settings = [
             type: "checkbox",
           },
           {
-            id: "compactedVerifyEntry",
-            title: "紧凑化审核界面",
-            description:
-              "将有效的编辑对比表格尽可能移到靠前的位置，以省去一些时候使用鼠标滚轮的麻烦。",
-            type: "checkbox",
-          },
-          {
             id: "advancedRanklist",
             title: "贡献榜重排版",
             description: "让贡献榜中各用户的昵称、排名、编辑量、编辑占比一目了然！",
@@ -202,12 +195,6 @@ export const settings = [
             description: "每日首次访问百科，或是本机时间为 00:00:00 时，自动执行签到操作。",
             type: "checkbox",
             value: true,
-          },
-          {
-            id: "centerMainExpand",
-            title: "个人主页数据拓展",
-            description: "显示平均字数和科龄，令模组区域并排显示，过长的模组区域默认压缩。",
-            type: "checkbox",
           },
         ],
       },
@@ -278,12 +265,6 @@ export const settings = [
         id: "editor",
         label: "编辑器",
         settings: [
-          {
-            id: "editorAutoResize",
-            title: "编辑器尺寸自适应",
-            description: "使编辑器的长度随正文内容，宽度随窗口尺寸自动调整。",
-            type: "checkbox",
-          },
           {
             id: "editorStats",
             title: "编辑量实时统计",
@@ -416,12 +397,6 @@ export const settings = [
             title: "日志智能管理",
             description:
               "允许从其他网站获取模组版本列表，并支持一键补充缺失的日志。支持 CurseForge 和 Modrinth 双平台。",
-            type: "checkbox",
-          },
-          {
-            id: "versionEditorHelper",
-            title: "日志搬运辅助工具",
-            description: "允许直接输入版本更新日期，而不再需要通过下拉列表勾选日期。",
             type: "checkbox",
           },
         ],
@@ -656,57 +631,17 @@ export const settings = [
         ],
       },
       {
-        id: "subscribe",
-        label: "关注模组",
+        id: "storage",
+        label: "数据存储",
         settings: [
-          {
-            id: "subscribeDelay",
-            title: "关注功能提醒",
-            description:
-              "在所关注的模组被编辑时提醒。设置相邻两次自动检测之间的最短冷却时间，单位为小时，设置为小于 0.01 以禁用。点击模组主页“关注”按钮时，脚本会自动同步关注模组列表。",
-            type: "number",
-            value: 24,
-            range: [0, null],
-          },
-          {
-            id: "subscribeComment",
-            title: "关注模组新短评提醒",
-            description: "若启用，则在所关注的模组有新的短评时也会提醒。",
-            type: "checkbox",
-          },
-        ],
-      },
-      {
-        id: "structureeditor",
-        label: "结构编辑器",
-        settings: [
-          {
-            id: "enableStructureEditor",
-            title: "结构编辑器",
-            description: "启用结构编辑器。",
-            type: "checkbox",
-          },
-        ],
-      },
-      {
-        id: "jsoneditor",
-        label: "JSON管理",
-        settings: [
-          {
-            id: "enableJsonHelper",
-            title: "JSON导入辅助",
-            description: "启用 JSON 导入辅助工具。",
-            type: "checkbox",
-          },
           {
             id: "itemRepository",
-            title: "JSON存储方式",
+            title: "本地 JSON 存储方式",
             description:
-              "配置使用 JSON 导入辅助工具时，JSON 应当以何种方式存储。（注意：切换此配置时，已存储的 JSON 文件不会自动同步，请手动转移）",
+              "本地自动链接搜索读取 JSON 时使用的存储方式。切换后已存储的 JSON 文件不会自动迁移，请手动转移。",
             type: "dropdownMenu",
             value: 0,
             range: { 0: "脚本存储", 1: "IndexedDB (推荐)" },
-            visible: (ctx) => ctx.configs.getSettings("enableJsonHelper"),
           },
         ],
       },
@@ -721,24 +656,6 @@ export const settings = [
             type: "number",
             value: 750,
             range: [500, null],
-          },
-          {
-            id: "requestMonitorPosition",
-            title: "网络请求监控位置",
-            description:
-              "记录脚本发出的所有网络请求的时间戳与基本信息，并在指定的位置展示，便于实时监控与调试。设置为“关闭”以禁用此特性。",
-            type: "dropdownMenu",
-            value: 1, // 默认启用！！网络请求失控会封 IP，惨痛的教训
-            range: {
-              0: "关闭",
-              1: "右下角",
-              2: "上方",
-              3: "左上角",
-              4: "右上角",
-              5: "左下角",
-              6: "下方",
-              7: "中央",
-            },
           },
         ],
       },

@@ -1416,7 +1416,7 @@ export class Utils {
    * 发送限速请求的全局入口：
    * 按 `updateRequestTime` 排定延迟后发出，记录日志；遇到 `yxd_token` 校验响应时写入 cookie 并自动重发。
    *
-   * 允许同时传入一个附加信息。若启用网络请求监控，则会在所有可见的标签页上提示本次发包的同时显示此信息。
+   * 允许同时传入本次请求的用途说明（`message`），会随请求日志一并保存，便于排查请求目的。
    * 原则上所有网络请求都应当有附加信息，便于在监控中理解请求目的。
    *
    * @warning 队列超出 {@link Values.MAX_REQUEST_COUNT} 上限时，本请求直接以失败告终、**不会发包**
@@ -1425,8 +1425,8 @@ export class Utils {
    *   可见地冒泡，否则会留下一条已排期、实则永远不会落地的待办。
    *
    * @param config 请求配置
-   * @param message 本次请求附带的提示消息
-   * @param silent 为 true 时不在请求监控中弹出提示（仍进入限速队列），用于脚本内部的批量查找
+   * @param message 本次请求的用途说明，会写入请求日志
+   * @param silent 历史参数：旧版「网络请求监控」已移除，当前无实际效果；保留以兼容既有调用方
    * @param log 为 false 时不写请求日志；含认证 key 等敏感数据的内部请求应关闭
    */
   createRequest<R extends GmResponseType = "text">(
@@ -1480,6 +1480,7 @@ export class Utils {
           const logs = GM_getValue("mcmodderLogger")?.split(";") || [];
           if (logs.length >= Values.MAX_REQUEST_COUNT / 10) logs.shift();
           let content = `A${lastRequestTime}:${config.url}`;
+          if (message) content += ` (${message})`;
           if (config.data) content += `(${config.data})`;
           logs.push(content);
           GM_setValue("mcmodderLogger", logs.join(";"));

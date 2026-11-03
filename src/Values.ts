@@ -55,33 +55,8 @@ export class Values {
   } as const;
 
   static readonly assets = {
-    almanacs: "https://i.mcmod.cn/editor/upload/20250731/1753943312_179043_WEbO.png",
-    progress1: "https://i.mcmod.cn/editor/upload/20241008/1728389750_179043_rcRM.png",
-    progress2: "https://i.mcmod.cn/editor/upload/20241018/1729266514_179043_vZVb.png",
     sprite: "https://i.mcmod.cn/editor/upload/20241019/1729313235_179043_fNWH.png",
-    cake: "https://i.mcmod.cn/editor/upload/20250802/1754100170_179043_DWqe.png",
-    candle: "https://i.mcmod.cn/editor/upload/20250802/1754100652_179043_shqU.png",
-    bg: "https://s21.ax1x.com/2025/01/05/pE9Avh4.jpg",
     mcmod: {
-      js: {
-        bootstrap: "/static/public/js/bootstrap.min.js",
-        bootstrapSelect: "/static/public/js/bootstrap-select.min.js",
-        sortable: "/static/public/js/jquery.sortable.min.js",
-        tableSorter: "/plugs/tablesorter/js/jquery.tablesorter.min.js",
-        three: "/static/public/plug/three/three.min.js",
-        threeOrbitControls: "/static/public/plug/three/three.orbit-controls.min.js",
-        threeTween: "/static/public/plug/three/three.tween.min.js",
-        structureBrowser: "/static/public/js/item/mc.structure_browser.functions.js",
-        item: "/static/public/js/item/mc.item.functions.js",
-      },
-      css: {
-        bootstrapSelect: "/static/public/css/bootstrap-select.min.css",
-        item: "/static/public/css/item/item.frame.css",
-        structureBrowser: "/static/public/css/item/structure_browser.frame.css",
-      },
-      aprilFools: {
-        mcr: "https://i.mcmod.cn/editor/upload/20230331/1680246648_2_vWiM.gif",
-      },
       imagesNone: `${this.hostname}/pages/class/images/none.jpg`,
       loading: `${this.hostname}/static/public/images/loading-colourful.gif`,
       iconStyleSample: "https://i.mcmod.cn/editor/upload/20210506/1620236406_2_BaUm.png",
@@ -89,7 +64,6 @@ export class Values {
       emptyItemIcon128x: "https://i.mcmod.cn/item/icon/128x128/0.png",
       level: {
         levelup: "/static/public/sound/task/levelup.ogg",
-        challengeComplete: "/static/public/sound/task/challenge_complete.ogg",
       },
     },
     js: {
@@ -98,7 +72,6 @@ export class Values {
       turndown: "https://cdnjs.cloudflare.com/ajax/libs/turndown/7.2.1/turndown.min.js",
     },
     nightMode: {
-      bg: "https://s41.ax1x.com/2026/05/13/peXw6Sg.png",
       imagesNone: "https://i.mcmod.cn/editor/upload/20241213/1734019784_179043_sDxX.jpg",
     },
     font: {

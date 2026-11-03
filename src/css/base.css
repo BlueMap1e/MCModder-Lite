@@ -298,7 +298,6 @@ body .uknowtoomuch:hover {
 .class-info-left .col-lg-6 .text,
 .verify-rowlist .text,
 .post_block .title .more a,
-.mcmodder-almanacs .more a,
 #comment-selfonly,
 .common-comment-block .comment-floor li.none,
 .comment-dl-tips,
@@ -377,7 +376,6 @@ a:hover,
 .news_block .right .editor ul a:hover,
 .post_block .title .more a:hover,
 .class_block .title a:hover,
-.mcmodder-almanacs .more a:hover,
 .item-table-block .table-tool li a:hover,
 .m_center li a:hover,
 .common-imglist p.text a:hover,
@@ -660,62 +658,6 @@ body .top-main .pulldown .top_content {
   opacity: 0.5;
   margin-left: 0.5em;
 }
-.mcmodder-task-tip {
-  width: 320px;
-  height: 85px;
-  position: fixed;
-  right: 0;
-  top: -50px;
-  z-index: 1000;
-  background-color: #212121;
-  border: 4px solid #555;
-  box-shadow: 0 0 0 1px #000;
-  border-radius: 6px;
-}
-.mcmodder-task-tip .icon {
-  width: 48px;
-  height: 48px;
-  margin: 5px 0 0 5px;
-  border: 1px solid #ddd;
-  border-radius: 10px;
-  text-align: center;
-  float: left;
-}
-.mcmodder-task-tip .icon img {
-  width: 32px;
-  height: 32px;
-  margin-top: 8px;
-}
-.mcmodder-task-tip .info {
-  width: 100%;
-  padding-left: 60px;
-  position: absolute;
-}
-.mcmodder-task-tip .info .title {
-  line-height: 25px;
-  font-size: 14px;
-  font-weight: bold;
-  color: #fafa00;
-}
-.mcmodder-task-tip .info .text,
-.mcmodder-task-tip .info .time {
-  line-height: 20px;
-  font-size: 12px;
-  color: #fff;
-}
-.mcmodder-task-tip .info .time {
-  position: absolute;
-  left: 10px;
-  bottom: 0;
-}
-.mcmodder-task-tip .info .range {
-  margin-top: 10px;
-  line-height: 20px;
-  margin-right: 5px;
-  font-size: 12px;
-  color: #fff;
-  text-align: right;
-}
 #mcmodder-night-switch,
 #mcmodder-profile-switch,
 #mcmodder-message-center,
@@ -748,9 +690,6 @@ body .common-template-frame li {
 .relation-version-sort-button {
   margin-left: 5px;
   cursor: var(--mcmodder-cursor-hand);
-}
-.mcmodder-numberinput-container {
-  display: inline-block;
 }
 .center-setting-block .form-control[type="color"] {
   width: 4em;
@@ -911,44 +850,6 @@ body:not(.view),
     width 0.6s ease,
     margin 0.6s ease;
 }
-.mcmodder-changelog-cover {
-  width: 100%;
-  background-image: url("https://s21.ax1x.com/2025/01/05/pE9Avh4.jpg");
-  display: inline-block;
-  height: 200px;
-  background-position-y: 100%;
-  background-size: 100%;
-  position: relative;
-}
-.mcmodder-changelog-title {
-  position: absolute;
-  bottom: 1em;
-  right: 0;
-  color: white;
-  text-shadow: 3px 3px 1px var(--mcmodder-color-text-shadow-strong);
-  font-size: 1.875em;
-}
-.mcmodder-changelog-subtitle {
-  position: absolute;
-  bottom: 0.7em;
-  right: 0.5em;
-  color: white;
-}
-.mcmodder-changelog-content {
-  max-height: 300px;
-  overflow: scroll;
-  text-align: left;
-  font-size: 14px;
-}
-.mcmodder-changelog li {
-  margin-left: 2em;
-}
-.mcmodder-changelog ul li {
-  list-style-type: disc;
-}
-.mcmodder-presubmit-editor {
-  width: 100%;
-}
 #item-used-item,
 #item-search-item {
   margin-top: 0.5em;
@@ -1001,12 +902,6 @@ body:not(.view),
   text-align: center;
   color: var(--mcmodder-color-primary-dark2);
   text-shadow: 1px 1px var(--mcmodder-color-background);
-}
-.jsonframe-table {
-  font-size: 14px;
-}
-.mcmodder-recipejson-container .mcmodder-collapsible-container td {
-  height: 300px;
 }
 .mcmodder-table-container {
   position: relative;
@@ -1085,33 +980,6 @@ body:not(.view),
   right: calc(50% - 2em);
   animation: mcmodder-loading-second 1s ease-in-out 0s infinite alternate;
 }
-/* 骨架屏：内容还在路上时用灰块占位，一道色带循环扫过表示仍在加载。
- * 用法是给任意元素加上 .mcmodder-skeleton（自带底色、圆角与裁剪），尺寸交给使用方。
- */
-.mcmodder-skeleton {
-  position: relative;
-  overflow: hidden;
-  border-radius: 4px;
-  background-color: var(--mcmodder-color-background-dark1);
-}
-.mcmodder-skeleton::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  transform: translateX(-100%);
-  background-image: linear-gradient(
-    90deg,
-    transparent,
-    var(--mcmodder-color-background-dark2),
-    transparent
-  );
-  animation: mcmodder-skeleton-shimmer 1.5s ease-in-out 0s infinite;
-}
-@keyframes mcmodder-skeleton-shimmer {
-  to {
-    transform: translateX(100%);
-  }
-}
 .verify-rowlist,
 #mcmodder-verify-search,
 #mcmodder-mod-search,
@@ -1124,8 +992,7 @@ body:not(.view),
 #mcmodder-history-search,
 #mcmodder-template-search,
 #mcmodder-input-newtext,
-#mcmodder-input-alias,
-#jsonframe-submit-classid {
+#mcmodder-input-alias {
   text-align: center;
 }
 #mcmodder-verify-window {
@@ -1228,31 +1095,6 @@ body:not(.view),
 #block-selector {
   width: 100%;
 }
-#mcmodder-editnum,
-#mcmodder-editbyte {
-  width: 5em;
-  height: 2em;
-  border-radius: calc(var(--mcmodder-width-radius) * 0.5);
-  padding: 0.3em;
-  border: 1px solid var(--mcmodder-color-accent-transparent1);
-  background-color: transparent;
-}
-#mcmodder-lv-input {
-  text-align: center;
-  height: 20px;
-  width: 25px;
-  margin-right: 0px;
-  color: yellow;
-  background: transparent;
-  border: none;
-  font-weight: bold;
-  text-shadow: 1px 1px 1px #333;
-}
-.mcmodder-byte-chart {
-  position: absolute;
-  top: 0px;
-  left: 0px;
-}
 .mcmodder-table {
   margin-top: 0;
   background-color: var(--mcmodder-color-background-transparent);
@@ -1317,10 +1159,6 @@ body:not(.view),
 .mcmodder-preview-frame img {
   max-height: 135px;
   max-width: 240px;
-}
-#mcmodder-splash-text {
-  width: 100%;
-  height: 300px;
 }
 .tooltip .item-info-table {
   display: inline-block;
@@ -1570,9 +1408,6 @@ div#mcmodder-text-result {
 #mcmodder-text-result,
 .mcmodder-golden-alert,
 .mcmodder-gui-alert,
-.mcmodder-changelog,
-.mcmodder-almanacs .good,
-.mcmodder-almanacs .bad,
 .sl-state-block,
 .header-right .header-search form,
 .form-control,
@@ -1834,14 +1669,6 @@ body .top-main .pulldown .arrow {
   width: 100px;
   height: 100%;
 }
-.mcmodder-scroll-indicator-horizontal {
-  -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
-  mask-image: linear-gradient(to right, #000 calc(100% - 40px), transparent);
-}
-.mcmodder-scroll-indicator-vertical {
-  -webkit-mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
-  mask-image: linear-gradient(to bottom, #000 calc(100% - 40px), transparent);
-}
 .common-rowlist-block .title,
 .common-imglist-block .title,
 .common-nav {
@@ -2079,114 +1906,8 @@ body .arrow {
   text-align: right;
   color: var(--mcmodder-color-danger-dark1);
 }
-.mcmodder-almanacs .icon {
-  background-image: url(https://i.mcmod.cn/editor/upload/20250731/1753943312_179043_WEbO.png);
-  width: 40px;
-  height: 40px;
-  float: left;
-  margin-right: 10px;
-  display: block;
-}
-.mcmodder-almanacs .content {
-  width: 100%;
-  display: flex;
-  gap: var(--mcmodder-width-padding-1);
-}
-.mcmodder-almanacs .title-container .title {
-  line-height: 40px;
-  font-size: 22px;
-  color: var(--mcmodder-color-text);
-}
-.mcmodder-almanacs .title-container .title:hover {
-  text-decoration: none;
-}
-.mcmodder-almanacs .date {
-  margin-left: var(--mcmodder-width-padding-2);
-}
-.mcmodder-almanacs .lore {
-  color: var(--mcmodder-color-text-dark2);
-  margin-left: 30px;
-  float: left;
-}
-.mcmodder-almanacs .content .good,
-.mcmodder-almanacs .content .bad {
-  position: relative;
-  flex: 1;
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  padding: calc(var(--mcmodder-width-padding-2) * 0.5) var(--mcmodder-width-padding-2);
-  gap: var(--mcmodder-width-padding-3);
-}
-.mcmodder-almanacs .content .empty::before {
-  content: "暂无数据";
-  font-size: 16px;
-  color: var(--mcmodder-color-text-dark3);
-  text-align: center;
-  line-height: 3em;
-  display: inline-block;
-  width: 100%;
-}
-.mcmodder-almanacs .good {
-  background-color: var(--mcmodder-color-almanacs-good);
-}
-.mcmodder-almanacs .bad {
-  background-color: var(--mcmodder-color-almanacs-bad);
-}
-.mcmodder-almanacs .good .mold {
-  color: var(--mcmodder-color-almanacs-good);
-}
-.mcmodder-almanacs .bad .mold {
-  color: var(--mcmodder-color-almanacs-bad);
-}
-.mcmodder-almanacs .block {
-  font-size: 16px;
-  padding: 0.2em 0.5em;
-  border: 1px solid var(--mcmodder-color-primary-dark2-transparent1);
-  border-radius: calc(var(--mcmodder-width-radius) * 0.5);
-}
-.mcmodder-almanacs .block .title {
-  color: var(--mcmodder-color-primary-dark2);
-  font-weight: bold;
-  text-shadow: 2px 2px 2px var(--mcmodder-color-text-shadow);
-}
-.mcmodder-almanacs .more {
-  float: right;
-  font-size: 12px;
-  line-height: 20px;
-}
-.mcmodder-almanacs .more a {
-  margin: 10px 0 0 10px;
-  padding: 0 5px;
-  border-radius: 5px;
-  border: 1px solid var(--mcmodder-color-background-dark3);
-  text-decoration: none;
-  -webkit-user-select: none;
-  user-select: none;
-}
 .common-center .center {
   max-width: unset;
-}
-.mcmodder-candle {
-  display: block;
-  width: 40px;
-  height: 40px;
-  position: absolute;
-  background-image: url("https://i.mcmod.cn/editor/upload/20250802/1754100652_179043_shqU.png");
-  background-size: cover;
-}
-.mcmodder-cake,
-.mcmodder-10th-cake {
-  background-size: cover;
-  position: relative;
-  display: inline-block;
-  width: 150px;
-  height: 150px;
-}
-.mcmodder-cake {
-  background-image: url("https://i.mcmod.cn/editor/upload/20250802/1754100170_179043_DWqe.png");
-}
-.mcmodder-10th-cake {
-  background-image: url("https://i.mcmod.cn/editor/upload/20250802/1754102714_179043_nNzj.png");
 }
 .item-table-hover,
 .item-table-block .TableBlock,
@@ -2216,7 +1937,6 @@ body .arrow {
 .mcmodder-mod-sort fieldset:last-child {
   margin-bottom: 0;
 }
-#mcmodder-unique-splashes,
 .edit-page-title {
   margin-top: var(--mcmodder-width-padding-2);
 }
@@ -2364,12 +2084,6 @@ body .center-header .user-icon .user-icon-img.tapped {
     var(--mcmodder-color-background-dark2)
   );
 }
-.mcmodder-jump {
-  color: var(--mcmodder-color-itemrelation-jump);
-}
-.mcmodder-general {
-  color: var(--mcmodder-color-itemrelation-general);
-}
 .mcmodder-editor-stats {
   font-size: 12px;
   margin-top: 10px;
@@ -2478,24 +2192,12 @@ body .top-main .info .more-info .top_content a:hover,
   font-size: 14px;
   margin-top: var(--mcmodder-width-padding-2);
 }
-#mcmodder-markdown-it {
-  display: block;
-}
 .syntaxhighlighter {
   overflow: auto;
   background-color: var(--mcmodder-color-background);
 }
 .item-h5-ename::before {
   content: " ";
-}
-#mcmodder-json-compare-frame {
-  display: block;
-}
-#mcmodder-json-compare-frame > .mcmodder-jsonframe {
-  display: inline-block;
-  width: 100%;
-  border: 1px solid var(--mcmodder-color-accent-dark1);
-  vertical-align: top;
 }
 .mcmodder-contextmenu {
   position: absolute;
@@ -2557,48 +2259,8 @@ body .top-main .info .more-info .top_content a:hover,
 .mcmodder-contextmenu li.selected:not(.empty) {
   background-color: var(--mcmodder-color-primary-transparent2);
 }
-.jsonframe-menu {
-  padding: 3px;
-  width: 100%;
-  height: 2.2em;
-  overflow: auto;
-  white-space: nowrap;
-}
-.jsonframe-fixedmenu {
-  position: fixed;
-  z-index: 1;
-  background-color: var(--mcmodder-color-background-transparent);
-  backdrop-filter: blur(10px);
-  overflow-x: auto;
-}
-.jsonframe-menucontent > * {
-  margin-right: 0.5em;
-}
-.jsonframe-menucontent > label {
-  display: inline-block !important;
+#block-selector label {
   margin-bottom: 0;
-}
-.jsonframe-select {
-  max-width: 250px;
-  text-align: left;
-}
-#block-selector label,
-.jsonframe-import-label {
-  margin-bottom: 0;
-}
-.jsonframe-content {
-  min-height: 300px;
-  background-color: var(--mcmodder-color-accent-transparent2);
-  width: 100%;
-  overflow: auto;
-  overflow-anchor: none;
-}
-.jsonframe-content tr[data-index] {
-  height: 48px;
-}
-.jsonframe-content th,
-.jsonframe-content td {
-  white-space: nowrap;
 }
 .mcmodder-table tr.selected {
   box-shadow: 0 0 0 3px var(--mcmodder-color-accent-transparent1) inset;
@@ -2615,15 +2277,6 @@ body .top-main .info .more-info .top_content a:hover,
 }
 .mcmodder-table tr.mcmodder-table-unsaved-tr.selected:after {
   color: var(--mcmodder-color-primary-dark1);
-}
-.jsonframe-content table img {
-  margin-bottom: 0;
-  width: 32px;
-  height: 32px;
-  image-rendering: pixelated;
-}
-.jsonframe-oredict {
-  margin-right: 0.25em;
 }
 html.dark .mcmodder-table-pointerover-tr > td:not(.mcmodder-table-pointerover-td) {
   backdrop-filter: brightness(125%);
@@ -2651,15 +2304,6 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 }
 .mcmodder-table-unsaved-tr {
   background-color: var(--mcmodder-color-primary-transparent1);
-}
-.mcmodder-swal-configtext {
-  text-align: center;
-  font-size: 14px;
-  margin: 0.5em 0 0.5em 0;
-}
-.mcmodder-jsdiff-nodiffbytes {
-  font-size: 12px;
-  color: var(--mcmodder-color-text-dark3);
 }
 #mcmodder-profile-frame {
   max-height: 600px;
@@ -2728,9 +2372,6 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 }
 .profile-option .text span:not(:first-child)::before {
   content: " · ";
-}
-#mcmodder-getitemlist-typeid-input {
-  border-radius: 0;
 }
 /* 定位层：只负责位置。这里不能加 transform，否则 getBoundingClientRect
    量到的是动画中的视觉盒，向上/向下与水平偏移都会跟着抖。 */
@@ -2939,9 +2580,6 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
   width: 240px;
   display: inline-block;
   text-align: center;
-}
-.presubmit-list tbody {
-  font-size: 14px;
 }
 .item-used-frame,
 .item-search-frame {
@@ -3312,82 +2950,12 @@ body .top-main .navs .app-url .li .text,
 .score-frame .score-one {
   border-bottom-color: var(--mcmodder-color-background-dark2);
 }
-.comment-attitude.up.colourful,
-.comment-attitude.up.colourful:hover {
-  color: var(--mcmodder-color-attitude-up);
-}
-.comment-attitude.grintears.colourful,
-.comment-attitude.grintears.colourful:hover {
-  color: var(--mcmodder-color-attitude-grintears);
-}
-.comment-attitude.heart.colourful,
-.comment-attitude.heart.colourful:hover {
-  color: var(--mcmodder-color-attitude-heart);
-}
-.comment-attitude.flushed.colourful,
-.comment-attitude.flushed.colourful:hover {
-  color: var(--mcmodder-color-attitude-flushed);
-}
-.comment-attitude.cry.colourful,
-.comment-attitude.cry.colourful:hover {
-  color: var(--mcmodder-color-attitude-cry);
-}
-.comment-attitude.meh.colourful,
-.comment-attitude.meh.colourful:hover {
-  color: var(--mcmodder-color-attitude-meh);
-}
-.comment-attitude.down.colourful,
-.comment-attitude.down.colourful:hover {
-  color: var(--mcmodder-color-attitude-down);
-}
-.comment-attitude.lemon.colourful,
-.comment-attitude.lemon.colourful:hover {
-  color: var(--mcmodder-color-attitude-lemon);
-}
-.comment-attitude.horsehead.colourful,
-.comment-attitude.horsehead.colourful:hover {
-  color: var(--mcmodder-color-attitude-horsehead);
-}
-.comment-attitude.heartbroken.colourful,
-.comment-attitude.heartbroken.colourful:hover {
-  color: var(--mcmodder-color-attitude-heartbroken);
-}
-.comment-attitude.angry.colourful,
-.comment-attitude.angry.colourful:hover {
-  color: var(--mcmodder-color-attitude-angry);
-}
-.comment-attitude.tired.colourful,
-.comment-attitude.tired.colourful:hover {
-  color: var(--mcmodder-color-attitude-tired);
-}
-.comment-attitude.snowflake.colourful,
-.comment-attitude.snowflake.colourful:hover {
-  color: var(--mcmodder-color-attitude-snowflake);
-}
-.comment-attitude.handshake.colourful,
-.comment-attitude.handshake.colourful:hover {
-  color: var(--mcmodder-color-attitude-handshake);
-}
-.attitude-list > ul {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-  gap: var(--mcmodder-width-padding-3);
-}
 .center-main.attitude li {
   width: 100%;
   overflow: clip;
   text-overflow: ellipsis;
   display: inline-flex;
   align-items: center;
-}
-.mcmodder-attitude-stat-name {
-  overflow: clip;
-  text-overflow: ellipsis;
-  display: inline-block;
-  max-width: 50%;
-}
-.mcmodder-attitude-tools .mcmodder-attitude-emoji {
-  margin-right: 3px;
 }
 .mcmodder-mobileclient {
   margin-left: var(--mcmodder-width-padding-2);
@@ -3405,15 +2973,10 @@ body .top-main .navs .app-url .li .text,
 .common-user-card .card-userinfo .exp-bar .progress-bar {
   background-color: var(--mcmodder-color-text-dark2);
 }
-.mcmodder-visualeffect-container {
-  position: relative;
-  display: inherit;
-}
 html.dark #edui_fixedlayer .edui-default .edui-dialog-buttons .edui-button .edui-button-body,
 html.dark #edui_fixedlayer .edui-default .edui-dialog-closebutton .edui-button-body,
 html.dark img[alt="link style"],
-html.dark .news_block .right .addArea,
-html.dark .mcmodder-almanacs i {
+html.dark .news_block .right .addArea {
   filter: invert(100%);
 }
 /* 确认/取消按钮的文字继承自 .edui-dialog-foot 的浅色文字色，会被上面的 invert(100%)

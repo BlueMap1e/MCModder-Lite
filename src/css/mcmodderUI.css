@@ -710,13 +710,9 @@ body > .container > *,
 .header-search form .class-info-right > ul,
 .item-text > .item-info-table,
 .common-text-menu,
-.mcmodder-presubmit-editor,
 #mcmodder-text-result,
 .mcmodder-golden-alert,
 .mcmodder-gui-alert,
-.mcmodder-changelog,
-.mcmodder-almanacs .good,
-.mcmodder-almanacs .bad,
 .form-control,
 .sl-state-block,
 .btn {
@@ -1301,22 +1297,13 @@ body .edui-default .edui-toolbar .edui-for-mcmodderupload.mcmodder-edui-uploadin
   display: grid;
   grid-template-columns: repeat(6, 1fr);
 }
-.center-total ul.mcmodder-center-main-expand {
-  grid-template-columns: repeat(8, 1fr);
-}
 @media (max-width: 1200px) {
   .center-total ul {
     grid-template-columns: repeat(3, 1fr);
   }
-  .center-total ul.mcmodder-center-main-expand {
-    grid-template-columns: repeat(4, 1fr);
-  }
 }
 @media (max-width: 600px) {
   .center-total ul {
-    grid-template-columns: repeat(2, 1fr);
-  }
-  .center-total ul.mcmodder-center-main-expand {
     grid-template-columns: repeat(2, 1fr);
   }
 }
@@ -1328,15 +1315,6 @@ body .edui-default .edui-toolbar .edui-for-mcmodderupload.mcmodder-edui-uploadin
 }
 #verify-window-label {
   display: inline-block;
-}
-.mcmodder-verifywindow-empty {
-  font-size: 24px;
-  color: var(--mcmodder-color-primary);
-  text-align: center;
-  margin-top: 45vh;
-}
-.mcmodder-verifywindow-empty:before {
-  content: "轻触任意待审项以查看详情~";
 }
 .arrow,
 .comment-row .comment-tools .comment-attitude-list .comment-attitude-list-hover ul,
