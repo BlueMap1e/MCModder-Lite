@@ -101,9 +101,8 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
   live next to it is gone.
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
-  `src/vue/mount.ts` (`mountVueApp`, Shadow DOM isolation) exists but has no call sites yet.
   Read the vendored skills under `.agents/skills/` before Vue work.
-- **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames, logger,
+- **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
   `Swiper`, `TimerUtils`). **Editable tables** -> `src/table/*`, command/undo pattern
   (`Command` + `src/table/command/`). **Field indexes** -> `src/fieldindex/`.
 - **Popovers** (`Popover`-rooted components mounted outside the Vue tree) ->
