@@ -75,6 +75,29 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
 - Gate always-on observers by page / selector and give them a timeout; a document-level
   observer that lives for the whole session is a bug.
 
+## Maintenance notes (2026-11)
+
+- **Do not bulk-delete CSS.** `base.css` (~87 KB), `mcmodderUI.css` (~34 KB) and `bbs.css`
+  (~37 KB) contain legacy overrides whose deletion has broken night mode before. Remove a rule
+  only with CSS-coverage evidence and a before/after screenshot of every affected page.
+- `mcmodderUI.css` is injected unconditionally because the old `mcmodderUI` setting was
+  removed. Treat it as the skin; scope structural rules with a marker class instead of
+  reintroducing a global toggle.
+- `ItemTabInit` is not dead: `canRun()` returns false, but `ItemPageInit` and
+  `OredictPageInit` instantiate it directly. Never delete a file based on `canRun()` alone.
+- Global keyboard shortcuts must return early when the event target is an `input`,
+  `textarea`, `select` or `isContentEditable`; otherwise they swallow native Ctrl+A/C/Z on
+  every page where the owner is mounted.
+- Editor enhancements must be defensive: editor globals / UEditor DOM may be absent on 404 or
+  restricted pages. Guard `editor`, wrap `init()` in try/catch, and skip rather than throw.
+- Deferred cleanup (do not start without a plan): zero-reference `Utils` helpers / `Values`
+  data, splitting `ConfigLoader` / `Utils` / `Values`, per-page CSS or bundle splitting.
+  The 2.4 MB bundle costs ~16 ms eval on desktop and ~84 ms at 4x CPU throttle; splitting
+  mainly helps low-end devices and adds loading / debugging complexity.
+- Known verification gaps: admin pages need a separate `admin.mcmod.cn` login state; no SRI
+  for `@require` / CDN scripts; `yxd_token` HttpOnly is unverified. Treat these as open, not
+  as design decisions.
+
 ## Host-page constraints
 
 - The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery,
