@@ -1,5 +1,7 @@
 // 必须放在所有其它 import 之前：ESM 的依赖会先于本模块体求值，
 // 这里要赶在 Values 的静态初始化（会读 GM_info）之前完成 dev 期自检。
+// earlySplash 必须最先求值（早于 devCheck 与整包依赖），把防闪烁遮罩落在第一毫秒
+import { nightMode, splashStyle } from "./earlySplash";
 import "./devCheck";
 import { GM_getValue, GM_addValueChangeListener } from "$";
 import { Mcmodder } from "./Mcmodder";
@@ -13,24 +15,6 @@ import bbsCss from "./css/bbs.css?raw";
   window.addEventListener("unhandledrejection", (event) => {
     console.error("[MCModder-Lite] 未处理的 Promise 异常：", event.reason);
   });
-  let nightMode = false;
-  try {
-    const settings = JSON.parse(GM_getValue("mcmodderSettings") || "{}");
-    nightMode = !!settings.nightMode;
-  } catch (e) {}
-  const splashStyle = document.createElement("style");
-  // 遮罩，防止显示百科原网页闪烁
-  splashStyle.id = "mcmodder-splash-screen";
-  splashStyle.textContent = `html { background: ${nightMode ? "#111" : "#fff"} !important; } body { visibility: hidden !important; }`;
-  if (document.documentElement != null) {
-    document.documentElement.appendChild(splashStyle);
-  } else {
-    document.addEventListener("DOMContentLoaded", () => {
-      if (document.documentElement != null) {
-        document.documentElement.appendChild(splashStyle);
-      }
-    });
-  }
   const initBbsDarkMode = () => {
     let settings: any = {};
     try {
