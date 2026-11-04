@@ -6,7 +6,7 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）的轻量编审辅助脚本，基
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE)
 [![Install](https://img.shields.io/badge/install-latest-brightgreen.svg)](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)
 
-面向轻度用户和编辑：保留编辑、审核与阅读的高频功能，移除云端服务与娱乐模块。需要功能更全的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
+给百科补上夜间模式，顺带把编辑、审核里最常用的功能做顺。需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
 
 ## 安装
 

@@ -106,7 +106,7 @@ export const settings = [
           {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
-            description: "(Beta!) 对社群应用夜间模式配色。",
+            description: "对社群页面（论坛列表、帖子等）应用夜间配色。",
             type: "checkbox",
             value: true,
           },
