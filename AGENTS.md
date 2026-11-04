@@ -101,6 +101,12 @@ npm run smoke:security  # XSS regression only (payload injected as page text bef
   every page where the owner is mounted.
 - Editor enhancements must be defensive: editor globals / UEditor DOM may be absent on 404 or
   restricted pages. Guard `editor`, wrap `init()` in try/catch, and skip rather than throw.
+- Changing a setting's `value:` default only affects users who never toggled it — persisted
+  settings win. Say so when reporting such a change; forcing everyone over needs a one-off
+  migration, which also overrides the choice of people who wanted the old default.
+- `uploadFileButton` rides on the site's **undocumented** UEditor endpoints (`uploadfile` /
+  `listfile`); if the site changes them the button fails silently. It is off by default, and
+  `Values.ueditorFileAccept` must list every extension the setting description promises.
 - Deferred cleanup (do not start without a plan): zero-reference `Utils` helpers / `Values`
   data, splitting `ConfigLoader` / `Utils` / `Values`, per-page CSS or bundle splitting.
   The 2.4 MB bundle costs ~16 ms eval on desktop and ~84 ms at 4x CPU throttle; splitting
