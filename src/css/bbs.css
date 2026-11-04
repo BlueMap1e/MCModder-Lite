@@ -16,6 +16,7 @@
   --mcmodder-color-bbs-shadow: rgba(0, 0, 0, 0.2);
   --mcmodder-color-bbs-editor-filter: invert(0);
   --mcmodder-color-font-green: #006600;
+  --mcmodder-color-link-visited: #6b21a8;
 }
 
 :root.dark {
@@ -36,6 +37,7 @@
   --mcmodder-color-bbs-shadow: rgba(0, 0, 0, 0.6);
   --mcmodder-color-bbs-editor-filter: invert(0.8);
   --mcmodder-color-font-green: #81c784;
+  --mcmodder-color-link-visited: #a78bfa;
 }
 
 html.dark body {
@@ -131,10 +133,11 @@ html.dark #wp.wp.fwp a:hover {
   color: var(--mcmodder-color-text);
 }
 
+/* 首页标语（.ooops）在社群首页同样出现：bbs 域只注入本文件，base.css 里的同名规则
+   在这里不生效，必须保留一份（与 base.css 保持一致）。 */
 html.dark .ooops .text {
   color: var(--mcmodder-color-accent-dark2);
 }
-
 html.dark .ooops .shadow {
   color: var(--mcmodder-color-background-dark2);
 }
@@ -1391,4 +1394,44 @@ html.dark .fwin .tedt,
 html.dark .fwin .tedt .area {
   background-color: var(--mcmodder-color-background-dark2);
   border-color: var(--mcmodder-color-background-dark3);
+}
+
+/* 版块/页面标题 h2：站点写死 #666，抬升面板上对比不足 */
+html.dark h2 {
+  color: var(--mcmodder-color-text-dark1);
+}
+/* 已读链接：保留站点「已访问变紫」的已读语义，换为夜间可读的淡紫 */
+html.dark a:visited {
+  color: var(--mcmodder-color-link-visited);
+}
+html.dark a:visited:hover {
+  color: var(--mcmodder-color-accent-dark2);
+}
+/* 高级发帖的 Discuz 编辑器容器（非浮窗路径；iframe 内部由 main.ts 注入） */
+html.dark #e_body.edt .area {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+
+/* 帖子标题链接 .xst 与热帖/置顶日期：站点写死紫色，深底上对比不足；
+   已读链接由上方 a:visited 规则接管，读写区分仍然保留 */
+html.dark a.s.xst {
+  color: var(--mcmodder-color-link);
+}
+html.dark .hottiebox .category_newlist li a {
+  color: var(--mcmodder-color-text-dark1) !important;
+}
+/* 楼层操作按钮（回复 / 点评 / 评分）：站点 .post_act a 以 !important 写死 #555，
+   这里以同强度、更夜间限定的作用域反制 */
+html.dark .post_act a {
+  color: var(--mcmodder-color-text-dark1) !important;
+}
+/* 富文本编辑器 iframe 元素自身的底色（内容文档由 main.ts 注入处理） */
+html.dark iframe#e_iframe {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+/* 编辑器底部状态条（#e_bbar 自动保存提示行），随工具栏一并压暗 */
+html.dark #e_body.edt .bbar,
+html.dark #e_body.edt .bbar a {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text-dark1);
 }

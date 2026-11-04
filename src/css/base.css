@@ -3114,3 +3114,36 @@ html.dark.mcmodder-config-dim-cover .cover img,
 html.dark.mcmodder-config-dim-cover .class-cover-image img {
   filter: brightness(0.8);
 }
+
+/* 首页标语（.ooops）与找服玩标语（.common-slogan）：站点的标语阴影层是深色日间配色，
+   夜间下与深底同化。这组规则曾在 bbs.css 里——但 bbs.css 只在社群域注入，主站从未生效
+   （教训第八节）；而社群首页同样有 .ooops 标语，故 bbs.css 也要保留一份。 */
+html.dark .ooops .text {
+  color: var(--mcmodder-color-accent-dark2);
+}
+html.dark .ooops .shadow,
+html.dark .common-slogan .shadow {
+  color: var(--mcmodder-color-background-dark2);
+}
+
+/* 实用工具页：站点把区块标题写死深灰（日间设计），内容面抬升后深灰贴深底 */
+html.dark .tools-list .mcmodder-content-block p.title {
+  color: var(--mcmodder-color-text-dark1);
+}
+/* 首页「添加模组」等快捷入口：站点写死 #222，深底上不可见 */
+html.dark .news_block .addArea a {
+  color: var(--mcmodder-color-text-dark1);
+}
+
+/* 贡献榜等页面的内联 UEditor 工具栏：站点以实例 ID（#edui1_toolbarboxouter）写死
+   #fafafa，ID 优先级压过类选择器，需以同 ID 夜间规则反制。样式取自上方
+   .edui-editor-toolbarboxouter 的既有夜间渐变；多实例（edui2+）页面出现时需补充。 */
+html.dark #edui1_toolbarboxouter.edui-editor-toolbarboxouter {
+  background-color: transparent;
+  background-image: linear-gradient(
+    to bottom,
+    var(--mcmodder-color-background),
+    var(--mcmodder-color-primary-background)
+  );
+  border-bottom-color: var(--mcmodder-color-primary-light);
+}
