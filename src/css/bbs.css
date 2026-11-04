@@ -359,6 +359,9 @@ html.dark .pn {
   border: 1px solid var(--mcmodder-color-primary-dark2);
   color: var(--mcmodder-color-bbs-white);
   box-shadow: none;
+  /* 站点 .pn 底色上还平铺 pn.png 渐变盘（不透明），盖掉我们的底色：
+     保存草稿呈白底白字、发表帖子呈贴图蓝。必须去掉贴图才是纯色主按钮 */
+  background-image: none;
 }
 
 html.dark .pn strong {
@@ -1474,10 +1477,12 @@ html.dark #e_body.edt .area {
    按钮写死 #f2f2f2 近白边框、部分下拉写死白底（.edt .b2r a.dp、card_btn.png 白盘），
    夜间成为白框网格且图标没入深底（用户实测）。对按钮整只反相一步到位：
    深色图标变亮、近白边框变暗（#f2f2f2 → ≈#3b3b3b）、白底下拉变深；
-   文字预补偿为深色，反相后呈浅色。滤镜变量与 iframe 注入色同源维护。 */
+   文字预补偿为深色，反相后呈浅色。滤镜变量与 iframe 注入色同源维护。
+   预补偿色必须 !important：否则被本文件更早的 html.dark #wp.wp.fwp a
+   （ID 特异性更高）压回 #cbd5e1，反相后只剩 #525252（用户实测对比度过低） */
 html.dark .edt .bar a {
   filter: var(--mcmodder-color-bbs-editor-filter);
-  color: #1a1a1a;
+  color: #1a1a1a !important;
 }
 
 /* 主题分类下拉（.ftid a）在表单区不在 .bar 内，且站点带 !important 文字色，
@@ -1492,6 +1497,87 @@ html.dark .ftid a {
 
 html.dark .ftid a::after {
   content: " ▾";
+  color: var(--mcmodder-color-text-dark2);
+}
+
+/* ===== 编辑器第二轮（用户实测）：弹窗底栏 / 复选框 / 纯文本模式 / 下拉小按钮 ===== */
+
+/* 编辑器弹窗（.fwinmask 家族，如图片上传）：底栏 .o 站点写死 #f2f2f2 白底 */
+html.dark .fwinmask .o,
+html.dark .fwin .o {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
+/* 原生 file input 的「浏览」按钮（::file-selector-button，Chromium/Firefox 均支持） */
+html.dark input[type="file"]::file-selector-button {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+  border: 1px solid var(--mcmodder-color-background-dark3);
+}
+
+/* 关闭 ×（cls.gif 亮盘）：夜间略压暗降噪 */
+html.dark .flbc {
+  opacity: 0.75;
+}
+
+/* 原生复选框/单选钮自绘：夜间的原生白块刺眼（用户实测）。appearance:none 后
+   各浏览器尺寸会塌，需显式定尺寸；✓ 勾用背景 SVG（Firefox 不渲染 input 的
+   ::before 伪元素），单选用径向渐变圆点 */
+html.dark input[type="checkbox"],
+html.dark input[type="radio"] {
+  appearance: none;
+  width: 13px;
+  height: 13px;
+  background-color: var(--mcmodder-color-background-dark2);
+  border: 1px solid var(--mcmodder-color-background-dark3);
+}
+
+html.dark input[type="radio"] {
+  border-radius: 50%;
+}
+
+html.dark input[type="checkbox"]:checked {
+  background-color: var(--mcmodder-color-primary-dark1);
+  border-color: var(--mcmodder-color-primary-dark2);
+  background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><path d='M3 8l3.5 3.5L13 5' stroke='white' stroke-width='2.2' fill='none' stroke-linecap='round'/></svg>");
+  background-size: 9px 9px;
+  background-position: center;
+  background-repeat: no-repeat;
+}
+
+html.dark input[type="radio"]:checked {
+  border-color: var(--mcmodder-color-primary-dark2);
+  background-image: radial-gradient(
+    circle,
+    var(--mcmodder-color-primary-dark1) 0 4px,
+    transparent 4.5px
+  );
+}
+
+/* 纯文本模式编辑区：站点 .edt .pt 写死白底（特异性 2 类压过通用 textarea 规则），
+   切换瞬间整块翻白（用户实测） */
+html.dark .edt .pt {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+}
+
+/* 下拉展开小按钮（投票帖截止时间 ^ 等）：站点白底 + newarow 白贴图（箭头画在
+   贴图里）。去掉贴图后按钮只剩空盒——站点用 text-indent:-9999px + overflow:hidden
+   藏字（用户实测「隐身」），此处反向利用：font-size:0 藏 ^，::after 补可见 ▾ */
+html.dark .dpbtn {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+  text-indent: 0;
+  font-size: 0;
+}
+
+html.dark .dpbtn::after {
+  content: "▾";
+  font-size: 12px;
+  line-height: 21px;
   color: var(--mcmodder-color-text-dark2);
 }
 
@@ -1510,6 +1596,23 @@ html.dark body#nv_forum #threadlist a.s.xst:visited {
 html.dark .hottiebox .category_newlist li a {
   color: var(--mcmodder-color-text-dark1) !important;
 }
+/* 帖子内嵌表格（.cgtl）的标题行：站点 .cgtl caption 写死浅蓝灰底，
+   夜间浅字叠浅底几乎不可见（用户实测） */
+html.dark .cgtl caption {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+
+/* 特殊主题自定义表单（编辑员申请等 .exfm 表单，table.tfm）：站点
+   .exfm.cl table td/th 写死 #e5e7f2 浅底，特异性 (0,2,2) 压过通用 .ptm
+   透明化，整片浅底浅字（用户实测）；同强度反制，虚线分隔线一并压暗 */
+html.dark .exfm.cl table th,
+html.dark .exfm.cl table td {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
 /* 楼层操作按钮（回复 / 点评 / 评分）：站点 .post_act a 以 !important 写死 #555，
    这里以同强度、更夜间限定的作用域反制 */
 html.dark .post_act a {
