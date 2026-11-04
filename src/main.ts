@@ -170,7 +170,7 @@ import bbsCss from "./css/bbs.css?raw";
       initBbsDarkMode();
     } else if (typeof jQuery === "undefined" && document.body != null) {
       // 已被封禁
-      if (document.body.innerText.includes("您已被系统封禁")) {
+      if ((document.body.textContent ?? "").includes("您已被系统封禁")) {
         document.body.innerHTML +=
           '若遇封IP，请在向作者反馈时发送下列内容，并告知具体封禁时间（精确到秒）以及被封禁时已打开的百科页面数量。下列内容可能包含敏感信息，可考虑私信发送。<textarea id="mcmodder-log-export" style="min-height: 800px; min-width: 100%;">';
         (document.getElementById("mcmodder-log-export") as HTMLTextAreaElement).value =
@@ -201,13 +201,32 @@ import bbsCss from "./css/bbs.css?raw";
       });
     }
   };
+  let started = false;
+  const start = () => {
+    if (started) return;
+    started = true;
+    try {
+      init();
+    } catch (error) {
+      console.error("Mcmodder 启动失败：", error);
+      clearScreenCover();
+    }
+  };
+  // 兜底：jQuery 未加载、load 事件已经错过，或初始化异常时，最多等 4 秒就撤遮罩
+  window.setTimeout(() => {
+    if (started) clearScreenCover();
+    else start();
+  }, 4000);
   const tryInit = () => {
     if (window.location.hostname === "bbs.mcmod.cn") {
-      init();
+      start();
     } else if (typeof jQuery !== "undefined") {
-      init();
+      start();
+    } else if (document.readyState === "complete") {
+      // load 已经发生过，再挂监听永远不会触发
+      start();
     } else {
-      window.addEventListener("load", init, { once: true });
+      window.addEventListener("load", () => start(), { once: true });
     }
   };
   if (document.readyState === "loading") {

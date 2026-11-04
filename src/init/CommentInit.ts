@@ -301,6 +301,9 @@ export class CommentInit extends Init {
           this.attachCommentObserver();
         }
       });
+      // 15 秒仍等不到留言板就放弃，避免整个会话常驻一个 document 级观察者
+      // （成功分支已提前 disconnect，此定时器到点后只是空操作）
+      window.setTimeout(() => waiter.disconnect(), 15000);
       waiter.observe(document.documentElement, { childList: true, subtree: true });
     }
   }

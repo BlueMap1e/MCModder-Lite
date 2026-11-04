@@ -3,6 +3,9 @@ import { CenterBaseInit } from "./CenterBaseInit";
 import { createApp } from "vue";
 import CenterSettings from "../../vue/components/CenterSettings.vue";
 
+/** 当前挂载的脚本设置面板；面板被站点移除时先卸载，避免 watcher 泄漏 */
+let settingsApp: ReturnType<typeof createApp> | null = null;
+
 export class CenterSettingInit extends CenterBaseInit {
   run() {
     // 事件解绑
@@ -40,29 +43,42 @@ export class CenterSettingInit extends CenterBaseInit {
     );
     // 脚本设置
     const menuArea = $("div.center-main.setting.menuarea").get(0);
-    $("<li>")
-      .html('<a data-menu-select="9" href="javascript:void(0);">脚本设置</a>')
-      .appendTo("#center-setting-frame > div.center-sub-menu > ul")
-      .bind("change", (e) => {
-        const target = $(e.currentTarget);
-        const a = target.attr("data-menu-select");
-        if (a) {
-          const e = target.parent().parent().parent();
-          const t = e.parent().children(".center-main");
-          e.children("ul").find("a").removeClass("active");
-          target.addClass("active");
-          t.children(".center-block").hide();
-          t.children(`.center-block[data-menu-frame='${a}']`).show();
-        }
+    // 菜单项与面板都做成幂等：站点重渲染时只补缺失的那一项，避免重复出现
+    if (!$('#center-setting-frame a[data-menu-select="9"]').length) {
+      $("<li>")
+        .html('<a data-menu-select="9" href="javascript:void(0);">脚本设置</a>')
+        .appendTo("#center-setting-frame > div.center-sub-menu > ul")
+        .bind("change", (e) => {
+          const target = $(e.currentTarget);
+          const a = target.attr("data-menu-select");
+          if (a) {
+            const e = target.parent().parent().parent();
+            const t = e.parent().children(".center-main");
+            e.children("ul").find("a").removeClass("active");
+            target.addClass("active");
+            t.children(".center-block").hide();
+            t.children(`.center-block[data-menu-frame='${a}']`).show();
+          }
+        });
+    }
+
+    const existingPanel = $(".center-main.setting.menuarea .center-block[data-menu-frame='9']").get(
+      0,
+    );
+    if (!existingPanel || !existingPanel.isConnected) {
+      // 旧面板已被站点整块移除：卸载旧应用，避免 watcher 与响应式开销累积
+      if (settingsApp) {
+        settingsApp.unmount();
+        settingsApp = null;
+      }
+      const mcmodderSettingMenu = $(
+        '<div class="center-block hidden" data-menu-frame="9" style="display: none;">',
+      ).appendTo(menuArea);
+      settingsApp = createApp(CenterSettings, {
+        parent: this.parent,
       });
-
-    const mcmodderSettingMenu = $(
-      '<div class="center-block hidden" data-menu-frame="9" style="display: none;">',
-    ).appendTo(menuArea);
-
-    createApp(CenterSettings, {
-      parent: this.parent,
-    }).mount(mcmodderSettingMenu.get(0));
+      settingsApp.mount(mcmodderSettingMenu.get(0));
+    }
 
     $(
       ".center-main.setting.menuarea .center-block:not([data-menu-frame=9]) .center-block-head .title",
