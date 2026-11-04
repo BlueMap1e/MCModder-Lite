@@ -73,6 +73,8 @@ export class EditHistoryPageInit extends Init {
       }
       Utils.commonMsg(`准备自动展开，可随时按 ${Utils.keyToString(abortKey)} 取消~`);
       $("html").bind("keydown", (e) => {
+        // 输入框 / 可编辑区里的同名快捷键属于原生操作，不该中止自动展开
+        if (Utils.isEditableTarget(e)) return;
         if (Utils.isKeyMatch(abortKey, e)) this.stopExpand = true;
       });
       this.getHistoryPage(2, maxPage);

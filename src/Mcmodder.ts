@@ -69,11 +69,6 @@ export class Mcmodder {
     this.isMobileClient = Utils.isMobileClient();
     const headerUserName = $(".header-user-name a, .name.top-username a, .profilebox").first();
     this.currentUsername = headerUserName.text() || "";
-    const win =
-      typeof (globalThis as any).unsafeWindow !== "undefined"
-        ? (globalThis as any).unsafeWindow
-        : window;
-    (win as any).__mcmodder_username__ = this.currentUsername;
     this.currentUID =
       Number(headerUserName.attr("href")?.split("//center.mcmod.cn/")[1]?.split("/")[0]) || 0;
     this.ueditorFrame = [];
@@ -703,58 +698,54 @@ export class Mcmodder {
         });
     }
 
-    // 个人菜单
-    if (/* this.configRepository.getSettings("mcmodderUI") */ true) {
-      const insertPos = $(".header-user .header-layer-block:first-child()");
-      if (insertPos.length) {
-        const myProfile = this.configRepository.getAllProfile() as Partial<Profile>;
-        const avatar = myProfile.avatar
-          ? `<a href="${Utils.getCenterURL(this.currentUID)}" target="_blank">
+    // 个人菜单（旧「UI 美化」开关已移除，以下行为恒启用）
+    const insertPos = $(".header-user .header-layer-block:first-child()");
+    if (insertPos.length) {
+      const myProfile = this.configRepository.getAllProfile() as Partial<Profile>;
+      const avatar = myProfile.avatar
+        ? `<a href="${Utils.getCenterURL(this.currentUID)}" target="_blank">
             <img alt="${myProfile.nickname}" src="${myProfile.avatar}">
           </a>`
-          : $(".header-user-avatar").html();
-        const nickname = myProfile.nickname || $(".header-user-name").text();
-        const lv = myProfile.lv
-          ? `<span class="mcmodder-profile-lv common-user-lv lv-${myProfile.lv}">Lv.${myProfile.lv}</span>`
-          : "";
-        $(`<div class="mcmodder-profile">${avatar}<p>${nickname} ${lv}</p></div>`).insertBefore(
-          insertPos,
-        );
+        : $(".header-user-avatar").html();
+      const nickname = myProfile.nickname || $(".header-user-name").text();
+      const lv = myProfile.lv
+        ? `<span class="mcmodder-profile-lv common-user-lv lv-${myProfile.lv}">Lv.${myProfile.lv}</span>`
+        : "";
+      $(`<div class="mcmodder-profile">${avatar}<p>${nickname} ${lv}</p></div>`).insertBefore(
+        insertPos,
+      );
 
-        $(".header-user .header-layer-block li a").each((_, _c) => {
-          const c = $(_c);
-          const text = c.text();
-          c.replaceWith(
-            `<a${
-              c.text() === "退出登录"
-                ? ` id="common-logout-btn"`
-                : ` href="${c.prop("href")}" target="_blank"`
-            }><i class="${(Values.iconMap as any)[text]}"/><span>${text}</span><i class="fa fa-chevron-right" /></a>`,
-          );
-        });
-      }
+      $(".header-user .header-layer-block li a").each((_, _c) => {
+        const c = $(_c);
+        const text = c.text();
+        c.replaceWith(
+          `<a${
+            c.text() === "退出登录"
+              ? ` id="common-logout-btn"`
+              : ` href="${c.prop("href")}" target="_blank"`
+          }><i class="${(Values.iconMap as any)[text]}"/><span>${text}</span><i class="fa fa-chevron-right" /></a>`,
+        );
+      });
     }
 
     const textArea = $(".text-area.common-text, .item-content.common-text, .post-row");
-    if (/* this.configRepository.getSettings("mcmodderUI") */ true) {
-      // 去除正文异常背景
-      if (!this.configRepository.getSettings("disableAutoStyleFix")) {
-        textArea
-          .find("[style]")
-          .filter((_i, c) => $(c).css("background-color") === "rgb(255, 255, 255)")
-          .css("background-color", "");
-        textArea
-          .find("span[style]")
-          .filter((_i, c) => $(c).css("color") === "rgb(0, 0, 0)")
-          .css("color", "");
-      }
-
-      // Swiper 调整
-      $(".swiper-container").each((_, _container) => {
-        const container = $(_container);
-        new Swiper(container);
-      });
+    // 去除正文异常背景
+    if (!this.configRepository.getSettings("disableAutoStyleFix")) {
+      textArea
+        .find("[style]")
+        .filter((_i, c) => $(c).css("background-color") === "rgb(255, 255, 255)")
+        .css("background-color", "");
+      textArea
+        .find("span[style]")
+        .filter((_i, c) => $(c).css("color") === "rgb(0, 0, 0)")
+        .css("color", "");
     }
+
+    // Swiper 调整
+    $(".swiper-container").each((_, _container) => {
+      const container = $(_container);
+      new Swiper(container);
+    });
 
     // 夜间模式正文颜色自动适配：只处理带内联 color 的节点，避免遍历整棵正文
     if (!this.configRepository.getSettings("disableAutoStyleFix")) {
@@ -815,7 +806,7 @@ export class Mcmodder {
         this.configRepository.setSettings("preferredWiderScreen", !this.preferredWiderScreen);
       });
 
-    if (this.currentUID /* && this.configRepository.getSettings("mcmodderUI") */) {
+    if (this.currentUID) {
       $(
         '<button id="mcmodder-message-center" data-toggle="tooltip" data-original-title="消息中心"><i class="fa fa-bell-o"></i></button>',
       )
@@ -828,11 +819,9 @@ export class Mcmodder {
     }
 
     this.msgSiteCount = Number($(".header-user-msg b").text());
-    if (/* this.configRepository.getSettings("mcmodderUI") */ true) {
-      $(".header-user-msg").remove();
-      $(`<div class="mcmodder-rednum">`).appendTo("#mcmodder-message-center");
-      this.applyBellNotify();
-    }
+    $(".header-user-msg").remove();
+    $(`<div class="mcmodder-rednum">`).appendTo("#mcmodder-message-center");
+    this.applyBellNotify();
 
     if (typeof editor != "undefined") this.callEditor();
     else if (
@@ -849,7 +838,7 @@ export class Mcmodder {
 
     // TODO: 取消锁定导航栏
 
-    if (this.isV4 /* && this.configRepository.getSettings("mcmodderUI") */) {
+    if (this.isV4) {
       window.addEventListener(
         "scroll",
         Utils.animationThrottle(() => {
