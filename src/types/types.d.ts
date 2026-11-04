@@ -206,6 +206,7 @@ interface Settings {
   nightMode: boolean;
   preferredWiderScreen: boolean;
   lastUid: number;
+  /** 旧版发包游标；新版本使用独立的 `mcmodderRequestCursor` 键，这里仅在迁移时读取 */
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
   recentlyVisitedMods: RecentlyVisited[];
