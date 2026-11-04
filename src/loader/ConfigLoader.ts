@@ -449,7 +449,7 @@ export const settings = [
             title: "在资料预览显示正文图片",
             description: "在资料的正文预览中显示正文中的图片。",
             type: "checkbox",
-            visible: (ctx) => ctx.configs.getSettings("hoverImage"),
+            visible: (ctx) => ctx.configs.getSettings("hoverDescription"),
           },
           {
             id: "rememberVisitedMods",
