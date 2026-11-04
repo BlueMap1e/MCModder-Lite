@@ -14,18 +14,26 @@ npm run dev      # vite-plugin-monkey dev server; install the served script into
 npm run build    # vue-tsc (type check) && vite build  ->  dist/mcmodder-lite.user.js
 npm run lint     # eslint src
 npm run format   # prettier --write src
-npm run verify   # lint + lint:config + format:check (the full local gate)
+npm run verify   # lint + lint:config + format:check (the static local gate)
+npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
+npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
+npm run smoke:security  # XSS regression only (payload injected as page text before the script)
 ```
 
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
   locals/parameters fail it (`strict`, `noUnusedLocals`, `noUnusedParameters`,
   `verbatimModuleSyntax`).
 - There is no unit test suite inside the repo. Validate with `npm run verify` + `npm run build`,
-  then exercise behavior in a browser on mcmod.cn. CI runs a committed public-page smoke
-  (`scripts/smoke-public.mjs`, Chromium + GM shim, no login needed; skipped when mcmod.cn's
-  CAPTCHA blocks the runner). A local Playwright harness with richer editor E2E may exist
-  outside the repo (not committed); it injects `dist/mcmodder-lite.user.js` into real pages
-  with a GM shim.
+  then exercise behavior in a browser on mcmod.cn. `npm run check` chains the reproducible
+  parts (static gate → build → `scripts/smoke-public.mjs` → `scripts/security-smoke.mjs`); both
+  smoke scripts drive real mcmod.cn pages through Playwright with a GM shim, need no login and
+  touch no site data. They report SKIPPED rather than failing when mcmod.cn's CAPTCHA blocks
+  the runner (expect this on datacenter IPs). CI runs only the public-page smoke.
+- Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
+  mode). The editor/center E2E with a logged-in state is **not** committed: a local Playwright
+  harness may exist outside the repo; it injects `dist/mcmodder-lite.user.js` into real pages
+  with a GM shim. A GM shim is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no
+  cross-tab sync), so anything depending on those still needs a real-browser pass.
 - The shippable artifact is `dist/mcmodder-lite.user.js` (copy into Tampermonkey).
 
 ## Working rules
