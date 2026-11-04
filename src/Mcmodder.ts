@@ -820,11 +820,17 @@ export class Mcmodder {
     }
 
     if (typeof editor != "undefined") this.callEditor();
-    else
+    else if (
+      document.querySelector("#edui1_iframeholder, #edui1, .edui-default") ||
+      /\/(edit|add|sandbox)\//.test(window.location.pathname)
+    ) {
+      // 只有确实可能出现编辑器的页面才挂全文档观察者，并限制最长等待时间
       this.generalEditorObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
+      window.setTimeout(() => this.generalEditorObserver.disconnect(), 30000);
+    }
 
     // TODO: 取消锁定导航栏
 
