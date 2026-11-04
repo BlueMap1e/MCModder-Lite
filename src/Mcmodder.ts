@@ -17,6 +17,7 @@ import { EditorInit } from "./init/EditorInit";
 import { Swiper } from "./widget/Swiper";
 import { createApp } from "vue";
 import ProfileSelector from "./vue/components/ProfileSelector.vue";
+import { sanitizeHTML } from "./vue/composables/useSanitizedHTML";
 import { ConfigRepository } from "./config/ConfigRepository.ts";
 
 interface ScreenAttachedFrameData {
@@ -254,8 +255,13 @@ export class Mcmodder {
           const doc = $(resp.responseXML);
           doc.find(".itemname > .tool").remove();
           doc.find(".quote_text legend a").last().remove();
+          // 悬浮预览注入的是**另一个页面**的正文 HTML，属于不可信内容：走全站同一个
+          // DOMPurify 白名单（`sanitizeHTML`）再落进 DOM。缓存 `linkContentDictionary`
+          // 取自清洗后的容器 outerHTML，复用时不需要再洗一遍。
           previewFrame.html(
-            doc.find(".item-content, .class-menu-main .text-area.font14").first().html(),
+            sanitizeHTML(
+              doc.find(".item-content, .class-menu-main .text-area.font14").first().html() ?? "",
+            ),
           );
           if (previewFrame.text() === "暂无简介，欢迎协助完善。") {
             previewFrame.html('<span class="mcmodder-common-danger">该资料正文暂无介绍...</span>');
