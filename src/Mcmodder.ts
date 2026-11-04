@@ -94,6 +94,15 @@ export class Mcmodder {
 
     InitLoader.run(this, this.initList);
 
+    // 先应用夜间配色再撤防闪烁遮罩：main() 里的 updateNightMode 隔着迁移、配置读取
+    // 与大量 DOM 扫描，慢页面上「遮罩已撤、dark 未上」的间隙就是白屏一闪
+    // （上游同构问题）。注意顺序：必须先迁移旧键再计算生效值；此处对
+    // nightMode 只读不写（写存储由 main() 的 resolveNightMode 负责），
+    // 否则未迁移用户的旧 nightMode 会被 auto 解析结果覆盖，迁移语义被破坏。
+    this.migrateNightModePreference();
+    this.isNightMode = this.computeNightMode();
+    document.documentElement.classList.toggle("dark", this.isNightMode);
+
     StyleLoader.run(this);
 
     this.main();
@@ -533,12 +542,30 @@ export class Mcmodder {
    * 跟随系统时取 prefers-color-scheme，手动偏好下系统变化不再覆写；
    * 仅在生效值将要变化时写入，避免无意义的跨标签页同步。
    */
-  private resolveNightMode() {
+  private migrateNightModePreference() {
+    // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
+    // 关闭过自适应的老用户按当时的生效值固定下来，避免升级后被系统配色突然改写外观。
+    // 必须先于一切对 nightMode 的解析/写入执行（构造函数中调用）。
+    const adaptableNightMode = this.configRepository.getSettings("adaptableNightMode");
+    if (adaptableNightMode !== undefined) {
+      this.configRepository.setSettings(
+        "nightModePreference",
+        adaptableNightMode ? 0 : this.configRepository.getSettings("nightMode") ? 2 : 1,
+      );
+      this.configRepository.deleteSettings("adaptableNightMode");
+    }
+  }
+
+  /** 按当前配置计算夜间生效值（纯读取，不写存储）。 */
+  private computeNightMode(): boolean {
     const preference = this.configRepository.getSettings("nightModePreference") ?? 0;
-    const nightMode =
-      preference === 1
-        ? false
-        : preference === 2 || window.matchMedia("(prefers-color-scheme: dark)").matches;
+    return preference === 1
+      ? false
+      : preference === 2 || window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+
+  private resolveNightMode() {
+    const nightMode = this.computeNightMode();
     if (this.configRepository.getSettings("nightMode") !== nightMode) {
       this.configRepository.setSettings("nightMode", nightMode);
     }
@@ -590,17 +617,6 @@ export class Mcmodder {
     if (useNotoSans) {
       this.configRepository.deleteSettings("useNotoSans");
       this.configRepository.setSettings("customFont", 2);
-    }
-
-    // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
-    // 关闭过自适应的老用户按当时的生效值固定下来，避免升级后被系统配色突然改写外观。
-    const adaptableNightMode = this.configRepository.getSettings("adaptableNightMode");
-    if (adaptableNightMode !== undefined) {
-      this.configRepository.setSettings(
-        "nightModePreference",
-        adaptableNightMode ? 0 : this.configRepository.getSettings("nightMode") ? 2 : 1,
-      );
-      this.configRepository.deleteSettings("adaptableNightMode");
     }
 
     // 多账号切换已整体移除（2026-11-04）：清掉旧版本留下的账号列表与快捷切换游标

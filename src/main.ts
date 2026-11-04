@@ -244,10 +244,18 @@ import bbsCss from "./css/bbs.css?raw";
       clearScreenCover();
     }
   };
-  // 兜底：jQuery 未加载、load 事件已经错过，或初始化异常时，最多等 4 秒就撤遮罩
+  // 兜底：初始化异常或 jQuery 迟到超过 4 秒时撤掉 body 隐藏，让用户先看到页面。
+  // 不在此处伪启动 init()——jQuery 未就绪时会被误判进封禁页分支，把遮罩连同
+  // html 深底一起拆掉，且 started 标记会阻塞 load 后真正的初始化。
+  // 夜间用户的 html 深底保留，待真实初始化（html.dark + base.css）接管。
   window.setTimeout(() => {
-    if (started) clearScreenCover();
-    else start();
+    if (started) {
+      clearScreenCover();
+    } else if (nightMode) {
+      splashStyle.textContent = "html { background: #111 !important; }";
+    } else {
+      splashStyle.remove();
+    }
   }, 4000);
   const tryInit = () => {
     if (window.location.hostname === "bbs.mcmod.cn") {
