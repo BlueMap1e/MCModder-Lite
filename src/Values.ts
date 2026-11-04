@@ -67,8 +67,9 @@ export class Values {
       },
     },
     js: {
-      markdownit: "https://cdnjs.cloudflare.com/ajax/libs/markdown-it/11.0.1/markdown-it.min.js",
-      pangu: "https://cdn.jsdelivr.net/npm/pangu@7.2.0/dist/browser/pangu.umd.min.js",
+      // 统一走 npmmirror（与 turndown 的 @require 一致），避免 cdnjs / jsdelivr 在大陆网络下不可达
+      markdownit: "https://registry.npmmirror.com/markdown-it/11.0.1/files/dist/markdown-it.min.js",
+      pangu: "https://registry.npmmirror.com/pangu/7.2.0/files/dist/browser/pangu.umd.js",
       turndown: "https://cdnjs.cloudflare.com/ajax/libs/turndown/7.2.1/turndown.min.js",
     },
     nightMode: {

@@ -475,13 +475,20 @@ export class AdvancedUEditor extends UEditor {
     if (!this.$document || !this.head || !this.$outerFrame || !this.mdEditorOption) return;
     const c = this.mdEditorOption![1].getValue();
     if (c) {
-      await Utils.loadScript(
-        this.head,
-        null,
-        Values.assets.js.markdownit,
-        null,
-        "mcmodder-script-markdownit",
-      );
+      try {
+        await Utils.loadScript(
+          this.head,
+          null,
+          Values.assets.js.markdownit,
+          null,
+          "mcmodder-script-markdownit",
+          10000,
+        );
+      } catch (error) {
+        console.warn("[MCModder-Lite] Markdown 编辑器依赖加载失败：", error);
+        Utils.commonMsg("Markdown 编辑器加载失败，请检查网络后重试。", false);
+        return;
+      }
 
       if (!this.mdEditorApp && this.mdEditorContainer) {
         this.mdEditorApp = createApp(MainTextEditor, {
@@ -887,7 +894,20 @@ export class AdvancedUEditor extends UEditor {
    */
   async performSpacingPage() {
     if (!this.window || !this.head || !this.body || !this.$body) return;
-    await Utils.loadScript(this.head, null, Values.assets.js.pangu, null, "mcmodder-script-pangu");
+    try {
+      await Utils.loadScript(
+        this.head,
+        null,
+        Values.assets.js.pangu,
+        null,
+        "mcmodder-script-pangu",
+        10000,
+      );
+    } catch (error) {
+      console.warn("[MCModder-Lite] 自动排版组件加载失败：", error);
+      Utils.commonMsg("自动排版组件加载失败，请检查网络后重试。", false);
+      return;
+    }
     const isEditable = this.body.contentEditable;
     this.body.contentEditable = "false";
 
