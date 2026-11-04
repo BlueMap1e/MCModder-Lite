@@ -56,7 +56,8 @@ export const settings = [
           {
             id: "customFont",
             title: "自定义字体",
-            description: "对百科默认字体应用选中的方案。",
+            description:
+              "对百科默认字体应用选中的方案。默认不指定，沿用站点自身字体；「使用系统字体组」不产生任何网络请求；Noto Sans SC 与 Inter 需从 Google Fonts 加载，网络不通时会在 3 秒后放弃并回退到系统字体。",
             type: "dropdownMenu",
             value: 0,
             range: {
