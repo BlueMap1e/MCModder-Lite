@@ -17,6 +17,8 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）的轻量编审辅助脚本，基
    - 点了没反应时，去 [Release 页面](https://github.com/BlueMap1e/MCModder-Lite/releases/latest) 手动下载 `mcmodder-lite.user.js`，拖进篡改猴。
 3. 打开任意百科页面即生效。设置入口在个人中心 →「设置」。
 
+**不要与上游 Mcmodder 同时安装。** 两者会同时改写百科页面，夜间按钮、悬浮预览、表格墙会互相打架。先停用上游，再装这个。
+
 内置自动更新，发版后篡改猴会提示升级，设置与数据保留。主测 Firefox / Zen，Chrome / Edge 同源可用；Safari 与移动端未测。
 
 ## 修改详情
