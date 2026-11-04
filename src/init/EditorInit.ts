@@ -446,7 +446,9 @@ export class EditorInit extends Init {
       this.modName = commonNav.children().eq(4).text().replace("]", "] ");
       if (commonNav.children().eq(8).length) this.itemName = commonNav.children().eq(8).text();
     }
-    Utils.addStyle(".swal2-show {animation: unset; -webkit-animation: unset;}");
+    // 完全去掉动画（`unset` / `none`）会让弹窗无法滚动，因此仍保留 0.01s 动画。
+    // 移植自上游 26e779e（上游实测结论，本仓库无登录态无法复现）。
+    Utils.addStyle(".swal2-show {animation: swal2-show .01s; -webkit-animation: swal2-show .01s}");
 
     if ($(".edit-tools").length) {
       if ($(".edit-user-alert.locked").length) {
