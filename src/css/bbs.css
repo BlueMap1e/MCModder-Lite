@@ -54,9 +54,13 @@ html.dark a:hover {
   color: var(--mcmodder-color-accent-dark2);
 }
 
+/* 页头双层结构：外层 .top-main 全宽，内层 .top-main.frame 定宽 1200px 居中（其
+   抬升底来自通用 .frame 规则）。外层若用页底色，内层两侧会露出更深的条带
+   （用户实测「两侧黑块」；日间站点原生内外同色、无分层）。外层同步抬升为暗2，
+   分隔线用暗3与页底衔接。 */
 html.dark .top-main {
-  background-color: var(--mcmodder-color-background);
-  border-bottom: 1px solid var(--mcmodder-color-background-dark2);
+  background-color: var(--mcmodder-color-background-dark2);
+  border-bottom: 1px solid var(--mcmodder-color-background-dark3);
 }
 
 html.dark .top-main .def-nav {
