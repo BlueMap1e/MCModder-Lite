@@ -244,16 +244,19 @@ import bbsCss from "./css/bbs.css?raw";
       clearScreenCover();
     }
   };
-  // 兜底：初始化异常或 jQuery 迟到超过 4 秒时撤掉 body 隐藏，让用户先看到页面。
-  // 不在此处伪启动 init()——jQuery 未就绪时会被误判进封禁页分支，把遮罩连同
-  // html 深底一起拆掉，且 started 标记会阻塞 load 后真正的初始化。
-  // 夜间用户的 html 深底保留，待真实初始化（html.dark + base.css）接管。
+  // 兜底：初始化异常或日间模式下 jQuery 迟到超过 4 秒时撤掉遮罩。
+  // 日间揭示无闪可防（白底本就是日间外观）；夜间用户不揭示——宁可多等深色
+  // 遮罩（旧行为），也不把站点尚未主题化的浅色渲染提前曝光（白闪）。
+  // 不伪启动 init()：jQuery 未就绪时会被误判进封禁页分支，把遮罩连同 html
+  // 深底一起拆掉，且 started 标记会阻塞 load 后真正的初始化。
+  // 「脚本晚注入」场景由 tryInit 的 readyState === "complete" 分支覆盖。
+  // 已知代价：夜间 + jQuery 永久卡死时深色遮罩会一直停留（旧行为，重载即可）。
+  // 若要夜间也提前揭示，需把调色盘生成提前到无 jQuery 的 document-start
+  // （early-dark 骨架），属独立重构。
   window.setTimeout(() => {
     if (started) {
       clearScreenCover();
-    } else if (nightMode) {
-      splashStyle.textContent = "html { background: #111 !important; }";
-    } else {
+    } else if (!nightMode) {
       splashStyle.remove();
     }
   }, 4000);
