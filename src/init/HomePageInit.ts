@@ -120,13 +120,15 @@ export class HomePageInit extends Init {
         cover.appendTo(block);
       }
       const now = Date.now();
+      // 资料名与封面都来自站点数据，按不可信文本处理：名称转义、封面先过 safeURL
+      const coverSrc = Utils.safeURL(data.cover);
       $(
-        `<img class="img" src="${data.cover}" onerror="this.src='https://www.mcmod.cn/pages/class/images/none.jpg'">`,
+        `<img class="img" src="${Utils.escapeHTML(coverSrc)}" onerror="this.src='https://www.mcmod.cn/pages/class/images/none.jpg'">`,
       ).appendTo(cover);
       $(`
         <div class="${v4 ? "content" : "info"}">
           <${v4 ? "span" : "div"} class="${v4 ? "primary" : "name"}">
-            <a target="_blank" href="${link}">${data.name}</a>
+            <a target="_blank" href="${link}">${Utils.escapeHTML(data.name)}</a>
           </${v4 ? "span" : "div"}>
           <${v4 ? "span" : "div"} class="${v4 ? "secondary" : "info"}">
             <${v4 ? "span" : "div"} title="最近浏览时间: ${Utils.getFormattedDateTime(new Date(time))}" class="time">

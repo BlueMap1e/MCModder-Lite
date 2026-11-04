@@ -440,7 +440,7 @@ export class TabEditInit extends Init {
       $(`<td class="input-head" data-toggle="tooltip" title="${i} 号材料">
         <strong>
           <i class="fa fa-sign-in" />
-          ${i} ${input[i].unit}
+          ${i} ${Utils.escapeHTML(input[i].unit)}
         </strong>
       </td>`)
         .appendTo(recipeTr)
@@ -514,7 +514,7 @@ export class TabEditInit extends Init {
       $(`<td class="output-head" data-toggle="tooltip" title="${i} 号成品">
         <strong>
           <i class="fa fa-sign-out" />
-          ${i} ${output[i].unit}
+          ${i} ${Utils.escapeHTML(output[i].unit)}
         </strong>
       </td>`)
         .appendTo(recipeTr)
@@ -585,7 +585,7 @@ export class TabEditInit extends Init {
       $(`<td class="fuel-head" data-toggle="tooltip" title="燃料">
         <strong>
           <i class="fa fa-fire" />
-          ${i} ${fuel[i].unit}
+          ${i} ${Utils.escapeHTML(fuel[i].unit)}
         </strong>
       </td>`)
         .appendTo(recipeTr)

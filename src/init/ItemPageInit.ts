@@ -90,7 +90,7 @@ export class ItemPageInit extends Init {
         const c = $(_c);
         c.insertBefore(c.parent().find(".item-content").children().first());
         const n = c.parents(".item-text").find(".name h5 > a").text();
-        $(`<th colspan="2" align="center">${n}</th>`).insertBefore(
+        $(`<th colspan="2" align="center">${Utils.escapeHTML(n)}</th>`).insertBefore(
           c.find("tbody").children().first(),
         );
         c.parent()

@@ -547,10 +547,11 @@ export class ClassPageInit extends Init {
               const infoCFID = doc.find("#class-cfprojectid").val();
               const infoMRID = doc.find("#class-mrprojectid").val();
               const lastElement = $(".col-lg-6").last();
+              // 三个 ID 取自远端编辑页的输入框，按不可信文本转义后再拼进 HTML
               if (infoModID)
                 Utils.addClickCopyEvent(
                   $(
-                    `<li class="col-lg-6"><a><span class="title">${infoModID}</span></a><span class="text">MODID</span></li>`,
+                    `<li class="col-lg-6"><a><span class="title">${Utils.escapeHTML(String(infoModID))}</span></a><span class="text">MODID</span></li>`,
                   )
                     .insertAfter(lastElement)
                     .find("a"),
@@ -559,7 +560,7 @@ export class ClassPageInit extends Init {
               if (infoCFID)
                 Utils.addClickCopyEvent(
                   $(
-                    `<li class="col-lg-6"><a><span class="title">${infoCFID}</span></a><span class="text">CFID</span></li>`,
+                    `<li class="col-lg-6"><a><span class="title">${Utils.escapeHTML(String(infoCFID))}</span></a><span class="text">CFID</span></li>`,
                   )
                     .insertAfter(lastElement)
                     .find("a"),
@@ -568,7 +569,7 @@ export class ClassPageInit extends Init {
               if (infoMRID)
                 Utils.addClickCopyEvent(
                   $(
-                    `<li class="col-lg-6"><a><span class="title">${infoMRID}</span></a><span class="text">MRID</span></li>`,
+                    `<li class="col-lg-6"><a><span class="title">${Utils.escapeHTML(String(infoMRID))}</span></a><span class="text">MRID</span></li>`,
                   )
                     .insertAfter(lastElement)
                     .find("a"),

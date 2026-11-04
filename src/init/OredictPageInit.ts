@@ -22,14 +22,18 @@ export class OredictPageInit extends Init {
     $(".oredict-item-list li").each((_, _li) => {
       const li = $(_li);
       const modName = li.find("div.sub.class a").text();
-      const modID = Utils.abstractLastFromURL(
-        li.find("div.sub.class a").first().prop("href"),
-        "class",
-      );
+      // 模组名来自站点文本，按不可信内容转义后再进属性与链接文本
+      const modNameSafe = Utils.escapeHTML(modName);
+      // 站内 class id 必为数字：非数字值既不进属性也不进选择器
+      const modID =
+        Utils.abstractLastFromURL(li.find("div.sub.class a").first().prop("href"), "class").replace(
+          /\D/g,
+          "",
+        ) || "0";
       if (!sortContainer.find(`fieldset[data-modid=${modID}]`).length)
-        $(`<fieldset data-modid="${modID}" data-modname="${modName}">
+        $(`<fieldset data-modid="${modID}" data-modname="${modNameSafe}">
           <legend>
-            <a href="/class/${modID}.html" target="_blank">${modName}</a>
+            <a href="/class/${modID}.html" target="_blank">${modNameSafe}</a>
           </legend>
           <div class="oredict-item-list">
             <ul></ul>
