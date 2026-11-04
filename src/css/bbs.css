@@ -1457,8 +1457,10 @@ html.dark .fwin .tedt .area {
   border-color: var(--mcmodder-color-background-dark3);
 }
 
-/* 版块/页面标题 h2：站点写死 #666，抬升面板上对比不足 */
-html.dark h2 {
+/* 版块/页面标题 h2 与小节标题 h3：站点写死 #666，抬升面板上对比不足
+   （全模板审计实测：导读页 h1.xs2、好友页侧栏 h3 同族，h1.xs2 另有专规则） */
+html.dark h2,
+html.dark h3 {
   color: var(--mcmodder-color-text-dark1);
 }
 /* 已读链接：保留站点「已访问变紫」的已读语义，换为夜间可读的淡紫 */
@@ -1626,5 +1628,22 @@ html.dark iframe#e_iframe {
 html.dark #e_body.edt .bbar,
 html.dark #e_body.edt .bbar a {
   background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text-dark1);
+}
+
+/* ===== 全模板审计（36 模板，2026-11-05）扫出的两处残余 ===== */
+
+/* 导读页标题栏：站点 h1.xs2 写死 #666，抬升面上对比 2.7（与侧栏 h2 同族） */
+html.dark h1.xs2 {
+  color: var(--mcmodder-color-text-dark1);
+}
+
+/* 好友列表卡片：ul.buddy li 站点写死 #f9f9f9 白卡，浅字叠浅卡（全模板审计实测） */
+html.dark .buddy > li {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
+html.dark .buddy > li h3 {
   color: var(--mcmodder-color-text-dark1);
 }
