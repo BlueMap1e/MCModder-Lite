@@ -1121,6 +1121,45 @@ export class Utils {
   private static requestCursor = 0;
   private static requestCursorLoaded = false;
 
+  /** 请求日志先攒在内存，2 秒或页面隐藏时再落盘，避免每个请求都读改写整份日志 */
+  private static pendingRequestLogs: string[] = [];
+  private static requestLogFlushTimer?: ReturnType<typeof setTimeout>;
+  private static requestLogFlushBound = false;
+
+  /** 排队一条请求日志；达到阈值立即落盘，否则最多每 2 秒写一次 */
+  private static queueRequestLog(content: string) {
+    Utils.pendingRequestLogs.push(content);
+    if (!Utils.requestLogFlushBound) {
+      Utils.requestLogFlushBound = true;
+      window.addEventListener("pagehide", () => Utils.flushRequestLogs());
+      document.addEventListener("visibilitychange", () => {
+        if (document.visibilityState === "hidden") Utils.flushRequestLogs();
+      });
+    }
+    if (Utils.pendingRequestLogs.length >= 32) {
+      Utils.flushRequestLogs();
+      return;
+    }
+    if (!Utils.requestLogFlushTimer) {
+      Utils.requestLogFlushTimer = window.setTimeout(() => Utils.flushRequestLogs(), 2000);
+    }
+  }
+
+  /** 把内存里的请求日志合并进持久化日志，并裁掉超出上限的旧记录 */
+  private static flushRequestLogs() {
+    if (Utils.requestLogFlushTimer) {
+      window.clearTimeout(Utils.requestLogFlushTimer);
+      Utils.requestLogFlushTimer = undefined;
+    }
+    if (!Utils.pendingRequestLogs.length) return;
+    const pending = Utils.pendingRequestLogs.splice(0);
+    const logs = GM_getValue("mcmodderLogger")?.split(";").filter(Boolean) || [];
+    logs.push(...pending);
+    const max = Values.MAX_REQUEST_COUNT / 10;
+    if (logs.length > max) logs.splice(0, logs.length - max);
+    GM_setValue("mcmodderLogger", logs.join(";"));
+  }
+
   /** 请求失败统一提示：多个并发请求同时失败时只提示一次，避免刷屏 */
   private static notifyRequestError(reason: string) {
     const now = Date.now();
@@ -1687,8 +1726,6 @@ export class Utils {
         config.onabort = () => fail("网络请求已取消");
         if (!config.timeout) config.timeout = 30000;
         if (log) {
-          const logs = GM_getValue("mcmodderLogger")?.split(";") || [];
-          if (logs.length >= Values.MAX_REQUEST_COUNT / 10) logs.shift();
           let content = `A${lastRequestTime}:${config.url}`;
           if (message) content += ` (${message})`;
           // 只记录请求体大小，绝不记录内容（可能含编辑正文 / 搜索词）
@@ -1696,8 +1733,7 @@ export class Utils {
             const bodySize = typeof config.data === "string" ? config.data.length : "non-string";
             content += ` [body:${bodySize}]`;
           }
-          logs.push(content);
-          GM_setValue("mcmodderLogger", logs.join(";"));
+          Utils.queueRequestLog(content);
         }
         // console.debug("Send Async request: ", config);
         GM_xmlhttpRequest(config);
