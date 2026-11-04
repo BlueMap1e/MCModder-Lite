@@ -54,6 +54,27 @@ npm run verify   # lint + lint:config + format:check (the full local gate)
 - `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
   locals/parameters; the build fails on them.
 
+## Security and performance invariants
+
+- Treat host-page content, remote API responses and user-supplied JSON as untrusted text. Never
+  build HTML from them: use text nodes / `setAttribute`, and when a string must become HTML,
+  escape it at the final sink with `Utils.escapeHTML`.
+- Validate URLs before writing `href` / `src` with `Utils.safeURL`; only `http(s)` and
+  site-relative paths are allowed.
+- Linkify user content with `Utils.linkifyTextNodes` (TreeWalker over text nodes); never
+  `.html()` plus string replacement.
+- `Utils.createRequest` owns error / timeout / abort handling; do not dispatch
+  `GM_xmlhttpRequest` elsewhere. Request logs record URL, purpose and body size only — never
+  body content.
+- `_uuid` is HttpOnly and written through `GM_cookie`; every write is read back and verified.
+  Do not reintroduce per-account credential storage.
+- Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
+  mode visually.
+- Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
+  styles.
+- Gate always-on observers by page / selector and give them a timeout; a document-level
+  observer that lives for the whole session is a bug.
+
 ## Host-page constraints
 
 - The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery,
