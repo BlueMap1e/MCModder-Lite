@@ -54,6 +54,12 @@ export class Mcmodder {
   private readonly titleNode = $("title");
   private readonly linkPendingSet = new Set<string>();
   private readonly linkContentDictionary: Record<string, string> = {};
+  /** 悬浮预览只绑定一次事件，避免每次 updateItemTooltip 重复注册 */
+  private hoverPreviewBound = false;
+  /** 当前有效的 hover 令牌；离开或移到别的链接时作废旧定时器 */
+  private hoverPreviewToken: symbol = Symbol("hover-preview");
+  /** 当前 hover 的链接：用于判断指针是否只是移到了链接内部子元素 */
+  private hoverPreviewAnchor?: HTMLAnchorElement;
   private readonly elementColorDictionary: Map<HTMLElement, string> = new Map();
   private readonly elementColorCache: Map<string, string> = new Map();
 
@@ -161,111 +167,142 @@ export class Mcmodder {
           `,
         });
       });
-      document.addEventListener("pointerover", async (e) => {
-        const target = e.target;
-        if (!(
-          target instanceof HTMLAnchorElement && target.classList.contains("mcmodder-item-link")
-        )) {
-          return;
-        }
-        await Utils.sleep(250);
-        const sourceUrl = $(target).attr("data-source-url");
-        const previewContainer = $(`.mcmodder-preview-container[data-source-url="${sourceUrl}"]`);
-        const previewFrame = previewContainer.find(`.mcmodder-preview-frame`);
-        const describedby = $(target).attr("aria-describedby");
-        if (!describedby) return;
-        const tooltip = $("#" + describedby);
-        if (!tooltip.length || !tooltip.hasClass("show")) return;
-        if (previewFrame.attr("data-status")) return;
-        const storagedContent = this.linkContentDictionary[sourceUrl];
-        if (storagedContent !== undefined) {
-          previewFrame.attr("data-status", "fulfilled");
-          $(target).attr("data-original-title", storagedContent);
-          previewFrame.children().html(storagedContent);
-          return;
-        }
-        if (this.linkPendingSet.has(sourceUrl)) return;
-        previewFrame.attr("data-status", "pending");
-        this.linkPendingSet.add(sourceUrl);
-        await Utils.sleep(750);
-        const resp = await this.utils.createRequest(
-          {
-            url: target.href,
-            method: "GET",
-            anonymous: true,
-          },
-          "链接预览",
-        );
-        if (!resp.responseXML) return;
-        if (previewFrame.attr("data-status") === "fulfilled") return;
-        const doc = $(resp.responseXML);
-        doc.find(".itemname > .tool").remove();
-        doc.find(".quote_text legend a").last().remove();
-        previewFrame.html(
-          doc.find(".item-content, .class-menu-main .text-area.font14").first().html(),
-        );
-        if (previewFrame.text() === "暂无简介，欢迎协助完善。") {
-          previewFrame.html('<span class="mcmodder-common-danger">该资料正文暂无介绍...</span>');
-        }
-        if (sourceUrl.includes("item/")) {
-          doc
-            .find(".itemname")
-            .first()
-            .insertBefore(previewFrame.children().first())
-            .find("h5")
-            .each((_, h5) => {
-              const keywords = (doc.find("meta[name=keywords]").attr("content") ?? "").split(",");
-              const english = keywords[1];
-              const raw = h5.textContent ?? "";
-              const suffix = english ? ` (${english})` : "";
-              const hasEnglish = !!english && raw.endsWith(suffix);
-              const chinese = hasEnglish ? raw.slice(0, -suffix.length) : raw;
-              // 资料名来自远端页面，用 DOM 组装，避免被当成 HTML 解析
-              h5.textContent = "";
-              const chineseAnchor = document.createElement("a");
-              chineseAnchor.textContent = chinese;
-              h5.appendChild(chineseAnchor);
-              if (hasEnglish) {
-                h5.appendChild(document.createTextNode(" "));
-                const enSpan = document.createElement("span");
-                enSpan.className = "item-h5-ename";
-                const enAnchor = document.createElement("a");
-                enAnchor.textContent = english;
-                enSpan.appendChild(enAnchor);
-                h5.appendChild(enSpan);
-              }
-            });
-        } else if (sourceUrl.includes("class/")) {
-          doc.find(".class-title").first().insertBefore(previewFrame.children().first());
-        }
-        const rightTable = doc.find(".item-data .item-info-table").first();
-        rightTable.removeClass("righttable").insertBefore(previewFrame);
-        const showImg = (c: Element) => (c.outerHTML = c.outerHTML.replaceAll("data-src=", "src="));
-        rightTable.find("img").each((_, img) => {
-          showImg(img);
+      if (!this.hoverPreviewBound) {
+        this.hoverPreviewBound = true;
+        document.addEventListener("pointerout", (e) => {
+          const related = e.relatedTarget as Node | null;
+          // 指针只是在链接内部子元素之间移动，不算离开
+          if (related && this.hoverPreviewAnchor?.contains(related)) return;
+          this.hoverPreviewAnchor = undefined;
+          this.hoverPreviewToken = Symbol("hover-preview");
         });
-        const mcicons = $("#icon-toughness-empty");
-        if (!mcicons.length) {
-          const module = import.meta.glob("./html/mcicons.html", {
-            query: "?raw",
-            eager: true,
-          });
-          const mciconsHtml = (module["./html/mcicons.html"] as any).default as string;
-          $(mciconsHtml).prependTo(document.body);
-        }
-        if (this.configRepository.getSettings("hoverImage")) {
-          previewFrame.find("img").each((_, img) => {
+        document.addEventListener("pointerover", async (e) => {
+          const target = e.target;
+          if (!(
+            target instanceof HTMLAnchorElement && target.classList.contains("mcmodder-item-link")
+          )) {
+            return;
+          }
+          this.hoverPreviewAnchor = target;
+          const token = (this.hoverPreviewToken = Symbol("hover-preview"));
+          await Utils.sleep(250);
+          if (this.hoverPreviewToken !== token) return;
+          const sourceUrl = $(target).attr("data-source-url");
+          const previewContainer = $(`.mcmodder-preview-container[data-source-url="${sourceUrl}"]`);
+          const previewFrame = previewContainer.find(`.mcmodder-preview-frame`);
+          const describedby = $(target).attr("aria-describedby");
+          if (!describedby) return;
+          const tooltip = $("#" + describedby);
+          if (!tooltip.length || !tooltip.hasClass("show")) return;
+          if (previewFrame.attr("data-status")) return;
+          const storagedContent = this.linkContentDictionary[sourceUrl];
+          if (storagedContent !== undefined) {
+            previewFrame.attr("data-status", "fulfilled");
+            $(target).attr("data-original-title", storagedContent);
+            previewFrame.children().html(storagedContent);
+            return;
+          }
+          if (this.linkPendingSet.has(sourceUrl)) return;
+          previewFrame.attr("data-status", "pending");
+          this.linkPendingSet.add(sourceUrl);
+          await Utils.sleep(750);
+          if (this.hoverPreviewToken !== token) {
+            this.linkPendingSet.delete(sourceUrl);
+            previewFrame.removeAttr("data-status");
+            return;
+          }
+          let resp;
+          try {
+            resp = await this.utils.createRequest(
+              {
+                url: target.href,
+                method: "GET",
+                anonymous: true,
+              },
+              "链接预览",
+            );
+          } catch (error) {
+            console.warn("[MCModder-Lite] 链接预览请求失败：", error);
+            this.linkPendingSet.delete(sourceUrl);
+            previewFrame.removeAttr("data-status");
+            return;
+          }
+          if (!resp.responseXML) {
+            this.linkPendingSet.delete(sourceUrl);
+            previewFrame.removeAttr("data-status");
+            return;
+          }
+          if (previewFrame.attr("data-status") === "fulfilled") return;
+          const doc = $(resp.responseXML);
+          doc.find(".itemname > .tool").remove();
+          doc.find(".quote_text legend a").last().remove();
+          previewFrame.html(
+            doc.find(".item-content, .class-menu-main .text-area.font14").first().html(),
+          );
+          if (previewFrame.text() === "暂无简介，欢迎协助完善。") {
+            previewFrame.html('<span class="mcmodder-common-danger">该资料正文暂无介绍...</span>');
+          }
+          if (sourceUrl.includes("item/")) {
+            doc
+              .find(".itemname")
+              .first()
+              .insertBefore(previewFrame.children().first())
+              .find("h5")
+              .each((_, h5) => {
+                const keywords = (doc.find("meta[name=keywords]").attr("content") ?? "").split(",");
+                const english = keywords[1];
+                const raw = h5.textContent ?? "";
+                const suffix = english ? ` (${english})` : "";
+                const hasEnglish = !!english && raw.endsWith(suffix);
+                const chinese = hasEnglish ? raw.slice(0, -suffix.length) : raw;
+                // 资料名来自远端页面，用 DOM 组装，避免被当成 HTML 解析
+                h5.textContent = "";
+                const chineseAnchor = document.createElement("a");
+                chineseAnchor.textContent = chinese;
+                h5.appendChild(chineseAnchor);
+                if (hasEnglish) {
+                  h5.appendChild(document.createTextNode(" "));
+                  const enSpan = document.createElement("span");
+                  enSpan.className = "item-h5-ename";
+                  const enAnchor = document.createElement("a");
+                  enAnchor.textContent = english;
+                  enSpan.appendChild(enAnchor);
+                  h5.appendChild(enSpan);
+                }
+              });
+          } else if (sourceUrl.includes("class/")) {
+            doc.find(".class-title").first().insertBefore(previewFrame.children().first());
+          }
+          const rightTable = doc.find(".item-data .item-info-table").first();
+          rightTable.removeClass("righttable").insertBefore(previewFrame);
+          const showImg = (c: Element) =>
+            (c.outerHTML = c.outerHTML.replaceAll("data-src=", "src="));
+          rightTable.find("img").each((_, img) => {
             showImg(img);
-            $(img).attr("src", $(img).attr("data-src"));
           });
-        }
-        rightTable.find("tr").last().remove();
-        const final = previewContainer.prop("outerHTML");
-        $(target).attr("data-original-title", final);
-        this.linkContentDictionary[sourceUrl] = final;
-        this.linkPendingSet.delete(sourceUrl);
-        previewFrame.attr("data-status", "fulfilled");
-      });
+          const mcicons = $("#icon-toughness-empty");
+          if (!mcicons.length) {
+            const module = import.meta.glob("./html/mcicons.html", {
+              query: "?raw",
+              eager: true,
+            });
+            const mciconsHtml = (module["./html/mcicons.html"] as any).default as string;
+            $(mciconsHtml).prependTo(document.body);
+          }
+          if (this.configRepository.getSettings("hoverImage")) {
+            previewFrame.find("img").each((_, img) => {
+              showImg(img);
+              $(img).attr("src", $(img).attr("data-src"));
+            });
+          }
+          rightTable.find("tr").last().remove();
+          const final = previewContainer.prop("outerHTML");
+          $(target).attr("data-original-title", final);
+          this.linkContentDictionary[sourceUrl] = final;
+          this.linkPendingSet.delete(sourceUrl);
+          previewFrame.attr("data-status", "fulfilled");
+        });
+      }
     }
     Utils.updateAllTooltip();
   }
@@ -393,11 +430,29 @@ export class Mcmodder {
       }
       case 2:
       case 3: {
-        $(`
-          <link rel="preconnect" href="https://fonts.googleapis.com">
-          <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-          <link href="${Values.assets.font.link[font]}" rel="stylesheet">
-        `).appendTo("head");
+        // 字体走 Google Fonts：非阻塞加载，3 秒未完成就放弃，避免大陆网络拖住首屏
+        document.getElementById("mcmodder-font-link")?.remove();
+        const preconnectAPI = document.createElement("link");
+        preconnectAPI.rel = "preconnect";
+        preconnectAPI.href = "https://fonts.googleapis.com";
+        const preconnectStatic = document.createElement("link");
+        preconnectStatic.rel = "preconnect";
+        preconnectStatic.href = "https://fonts.gstatic.com";
+        preconnectStatic.crossOrigin = "anonymous";
+        const fontLink = document.createElement("link");
+        fontLink.id = "mcmodder-font-link";
+        fontLink.rel = "stylesheet";
+        fontLink.href = String(Values.assets.font.link[font]);
+        // 先按 print 加载（不阻塞渲染），加载完成后再切回 all
+        fontLink.media = "print";
+        fontLink.onload = () => {
+          fontLink.media = "all";
+        };
+        fontLink.onerror = () => fontLink.remove();
+        document.head.append(preconnectAPI, preconnectStatic, fontLink);
+        window.setTimeout(() => {
+          if (fontLink.isConnected && fontLink.media === "print") fontLink.remove();
+        }, 3000);
         Utils.addStyle(`* {font-family: ${Values.assets.font.fontFamily[font]};}`);
         break;
       }
