@@ -295,9 +295,15 @@ export class Mcmodder {
                 }
               });
           } else if (sourceUrl.includes("class/")) {
-            doc.find(".class-title").first().insertBefore(previewFrame.children().first());
+            // 标题块同样是远端节点，与正文一样先过白名单再插进文档
+            const classTitle = doc.find(".class-title").first();
+            $(sanitizeHTML(classTitle.prop("outerHTML") ?? "")).insertBefore(
+              previewFrame.children().first(),
+            );
           }
-          const rightTable = doc.find(".item-data .item-info-table").first();
+          // 右侧资料表同理：远端节点直接 insertBefore 会连 `<img onerror>` 一起带进页面
+          const rightTableSource = doc.find(".item-data .item-info-table").first();
+          const rightTable = $(sanitizeHTML(rightTableSource.prop("outerHTML") ?? ""));
           rightTable.removeClass("righttable").insertBefore(previewFrame);
           const showImg = (c: Element) =>
             (c.outerHTML = c.outerHTML.replaceAll("data-src=", "src="));
@@ -708,16 +714,19 @@ export class Mcmodder {
     const insertPos = $(".header-user .header-layer-block:first-child()");
     if (insertPos.length) {
       const myProfile = this.configRepository.getAllProfile() as Partial<Profile>;
-      const avatar = myProfile.avatar
+      // 头像地址与昵称来自站点资料，按不可信内容处理：URL 过 safeURL、文本转义
+      const avatarURL = Utils.safeURL(myProfile.avatar);
+      const nicknameSafe = Utils.escapeHTML(myProfile.nickname || $(".header-user-name").text());
+      const avatar = avatarURL
         ? `<a href="${Utils.getCenterURL(this.currentUID)}" target="_blank">
-            <img alt="${myProfile.nickname}" src="${myProfile.avatar}">
+            <img alt="${nicknameSafe}" src="${Utils.escapeHTML(avatarURL)}">
           </a>`
         : $(".header-user-avatar").html();
-      const nickname = myProfile.nickname || $(".header-user-name").text();
-      const lv = myProfile.lv
-        ? `<span class="mcmodder-profile-lv common-user-lv lv-${myProfile.lv}">Lv.${myProfile.lv}</span>`
+      const lvNumber = Number(myProfile.lv) || 0;
+      const lv = lvNumber
+        ? `<span class="mcmodder-profile-lv common-user-lv lv-${lvNumber}">Lv.${lvNumber}</span>`
         : "";
-      $(`<div class="mcmodder-profile">${avatar}<p>${nickname} ${lv}</p></div>`).insertBefore(
+      $(`<div class="mcmodder-profile">${avatar}<p>${nicknameSafe} ${lv}</p></div>`).insertBefore(
         insertPos,
       );
 

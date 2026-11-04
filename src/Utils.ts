@@ -735,16 +735,16 @@ export class Utils {
    * @param data 如果额外传入该参数，则原始内容将以该参数为准
    */
   static textToAnchor(text: Text, data?: string) {
-    const link = data ?? text.data;
-    try {
-      new URL(link);
-    } catch {
-      return;
-    }
+    const raw = data ?? text.data;
+    // 文本来自审核附言等用户内容：只放行 http(s) 与站内相对路径，
+    // 否则 `javascript:` 之类的协议会被写进 href 并在点击时执行
+    const link = Utils.safeURL(raw);
+    if (!link) return;
     const anchor = document.createElement("a");
     anchor.target = "_blank";
+    anchor.rel = "noopener noreferrer";
     anchor.href = link;
-    anchor.innerText = link;
+    anchor.innerText = raw;
     text.replaceWith(anchor);
     return anchor;
   }
