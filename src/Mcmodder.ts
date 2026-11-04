@@ -195,6 +195,13 @@ export class Mcmodder {
           const tooltip = $("#" + describedby);
           if (!tooltip.length || !tooltip.hasClass("show")) return;
           if (previewFrame.attr("data-status")) return;
+          // 请求失败时不要留下永久的加载动画：换成一行提示，下次悬浮再重试
+          const showPreviewError = () => {
+            previewFrame.html('<span class="mcmodder-common-danger">预览加载失败</span>');
+            $(target).attr("data-original-title", previewContainer.prop("outerHTML"));
+            previewFrame.removeAttr("data-status");
+            this.linkPendingSet.delete(sourceUrl);
+          };
           const storagedContent = this.linkContentDictionary[sourceUrl];
           if (storagedContent !== undefined) {
             previewFrame.attr("data-status", "fulfilled");
@@ -223,16 +230,17 @@ export class Mcmodder {
             );
           } catch (error) {
             console.warn("[MCModder-Lite] 链接预览请求失败：", error);
-            this.linkPendingSet.delete(sourceUrl);
-            previewFrame.removeAttr("data-status");
+            showPreviewError();
             return;
           }
           if (!resp.responseXML) {
-            this.linkPendingSet.delete(sourceUrl);
-            previewFrame.removeAttr("data-status");
+            showPreviewError();
             return;
           }
-          if (previewFrame.attr("data-status") === "fulfilled") return;
+          if (previewFrame.attr("data-status") === "fulfilled") {
+            this.linkPendingSet.delete(sourceUrl);
+            return;
+          }
           const doc = $(resp.responseXML);
           doc.find(".itemname > .tool").remove();
           doc.find(".quote_text legend a").last().remove();

@@ -1168,6 +1168,11 @@ body:not(.view),
   max-height: 135px;
   max-width: 240px;
 }
+/* 预览内容就绪前先隐藏 tooltip：避免“加载中”小框先闪一下、再被完整预览撑开 */
+.tooltip:has(.mcmodder-preview-frame .mcmodder-loading) {
+  opacity: 0 !important;
+  pointer-events: none !important;
+}
 .tooltip .item-info-table {
   display: inline-block;
   width: unset;
