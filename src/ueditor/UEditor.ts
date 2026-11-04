@@ -77,10 +77,18 @@ export class UEditor {
     this.parent = parent;
     this.configs = parent.configRepository;
     this.editor = editor;
+    if (!editor || typeof editor.ready !== "function") {
+      console.warn("[MCModder-Lite] 编辑器实例不可用，跳过增强。");
+      return;
+    }
     // ready 回调触发时 iframe 内的 DOM 尚未完全就绪，需再让出一个任务周期，详见类注释
     editor.ready(() => {
       setTimeout(() => {
-        this.init(editor);
+        try {
+          this.init(editor);
+        } catch (error) {
+          console.error("[MCModder-Lite] 编辑器增强初始化异常：", error);
+        }
       }, 0);
     });
   }
@@ -92,12 +100,16 @@ export class UEditor {
    * @param editor 百科的原生编辑器实例。
    */
   protected init(editor: any) {
-    const iframe = editor.iframe;
+    const iframe = editor?.iframe;
 
     this.outerFrame = $(iframe).parents("#editor-ueeditor").get(0) as HTMLElement;
     this.$outerFrame = $(this.outerFrame);
     this.innerFrame = $(iframe).parents("#edui1").get(0) as HTMLElement;
     this.$innerFrame = $(this.innerFrame);
+    if (!this.outerFrame || !this.innerFrame) {
+      console.warn("[MCModder-Lite] 编辑器外层 DOM 尚未就绪，跳过增强。");
+      return;
+    }
     this.frame = this.outerFrame.childNodes.item(0) as HTMLElement;
     this.toolbar = this.$outerFrame.find(".edui-toolbar");
     this.iframe = iframe;
@@ -111,6 +123,10 @@ export class UEditor {
     this.body = this.document?.body;
     this.$head = $(this.head || "");
     this.$body = $(this.body || "");
+    if (!this.body || !this.document || !this.head) {
+      console.warn("[MCModder-Lite] 编辑器正文 DOM 尚未就绪，跳过增强。");
+      return;
+    }
 
     // 把自己登记进全局列表，并给**所有**已登记的编辑器 iframe 补注入样式与夜间模式
     // （含此前已初始化的那些，保证页面上多个编辑器时样式一致）
@@ -118,7 +134,8 @@ export class UEditor {
     const isDark = $("html").hasClass("dark");
     this.parent.ueditorFrame.forEach((e) => {
       if (!e.document) return;
-      Utils.addStyle(this.parent.css, "", e.document);
+      // 同一个 iframe 文档只注入一次，避免多编辑器时反复写入整份 CSS
+      Utils.addStyle(this.parent.css, "mcmodder-ueditor-css", e.document);
       // 以父页面实际的 dark 类为准，而不是父实例上可能滞后的 isNightMode：
       // 夜间模式自适应、跨标签页同步等场景下字段可能尚未刷新，
       // 若此时漏掉 dark 类，iframe 会继续使用亮色变量；

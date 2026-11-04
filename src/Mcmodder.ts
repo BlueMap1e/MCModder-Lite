@@ -106,12 +106,27 @@ export class Mcmodder {
   }
 
   private callEditor() {
-    if ($(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href)) {
-      setTimeout(() => new AdvancedUEditor(editor, this), 3e2);
-    } else {
-      setTimeout(() => new UEditor(editor, this), 3e2);
-    }
+    const useAdvanced = !!$(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href);
+    setTimeout(() => {
+      if (typeof editor === "undefined" || !editor) {
+        console.warn("[MCModder-Lite] 未找到编辑器实例，跳过增强。");
+        return;
+      }
+      try {
+        if (useAdvanced) new AdvancedUEditor(editor, this);
+        else new UEditor(editor, this);
+      } catch (error) {
+        console.error("[MCModder-Lite] 编辑器增强初始化失败：", error);
+        if (!this.editorErrorNotified) {
+          this.editorErrorNotified = true;
+          Utils.commonMsg("编辑器增强加载失败，正文编辑仍可正常使用。", false);
+        }
+      }
+    }, 3e2);
   }
+
+  /** 编辑器增强初始化失败时只提示一次，避免多编辑器/重复触发刷屏 */
+  private editorErrorNotified = false;
 
   private readonly generalEditorObserver = new MutationObserver((mutationList) => {
     for (const mutation of mutationList) {
