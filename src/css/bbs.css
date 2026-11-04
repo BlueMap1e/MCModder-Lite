@@ -1354,3 +1354,41 @@ html.dark #scrolltop a {
 html.dark .focus {
   background-color: var(--mcmodder-color-background-dark1);
 }
+
+/* 浮窗（发帖 / 回复 / 编辑）：Discuz 的 `.fwin` 浮层整块用站点原生浅色，
+   夜间模式下标题栏、主题输入框、正文框与底部操作栏仍是白底；
+   正文框最严重——白底配浅色文字，打出来的字几乎看不见 */
+html.dark .fwin {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+html.dark .fwin .flb {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+  border-bottom: 1px solid var(--mcmodder-color-background-dark3);
+}
+html.dark .fwin .flb em,
+html.dark .fwin .flb a {
+  color: var(--mcmodder-color-text);
+}
+html.dark .fwin .flb a:hover {
+  color: var(--mcmodder-color-link);
+}
+html.dark .fwin .px,
+html.dark .fwin textarea.pt {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .fwin .pns {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+  border-top: 1px solid var(--mcmodder-color-background-dark3);
+}
+html.dark .fwin .tedt,
+html.dark .fwin .tedt .area {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+}
