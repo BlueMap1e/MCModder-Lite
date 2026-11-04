@@ -536,7 +536,7 @@ export class ClassPageInit extends Init {
               const doc = $(resp.responseXML);
               if (doc.find(".edit-unlogining").length) {
                 if (doc.find(".edit-unlogining").text().includes("登录"))
-                  Utils.commonMsg("请重新登录或在切换账号界面中退出未登录状态后再操作~", false);
+                  Utils.commonMsg("请重新登录后再操作~", false);
                 else Utils.commonMsg("受本模组/整合包区域限制，无法直接获取高级信息...", false);
                 button.removeClass("disabled");
                 button.find("span").text("展开高级信息");

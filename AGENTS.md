@@ -74,8 +74,11 @@ npm run smoke:security  # XSS regression only (payload injected as page text bef
 - `Utils.createRequest` owns error / timeout / abort handling; do not dispatch
   `GM_xmlhttpRequest` elsewhere. Request logs record URL, purpose and body size only — never
   body content.
-- `_uuid` is HttpOnly and written through `GM_cookie`; every write is read back and verified.
-  Do not reintroduce per-account credential storage.
+- The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
+  switching and per-account credential storage were removed on purpose (2026-11-04): the
+  feature was half-dead and its risk outweighed the benefit. Multi-account is the browser's
+  job (profiles / containers). `GM_cookie` is used only for `yxd_token`, and that write is read
+  back and verified. Do not reintroduce account switching.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline

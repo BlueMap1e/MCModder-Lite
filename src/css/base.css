@@ -660,7 +660,6 @@ body .top-main .pulldown .top_content {
   margin-left: 0.5em;
 }
 #mcmodder-night-switch,
-#mcmodder-profile-switch,
 #mcmodder-message-center,
 #mcmodder-pagewidth-switch {
   position: relative;
@@ -672,7 +671,6 @@ body .top-main .pulldown .top_content {
   display: inline-block;
 }
 #mcmodder-night-switch:focus,
-#mcmodder-profile-switch:focus,
 #mcmodder-pagewidth-switch:focus,
 #mcmodder-message-center:focus {
   outline: none;
@@ -2335,74 +2333,6 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 }
 .mcmodder-table-unsaved-tr {
   background-color: var(--mcmodder-color-primary-transparent1);
-}
-#mcmodder-profile-frame {
-  max-height: 600px;
-  overflow: auto;
-}
-.profile-option {
-  position: relative;
-  height: 100px;
-  border: 1px solid var(--mcmodder-color-primary);
-  margin-top: 3px;
-  border-radius: 10px;
-}
-.profile-option.empty-profile {
-  align-content: center;
-  color: var(--mcmodder-color-text-dark3);
-}
-.profile-option .avatar {
-  width: 80px;
-  height: 80px;
-  position: absolute;
-  left: 10px;
-  top: 10px;
-}
-.profile-option .avatar img {
-  width: 80px;
-  height: 80px;
-  border-radius: 50%;
-}
-.profile-selected {
-  background: linear-gradient(
-    45deg,
-    var(--mcmodder-color-primary-transparent2),
-    var(--mcmodder-color-accent-transparent2)
-  );
-  border-radius: 10px;
-}
-.profile-option:hover {
-  background-color: var(--mcmodder-color-background-transparent);
-}
-.profile-option .info {
-  padding: 5px 10px 5px 100px;
-  text-align: left;
-}
-.profile-option .info .title {
-  text-wrap: nowrap;
-  overflow: clip;
-  text-overflow: ellipsis;
-}
-.profile-option .info .title .uid {
-  font-size: 16px;
-  margin-right: 0.25em;
-}
-.profile-option .info .title .lv a {
-  font-size: 14px;
-  color: white;
-}
-.profile-option .text {
-  color: var(--mcmodder-color-text-dark2);
-  font-size: 14px;
-}
-.profile-option .text .delete {
-  color: var(--mcmodder-color-danger);
-  position: absolute;
-  top: 5px;
-  right: 5px;
-}
-.profile-option .text span:not(:first-child)::before {
-  content: " · ";
 }
 /* 定位层：只负责位置。这里不能加 transform，否则 getBoundingClientRect
    量到的是动画中的视觉盒，向上/向下与水平偏移都会跟着抖。 */

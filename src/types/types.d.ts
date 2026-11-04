@@ -205,12 +205,10 @@ interface Settings {
   // 以下不显示在设置界面
   nightMode: boolean;
   preferredWiderScreen: boolean;
-  lastUid: number;
   /** 旧版发包游标；新版本使用独立的 `mcmodderRequestCursor` 键，这里仅在迁移时读取 */
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
   recentlyVisitedMods: RecentlyVisited[];
-  myProfiles: string;
   guiLocker: number;
   shapelessLocker: boolean;
   jsonDatabase_v2: Record<0 | 1, string[]>;
@@ -606,13 +604,6 @@ interface ItemType {
 
 interface Profile {
   /**
-   * 存储在浏览器 Cookie 中的验证用户身份的 UUID
-   *
-   * 只有用户拥有的账号信息才存在此属性
-   */
-  uuid?: string;
-
-  /**
    * 已认证账户的认证 UID
    */
   auth_uid?: number;
@@ -626,15 +617,6 @@ interface Profile {
    * 已认证账户的认证密钥
    */
   auth_key?: string;
-
-  /**
-   * 该账户的登录信息会于该时间戳 (毫秒单位) 过期，届时必须重新登录以刷新登录信息
-   *
-   * 百科账号登录一般 30 天过期，QQ 登录 7 天过期
-   *
-   * 只有用户拥有的账号信息才存在此属性
-   */
-  expirationDate?: number;
 
   /** 用户头像的图片 URL */
   avatar: string;

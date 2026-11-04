@@ -15,8 +15,6 @@ import { InitLoader } from "./loader/InitLoader";
 import { GeneralEditInit } from "./init/GeneralEditInit";
 import { EditorInit } from "./init/EditorInit";
 import { Swiper } from "./widget/Swiper";
-import { createApp } from "vue";
-import ProfileSelector from "./vue/components/ProfileSelector.vue";
 import { sanitizeHTML } from "./vue/composables/useSanitizedHTML";
 import { ConfigRepository } from "./config/ConfigRepository.ts";
 
@@ -404,54 +402,6 @@ export class Mcmodder {
     // this.screenAttachedFrame = $(".mcmodder-screenattached");
   }
 
-  /**
-   * 切换当前账号，即改写标识登录状态的 `_uuid` cookie
-   *
-   * `_uuid` 为 HttpOnly cookie，只能通过油猴的 `GM_cookie` 接口改写
-   *
-   * @returns 是否切换成功，失败时已向用户提示
-   */
-  async switchProfile(uid: number): Promise<boolean> {
-    const profile = uid ? this.configRepository.getAllProfile(uid) : undefined;
-    if (uid && (!profile || !profile.uuid)) {
-      Utils.commonMsg(
-        "切换账号失败：出于安全考虑，本版本不保存其他账号的登录凭据。请在站点上直接退出/登录，或先访问该账号主页后再试。",
-        false,
-      );
-      return false;
-    }
-    const success = profile
-      ? await Utils.setUuidCookie(profile.uuid, profile.expirationDate)
-      : await Utils.deleteUuidCookie();
-    if (!success) {
-      Utils.commonMsg(
-        "切换账号失败：无法改写 `_uuid` cookie。请确认脚本管理器允许访问 HttpOnly cookie，或直接使用站点登录。",
-        false,
-      );
-      return false;
-    }
-    this.currentUsername = profile ? profile.nickname : "";
-    this.currentUID = uid;
-    return true;
-  }
-
-  private profileSelectorContainer = $("<div>");
-  private profileSelector?: InstanceType<typeof ProfileSelector>;
-
-  fireProfileSelectFrame() {
-    swal.fire({
-      title: "切换当前账号",
-      html: `<div class="profile-option-container"></div>`,
-      showConfirmButton: false,
-    });
-    if (!this.profileSelector) {
-      this.profileSelector = createApp(ProfileSelector, {
-        parent: this,
-      }).mount(this.profileSelectorContainer.get(0)) as InstanceType<typeof ProfileSelector>;
-    }
-    this.profileSelectorContainer.appendTo(".profile-option-container");
-  }
-
   applyCustomFont(font: number) {
     switch (font) {
       case 1: {
@@ -794,23 +744,6 @@ export class Mcmodder {
 
     this.updateNightMode();
     this.updatePageWidth();
-
-    $(`<button id="mcmodder-profile-switch" data-toggle="tooltip" data-original-title="切换账号 (按住 Shift 快捷切换)">
-      <i class="fa fa-low-vision"></i>
-    </button>`)
-      .appendTo(".header-container .header-search")
-      .click(async (e) => {
-        if (Utils.isKeyMatch({ shiftKey: true }, e)) {
-          // 按住 Shift 以快捷切换至上一个状态
-          const currentUID = this.currentUID;
-          const lastUID = this.configRepository.getSettings("lastUid") ?? 0;
-          if (!(await this.switchProfile(lastUID))) return;
-          Utils.commonMsg("已快捷切换至" + (lastUID ? ` UID:${lastUID} ` : "未登录状态") + " ~");
-          this.configRepository.setSettings("lastUid", currentUID);
-          return;
-        }
-        this.fireProfileSelectFrame();
-      });
 
     this.preferredWiderScreen = this.configRepository.getSettings("preferredWiderScreen") ?? false;
     $(`<button id="mcmodder-pagewidth-switch" data-toggle="tooltip" data-original-title="宽窄屏切换">
