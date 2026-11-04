@@ -105,9 +105,8 @@ npm run smoke:security  # XSS regression only (payload injected as page text bef
   data, splitting `ConfigLoader` / `Utils` / `Values`, per-page CSS or bundle splitting.
   The 2.4 MB bundle costs ~16 ms eval on desktop and ~84 ms at 4x CPU throttle; splitting
   mainly helps low-end devices and adds loading / debugging complexity.
-- Known verification gaps: admin pages need a separate `admin.mcmod.cn` login state; no SRI
-  for `@require` / CDN scripts; `yxd_token` HttpOnly is unverified. Treat these as open, not
-  as design decisions.
+- Known verification gaps: admin pages need a separate `admin.mcmod.cn` login state; `yxd_token`
+  HttpOnly is unverified. Treat these as open, not as design decisions.
 
 ## Host-page constraints
 
@@ -121,9 +120,11 @@ npm run smoke:security  # XSS regression only (payload injected as page text bef
   `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token` retry). Never call
   `GM_xmlhttpRequest` directly.
 - External libraries:
-  - CDN `@require` from `vite.config.ts`: only `turndown` (mapped to `TurndownService`).
+  - No `@require` / CDN script: every third-party library is bundled at build time, so installing
+    the userscript fetches no remote code. Add new libraries through `package.json` + `import`,
+    never through `@require`.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
-    `pinyin-match`, `turndown-plugin-gfm`.
+    `pinyin-match`, `turndown`, `turndown-plugin-gfm`.
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
     ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
   - Do not upgrade the intentionally old pins (jQuery, SweetAlert) or swap host libraries for

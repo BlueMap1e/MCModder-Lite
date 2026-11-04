@@ -72,8 +72,7 @@ const userscriptMeta = {
     "GM_addValueChangeListener",
     "GM_xmlhttpRequest",
   ],
-  connect: ["mcmod.cn", "www.curseforge.com", "api.modrinth.com", "cdn.jsdelivr.net"],
-  require: ["https://registry.npmmirror.com/turndown/7.2.4/files/dist/turndown.js"],
+  connect: ["mcmod.cn", "www.curseforge.com", "api.modrinth.com"],
 } as const;
 
 /** 32 位 FNV-1a 哈希，用于给 dev 期模块 URL 打缓存戳 */
@@ -136,9 +135,6 @@ export default defineConfig({
           style.setAttribute("data-mcmodder-vue-css", "");
           style.textContent = css;
           (document.head || document.documentElement).appendChild(style);
-        },
-        externalGlobals: {
-          turndown: "TurndownService",
         },
       },
     }),
