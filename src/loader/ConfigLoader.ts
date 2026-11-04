@@ -174,9 +174,10 @@ export const settings = [
           {
             id: "advancedRanklist",
             title: "贡献榜重排版",
-            description: "让贡献榜中各用户的昵称、排名、编辑量、编辑占比一目了然！",
+            description:
+              "把贡献榜重排成卡片布局。站点原生排版已经改好，默认不需要开启；仅在原生布局显示异常时作为补救。",
             type: "checkbox",
-            value: true,
+            value: false,
           },
           {
             id: "advancedOredictPage",
