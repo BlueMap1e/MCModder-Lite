@@ -1,4 +1,5 @@
 import {
+  GM_addValueChangeListener,
   GM_cookie,
   GM_getValue,
   GM_setValue,
@@ -1116,6 +1117,10 @@ export class Utils {
   /** 请求失败提示的去抖间隔（毫秒） */
   private static lastRequestErrorAt = 0;
 
+  /** 发包排期游标：独立 GM 键，避免每次请求都改写整份设置 */
+  private static requestCursor = 0;
+  private static requestCursorLoaded = false;
+
   /** 请求失败统一提示：多个并发请求同时失败时只提示一次，避免刷屏 */
   private static notifyRequestError(reason: string) {
     const now = Date.now();
@@ -1541,7 +1546,19 @@ export class Utils {
       500,
     );
     const now = Date.now();
-    let lastRequestTime = this.configs.getSettings("lastRequestTime") || now;
+    if (!Utils.requestCursorLoaded) {
+      Utils.requestCursorLoaded = true;
+      // 新键优先；旧版游标存在 settings 里，只读一次作为迁移回退
+      const stored = Number(GM_getValue("mcmodderRequestCursor", 0)) || 0;
+      const legacy = Number(this.configs.getSettings("lastRequestTime")) || 0;
+      Utils.requestCursor = stored || legacy || now;
+      // 跨标签页只同步这个小键，不再回灌整份设置
+      GM_addValueChangeListener("mcmodderRequestCursor", (_key, _oldValue, value) => {
+        const next = Number(value) || 0;
+        if (next > Utils.requestCursor) Utils.requestCursor = next;
+      });
+    }
+    let lastRequestTime = Utils.requestCursor || now;
     // 持久化的游标可能因旧版本数据、云端同步覆盖等而异常领先当前时间；此时照着它排期会把
     // 整条发包队列堵死，故直接丢弃、以当前时间重新起算
     if (lastRequestTime > now + minimumRequestInterval * Values.REQUEST_SCHEDULE_MAX_DRIFT_FACTOR) {
@@ -1553,7 +1570,9 @@ export class Utils {
       return null;
     }
     if (now > lastRequestTime) lastRequestTime = now;
-    this.configs.setSettings("lastRequestTime", lastRequestTime + minimumRequestInterval);
+    Utils.requestCursor = lastRequestTime + minimumRequestInterval;
+    // 只写独立的游标键，避免每次请求都改写整份设置、覆盖其他标签页刚改的配置
+    GM_setValue("mcmodderRequestCursor", Utils.requestCursor);
     return lastRequestTime;
   }
 
