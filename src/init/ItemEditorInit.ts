@@ -33,6 +33,9 @@ export class ItemEditorInit extends Init {
   }
 
   run() {
+    // 条目不存在 / 当前账号无权限时，站点会返回 404 页（URL 仍命中 /item/edit/）：
+    // 此时没有图标输入框，也就没有可增强的表单，直接跳过；否则后面 `.val().trim()` 会抛错
+    if (!$("#icon-32x").length) return;
     const l = "#edit-page-1 .tab-ul hr:nth-child(6)";
     $(
       '<img id="item-icon-16x-preview-img" /><br><input id="icon-input-16x" type="file" accept="image/*" class="hidden"><label id="icon-input-16x-label" class="btn btn-dark" for="icon-input-16x">上传图标以自动调整尺寸</label><input id="icon-16x" style="display: none;">',

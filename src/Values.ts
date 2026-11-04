@@ -8,18 +8,69 @@ export class Values {
       GM_openInTab("https://center.mcmod.cn/#/setting/", { active: true });
     },
     exportLogs: function () {
-      $("html")
-        .empty()
-        .html(
-          '若遇封IP，请在向作者反馈时发送下列内容，并告知具体封禁时间（精确到秒）以及被封禁时已打开的百科页面数量。下列内容可能包含敏感信息，可考虑私信发送。<textarea id="mcmodder-log-export" style="min-height: 800px; min-width: 100%;">',
-        );
-      $("#mcmodder-log-export").val(
-        GM_getValue("mcmodderSettings") +
-          "\n" +
-          GM_getValue("scheduleRequestList") +
-          "\n" +
-          GM_getValue("mcmodderLogger"),
+      const content =
+        (GM_getValue("mcmodderSettings") ?? "") +
+        "\n" +
+        (GM_getValue("scheduleRequestList") ?? "") +
+        "\n" +
+        (GM_getValue("mcmodderLogger") ?? "");
+      // 用覆盖层展示，不再 $("html").empty()：清空整个文档会连带丢掉页面上未保存的内容
+      // （编辑页草稿、填了一半的表单），而调试导出只是「给我一段文本」。
+      document.getElementById("mcmodder-log-export-overlay")?.remove();
+      const overlay = document.createElement("div");
+      overlay.id = "mcmodder-log-export-overlay";
+      overlay.setAttribute(
+        "style",
+        [
+          "position:fixed",
+          "inset:0",
+          "z-index:2147483000",
+          "display:flex",
+          "flex-direction:column",
+          "gap:8px",
+          "padding:12px",
+          "background:var(--mcmodder-color-background, #fff)",
+          "color:var(--mcmodder-color-text, #212529)",
+        ].join(";"),
       );
+      const tip = document.createElement("div");
+      tip.textContent =
+        "若遇封IP，请在向作者反馈时发送下列内容，并告知具体封禁时间（精确到秒）以及被封禁时已打开的百科页面数量。下列内容可能包含敏感信息，可考虑私信发送。";
+      const area = document.createElement("textarea");
+      area.id = "mcmodder-log-export";
+      area.readOnly = true;
+      area.value = content;
+      area.setAttribute(
+        "style",
+        [
+          "flex:1",
+          "width:100%",
+          "min-height:0",
+          "font-family:var(--mcmodder-font-monospace, monospace)",
+          "white-space:pre",
+        ].join(";"),
+      );
+      const closeButton = document.createElement("button");
+      closeButton.type = "button";
+      closeButton.className = "btn btn-dark";
+      closeButton.textContent = "关闭（Esc）";
+      // 两个关闭入口都走同一条清理路径，避免 Esc 监听器残留
+      function closeOverlay() {
+        overlay.remove();
+        document.removeEventListener("keydown", onKeyDown, true);
+      }
+      // Esc 关闭：捕获阶段拦截，避免被站点自己的 Esc 处理先吃掉
+      function onKeyDown(e: KeyboardEvent) {
+        if (e.key !== "Escape") return;
+        e.stopPropagation();
+        closeOverlay();
+      }
+      closeButton.addEventListener("click", closeOverlay);
+      document.addEventListener("keydown", onKeyDown, true);
+      overlay.append(tip, area, closeButton);
+      (document.body ?? document.documentElement).append(overlay);
+      area.focus();
+      area.select();
     },
   } as const;
 

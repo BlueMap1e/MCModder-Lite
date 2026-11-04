@@ -252,11 +252,7 @@ function bindEvents() {
     .keydown((e) => {
       // 焦点在输入控件 / 可编辑区时，把 Ctrl+A、Ctrl+C、Ctrl+Z 等交还给浏览器。
       // 否则表格的全局快捷键会吞掉页面上所有普通输入框的原生行为。
-      const target = e.target as HTMLElement | null;
-      if (
-        target instanceof HTMLElement &&
-        (target.isContentEditable || target.closest("input, textarea, select"))
-      ) {
+      if (Utils.isEditableTarget(e)) {
         return;
       }
 

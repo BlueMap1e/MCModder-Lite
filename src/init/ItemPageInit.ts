@@ -47,7 +47,7 @@ export class ItemPageInit extends Init {
     });
 
     // 矿物词典
-    /* if (this.configs.getSettings("mcmodderUI")) */ $(".item-dict").each((_, c) => {
+    $(".item-dict").each((_, c) => {
       if ($(c).contents().length) {
         const od = $(c).text().slice(6).split(",\u00a0");
         $(c).html("[矿物词典/物品标签] ");
@@ -105,7 +105,7 @@ export class ItemPageInit extends Init {
 
     // 根据ID快速跳转
     const h = $("span.name > h5").parent().get(0);
-    if (/* this.configs.get("mcmodderUI") && */ h) {
+    if (h) {
       const s = $('<span class="small badge-row mcmodder-item-flip">').appendTo(h);
       const isTabPage = this.parent.href.includes("/tab/") ? "tab/" : "";
       const itemId = parseInt(this.parent.href.split("item/" + isTabPage)[1]);
@@ -157,10 +157,6 @@ export class ItemPageInit extends Init {
   }
 
   private renderEname(ename: string) {
-    return `<span class="item-h5-ename">${
-      // this.configs.get("mcmodderUI") ?
-      `<a>${ename}</a>` // :
-      // `(<a>${ ename }</a>)`
-    }</span>`;
+    return `<span class="item-h5-ename"><a>${ename}</a></span>`;
   }
 }

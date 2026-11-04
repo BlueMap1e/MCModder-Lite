@@ -337,6 +337,21 @@ export class Utils {
     return node.nodeType === Node.TEXT_NODE;
   }
 
+  /**
+   * 事件目标是否位于输入控件 / 可编辑区。
+   *
+   * 全局级快捷键（尤其是会 `preventDefault` 的）必须先放行这类目标，把 `Ctrl+A` / `Ctrl+C` /
+   * `Ctrl+Z` 交还给浏览器和站点原生输入框；否则一旦绑在 `document.body` / `html` 上，
+   * 全站所有普通输入框的编辑操作都会被吞掉。
+   */
+  static isEditableTarget(e: { target?: EventTarget | null } | null | undefined) {
+    const target = e?.target;
+    return (
+      target instanceof HTMLElement &&
+      (target.isContentEditable || !!target.closest("input, textarea, select"))
+    );
+  }
+
   /** 生成 `[l, r)` 内步长为 `step` 的整数序列（`l`/`r` 须为整数，`step` 为正整数） */
   static createRange(l: number, r: number, step = 1) {
     if (!Number.isInteger(l) || !Number.isInteger(r)) {

@@ -48,6 +48,8 @@ export class VerifyHistoryInit extends Init {
       };
       Utils.commonMsg("准备自动展开，可随时按 Ctrl + C 取消~");
       $("html").bind("keydown", (e) => {
+        // 输入框 / 可编辑区里的 Ctrl+C 是复制，不该被当成「取消自动展开」
+        if (Utils.isEditableTarget(e)) return;
         if (Utils.isKeyMatch({ ctrlKey: true, keyCode: 67 }, e)) this.stopExpand = true;
       });
       getHistoryPage(2);
