@@ -18,6 +18,10 @@ export class GeneralEditInit extends Init {
       t.innerHTML = t.innerHTML.replace("Alt + X", "⌥X").replace("Ctrl + Enter", "⌘⏎");
     } */
     const leftText = $(".left .text").get(0);
+    if (!leftText) {
+      console.warn("[MCModder-Lite] 未找到编辑器提示栏，跳过编辑增强。");
+      return;
+    }
     leftText.innerHTML = leftText.innerHTML
       .replace("Alt + X", Utils.keyToHTML(this.configs.getSettings("keybindFastLink")!))
       .replace("Alt + Z", Utils.keyToHTML({ altKey: true, key: "Z" }))

@@ -6,6 +6,13 @@ import { Mcmodder } from "./Mcmodder";
 import bbsCss from "./css/bbs.css?raw";
 
 (() => {
+  // 兜底记录未捕获异常，便于用户反馈时定位；不改变任何行为
+  window.addEventListener("error", (event) => {
+    if (event.error) console.error("[MCModder-Lite] 未捕获异常：", event.error);
+  });
+  window.addEventListener("unhandledrejection", (event) => {
+    console.error("[MCModder-Lite] 未处理的 Promise 异常：", event.reason);
+  });
   let nightMode = false;
   try {
     const settings = JSON.parse(GM_getValue("mcmodderSettings") || "{}");
