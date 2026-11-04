@@ -339,9 +339,12 @@ export class Values {
   /**
    * 「上传文件」按钮可选的文件类型：与站点 UEditor 服务端的 `fileAllowFiles` 对齐，
    * 只用于文件选择框的过滤，最终是否放行仍由服务端判定。
+   *
+   * `webp` / `avif` 不在服务端默认白名单里，但设置描述承诺了这个用途，故放行到选择框；
+   * 服务端若不收会回明确错误，而这两个格式也正是这个隐藏入口最实际的用途。
    */
   static readonly ueditorFileAccept =
-    ".png,.jpg,.jpeg,.gif,.bmp,.flv,.swf,.mkv,.avi,.rm,.rmvb,.mpeg,.mpg,.ogg,.ogv,.mov,.wmv,.mp4,.webm,.mp3,.wav,.mid,.rar,.zip,.tar,.gz,.7z,.bz2,.cab,.iso,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.txt,.md,.xml";
+    ".webp,.avif,.png,.jpg,.jpeg,.gif,.bmp,.flv,.swf,.mkv,.avi,.rm,.rmvb,.mpeg,.mpg,.ogg,.ogv,.mov,.wmv,.mp4,.webm,.mp3,.wav,.mid,.rar,.zip,.tar,.gz,.7z,.bz2,.cab,.iso,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.txt,.md,.xml";
   /** 站点 UEditor 服务端的 `fileMaxSize`：超过它的文件只作提示、照常尝试上传 */
   static readonly ueditorFileMaxSize = 1024000;
   /** 资料图标的体积限制 */

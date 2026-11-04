@@ -603,21 +603,6 @@ interface ItemType {
 }
 
 interface Profile {
-  /**
-   * 已认证账户的认证 UID
-   */
-  auth_uid?: number;
-
-  /**
-   * 已认证账户的认证用户名
-   */
-  auth_username?: string;
-
-  /**
-   * 已认证账户的认证密钥
-   */
-  auth_key?: string;
-
   /** 用户头像的图片 URL */
   avatar: string;
 

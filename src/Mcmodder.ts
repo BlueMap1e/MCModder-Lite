@@ -603,6 +603,9 @@ export class Mcmodder {
       this.configRepository.deleteSettings("adaptableNightMode");
     }
 
+    // 多账号切换已整体移除（2026-11-04）：清掉旧版本留下的账号列表与快捷切换游标
+    this.configRepository.pruneLegacySettings(["myProfiles", "lastUid"]);
+
     const customFont = this.configRepository.getSettings("customFont");
     if (customFont) {
       this.applyCustomFont(customFont);

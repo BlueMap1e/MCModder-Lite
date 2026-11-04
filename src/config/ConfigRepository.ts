@@ -367,6 +367,27 @@ export class ConfigRepository {
   }
 
   /**
+   * 清理已从 `Settings` 类型中移除的旧键（例如多账号切换留下的 `myProfiles` / `lastUid`）。
+   *
+   * `deleteSettings` 的泛型只接受现存键，已删除的键只能走字符串入口；键都不存在时不写存储，
+   * 避免每次启动都改一遍设置。
+   */
+  pruneLegacySettings(keys: readonly string[]) {
+    const settings = this.getAllSettings();
+    if (!settings) return;
+    // `Settings` 没有索引签名，删除未知键需要先退到通用记录
+    const record = settings as unknown as Record<string, unknown>;
+    let changed = false;
+    for (const key of keys) {
+      if (key in record) {
+        delete record[key];
+        changed = true;
+      }
+    }
+    if (changed) this.setAll("mcmodderSettings", record as unknown as Required<Settings>);
+  }
+
+  /**
    * 整体覆写某个存储键的值。
    *
    * 先写 GM Storage；若为缓存键，再整体替换 `ref.value`（shallowRef 自动触发，无需手动 trigger）。
