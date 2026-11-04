@@ -84,8 +84,10 @@ npm run check
 1. 把 `package.json` 和 `vite.config.ts` 里的版本号改成同一个新版本。
 2. 在 `CHANGELOG.md` 最上面加一节 `## [新版本号] - 日期`，写人话即可。
 3. 提交信息里带 `[release]`，推送。
-4. **先发 pre-release**：在 GitHub 发布页勾选「Set as a pre-release」，找 1–2 个人装一下。
-5. 没问题后编辑这个 release，取消 pre-release，变成正式版。
+4. CI 会自动建好**正式** release（发布脚本直接 `gh release create`，没有草稿或预发布标记），
+   不需要你在发布页填任何东西。
+5. 想先小范围验证就手动降级：打开该 release → 右上角编辑（铅笔图标）→ 勾选
+   「Set as a pre-release」→ 保存；装 1–2 台机器确认没问题后，再取消勾选改回正式版。
 
 ---
 
