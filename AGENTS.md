@@ -191,6 +191,10 @@ npm run smoke:security  # XSS regression only (payload injected as page text bef
   same `parent.css` injected (see `UEditor.attachDialogStyleListener`) after their `<html>` is
   tagged with the `mcmodder-ueditor-dialog` marker class; dialog-specific rules live in
   `base.css` scoped by that class.
+- **`bbs.css` is not in `StyleLoader`.** It is imported raw by `src/main.ts` and injected only
+  when `initBbsDarkMode()` runs (bbs domain + `bbsNightMode` on). Rules in it never apply on
+  the main site — night rules for main-site DOM belong in `base.css`. Misplacing them is silent:
+  the rule simply does nothing (that is how the homepage splash text stayed unreadable at night).
 
 ## Key files
 
