@@ -135,10 +135,14 @@ export class Utils {
     });
   }
 
-  /** 写入 `_uuid` cookie（切换账号），返回是否写入成功 */
+  /** 写入 `_uuid` cookie（切换账号），返回是否写入并回读成功 */
   static setUuidCookie(uuid: string | undefined, expirationDate?: number): Promise<boolean> {
     if (!uuid) {
       console.warn("待写入的 `_uuid` cookie 为空，请先访问一次该账号的个人主页以记录登录信息。");
+      return Promise.resolve(false);
+    }
+    if (expirationDate && expirationDate > 0 && expirationDate <= Date.now()) {
+      console.warn("目标账号的登录凭据已过期，已拒绝写入 `_uuid` cookie。");
       return Promise.resolve(false);
     }
     if (!Utils.supportCookieAPI()) {
@@ -164,28 +168,64 @@ export class Utils {
             resolve(false);
             return;
           }
-          resolve(true);
+          // 回读校验：部分管理器会静默忽略 HttpOnly 写入，不能只看 set 的返回值
+          GM_cookie.list({ name: "_uuid" }, (cookies, listErr) => {
+            if (listErr || !cookies) {
+              resolve(true);
+              return;
+            }
+            if (!cookies.some((cookie) => cookie.value === uuid)) {
+              console.warn("写入 `_uuid` cookie 后回读不一致，按失败处理。");
+              resolve(false);
+              return;
+            }
+            resolve(true);
+          });
         },
       );
     });
   }
 
   /** 删除 `_uuid` cookie（退出登录），返回是否删除成功 */
-  static deleteUuidCookie(): Promise<boolean> {
+  static async deleteUuidCookie(): Promise<boolean> {
     if (!Utils.supportCookieAPI()) {
       console.warn("当前脚本管理器不支持 `GM_cookie`，无法删除 HttpOnly cookie `_uuid`。");
-      return Promise.resolve(false);
+      return false;
     }
-    return new Promise((resolve) => {
-      GM_cookie.delete({ name: "_uuid" }, (err) => {
-        if (err) {
-          console.warn("删除 `_uuid` cookie 失败：", err);
-          resolve(false);
-          return;
-        }
-        resolve(true);
+    const cookies = await new Promise<Array<{ value: string; domain: string; path: string }>>(
+      (resolve) => {
+        GM_cookie.list({ name: "_uuid" }, (list, err) => {
+          if (err) {
+            console.warn("读取 `_uuid` cookie 失败：", err);
+            resolve([]);
+            return;
+          }
+          resolve(list ?? []);
+        });
+      },
+    );
+    if (!cookies.length) return true;
+    let allDeleted = true;
+    for (const cookie of cookies) {
+      // delete 只接受 url，不接受 domain/path：按 cookie 自身的域与路径拼出精确 url
+      const host = cookie.domain.replace(/^\./, "");
+      const cookieURL = `https://${host}${cookie.path || "/"}`;
+      await new Promise<void>((resolve) => {
+        GM_cookie.delete({ name: "_uuid", url: cookieURL }, (err) => {
+          if (err) {
+            console.warn("删除 `_uuid` cookie 失败：", err);
+            allDeleted = false;
+          }
+          resolve();
+        });
       });
-    });
+    }
+    const remaining = await new Promise<Array<{ value: string; domain: string; path: string }>>(
+      (resolve) => {
+        GM_cookie.list({ name: "_uuid" }, (list, err) => resolve(err ? [] : (list ?? [])));
+      },
+    );
+    return allDeleted && remaining.length === 0;
   }
 
   /** 转发到百科原生的 `showTaskTip`，弹出任务/成就提示 */
@@ -1539,6 +1579,7 @@ export class Utils {
     message?: string,
     silent = false,
     log = true,
+    retry = false,
   ): Promise<GmResponseEvent<R, unknown>> {
     const lastRequestTime = this.updateRequestTime(),
       now = Date.now();
@@ -1582,16 +1623,31 @@ export class Utils {
           }
           const url = new URL(resp.finalUrl);
           const hostname = url.hostname;
+          // 只允许百科域：避免把 token 写到第三方（CurseForge / Modrinth）域
+          if (hostname !== "mcmod.cn" && !hostname.endsWith(".mcmod.cn")) {
+            console.warn(`[MCModder-Lite] 忽略非百科域的 yxd_token：${hostname}`);
+            succeed(resp);
+            return;
+          }
+          if (retry) {
+            // 已重试过一次仍是 token 响应：交回调用方，避免无限递归
+            succeed(resp);
+            return;
+          }
           const pathname = url.pathname;
           const index = pathname.lastIndexOf("/");
-          const path = "/" + pathname.slice(1, index);
+          const path = index > 0 ? pathname.slice(0, index) : "/";
           const yxdToken = yxdTokenList[0].slice(11, -1);
           GM_cookie.set(
             {
               name: "yxd_token",
               value: yxdToken,
               domain: hostname,
-              path: path,
+              path: path || "/",
+              secure: true,
+              // 站点以脚本形式下发 token，客户端是否读取尚未证实；
+              // 暂不设 HttpOnly，避免破坏站点自身的 token 刷新（待实测后再收紧）
+              httpOnly: false,
             },
             (err) => {
               if (err) {
@@ -1600,8 +1656,9 @@ export class Utils {
                 succeed(resp);
                 return;
               }
-              this.createRequest(config, message, silent, log).then(succeed, (error: unknown) =>
-                fail(error instanceof Error ? error.message : String(error)),
+              this.createRequest(config, message, silent, log, true).then(
+                succeed,
+                (error: unknown) => fail(error instanceof Error ? error.message : String(error)),
               );
             },
           );
@@ -1615,8 +1672,11 @@ export class Utils {
           if (logs.length >= Values.MAX_REQUEST_COUNT / 10) logs.shift();
           let content = `A${lastRequestTime}:${config.url}`;
           if (message) content += ` (${message})`;
-          // 请求体可能含编辑正文 / 搜索词，只保留截断片段，避免调试导出泄露全文
-          if (config.data) content += `(${String(config.data).slice(0, 200)})`;
+          // 只记录请求体大小，绝不记录内容（可能含编辑正文 / 搜索词）
+          if (config.data) {
+            const bodySize = typeof config.data === "string" ? config.data.length : "non-string";
+            content += ` [body:${bodySize}]`;
+          }
           logs.push(content);
           GM_setValue("mcmodderLogger", logs.join(";"));
         }

@@ -346,12 +346,19 @@ export class Mcmodder {
    */
   async switchProfile(uid: number): Promise<boolean> {
     const profile = uid ? this.configRepository.getAllProfile(uid) : undefined;
+    if (uid && (!profile || !profile.uuid)) {
+      Utils.commonMsg(
+        "切换账号失败：出于安全考虑，本版本不保存其他账号的登录凭据。请在站点上直接退出/登录，或先访问该账号主页后再试。",
+        false,
+      );
+      return false;
+    }
     const success = profile
       ? await Utils.setUuidCookie(profile.uuid, profile.expirationDate)
       : await Utils.deleteUuidCookie();
     if (!success) {
       Utils.commonMsg(
-        "切换账号失败：无法改写 `_uuid` cookie。该 cookie 为 HttpOnly cookie，需要油猴测试版 (Tampermonkey beta) 并在设置中允许脚本访问 HttpOnly cookie ~",
+        "切换账号失败：无法改写 `_uuid` cookie。请确认脚本管理器允许访问 HttpOnly cookie，或直接使用站点登录。",
         false,
       );
       return false;
