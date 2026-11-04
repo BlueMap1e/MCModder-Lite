@@ -125,6 +125,14 @@ html.dark .top-main .more-info .separate-li {
   border-bottom-color: transparent;
 }
 
+/* 页头右上 .info 容器：通用 .info 规则（暗1底 + 边框）是为侧栏挂件设计的，
+   用在页头上比抬升页头带（暗2）更深，形成一块「凹陷黑底」（用户实测）。
+   页头处改回透明融入页头带；侧栏同名 .info 不在 .top-main 内，不受影响。 */
+html.dark .top-main .info {
+  background-color: transparent;
+  border-color: transparent;
+}
+
 html.dark #wp.wp.fwp a {
   color: var(--mcmodder-color-text-dark1);
 }
@@ -983,14 +991,40 @@ html.dark body#nv_forum #postlist table td {
   background-color: var(--mcmodder-color-background-dark2);
 }
 
-html.dark body#nv_forum .pls .xlc li a,
-html.dark body#nv_forum .pls .xlc a,
 html.dark body#nv_forum .pls .imicn a {
   background-color: transparent;
   border-color: transparent;
   filter: invert(0.85);
   will-change: filter;
   transform: translate3d(0, 0, 0);
+}
+
+/* 串个门 / 发消息 / 加好友按钮：站点雪碧图 static/style/bg.png 实际仅 50x99，
+   而站点 CSS 定位 -1px -420px 越界回绕，贴出白色渐变碎片——日夜间都呈无意义
+   灰方块（探针像素取证），文字又被 text-indent:-11988px 隐藏，图标已不存在。
+   夜间还原文字标签（宽度自适应、跟随文字色）；日间站点原生外观不动。 */
+html.dark body#nv_forum .pls .xlc li,
+html.dark body#nv_forum .pls .xlc a {
+  width: auto;
+  height: auto;
+}
+
+html.dark body#nv_forum .pls .xlc a {
+  background-image: none;
+  background-color: transparent;
+  border-color: transparent;
+  text-indent: 0;
+  font-size: 12px;
+  line-height: 20px;
+  white-space: nowrap;
+  color: var(--mcmodder-color-text-dark1);
+  filter: none;
+  will-change: auto;
+  transform: none;
+}
+
+html.dark body#nv_forum .pls .xlc li + li {
+  margin-left: 8px;
 }
 
 html.dark body#nv_forum #thread_subject,
@@ -1031,9 +1065,12 @@ html.dark body#nv_forum #postlist .ad .plc {
   border-color: var(--mcmodder-color-background-dark3);
 }
 
+/* 头像列 td.pls 被站点写成透明（单元格内联 style="background:none"，露出表格
+   暗1底，与内容列暗2形成色差——用户实测「头像列不协调黑块」）。内联样式压过
+   一切非 !important 声明，此处必须同强度反制才能生效。 */
 html.dark body#nv_forum #postlist td.pls,
 html.dark body#nv_forum .pl td.pls {
-  background-color: var(--mcmodder-color-background-dark2);
+  background-color: var(--mcmodder-color-background-dark2) !important;
 }
 
 html.dark body#nv_forum .pnpost,
@@ -1303,6 +1340,17 @@ html.dark .ntc_l {
    mod=medal、mod=spacecp&ac=credit 与 mod=task）的站点遗留浅色底。
    页面文字色经 body 继承已是浅色，以下背景不压暗即浅字浅底（探针实测）。 ===== */
 
+/* 任务页图片（task.gif 日历图标、rewardless.gif 奖励按钮）是白色系位图，
+   夜间刺眼（用户实测）；色都烤死在图里，夜间整体降不透明度最稳妥。
+   rewardless 浅灰底白字更亮，单独压得更低。 */
+html.dark img[src*="static/image/task/"] {
+  opacity: 0.7;
+}
+
+html.dark img[src*="static/image/task/rewardless"] {
+  opacity: 0.55;
+}
+
 /* Discuz 全站斑马行工具类（common.css .alt, .alt th, .alt td 浅灰） */
 html.dark .alt,
 html.dark .alt th,
@@ -1412,10 +1460,17 @@ html.dark #e_body.edt .area {
   background-color: var(--mcmodder-color-background-dark2);
 }
 
-/* 帖子标题链接 .xst 与热帖/置顶日期：站点写死紫色，深底上对比不足；
-   已读链接由上方 a:visited 规则接管，读写区分仍然保留 */
-html.dark a.s.xst {
-  color: var(--mcmodder-color-link);
+/* 帖子标题链接 .xst：旧规则用链接蓝，但列表页里被本文件更早的
+   html.dark body#nv_forum #threadlist a（2 个 ID，正文色）压过，实际渲染为
+   近白正文色，整列刺眼（用户实测）。改为次要文字色并带上同等 ID 强度，
+   已读再降一档保留读写区分；站长内联标色（style="color:#…"）的标题不受影响。 */
+html.dark a.s.xst,
+html.dark body#nv_forum #threadlist a.s.xst {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+html.dark body#nv_forum #threadlist a.s.xst:visited {
+  color: var(--mcmodder-color-text-dark3);
 }
 html.dark .hottiebox .category_newlist li a {
   color: var(--mcmodder-color-text-dark1) !important;
