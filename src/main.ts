@@ -39,6 +39,41 @@ import bbsCss from "./css/bbs.css?raw";
       } else {
         document.documentElement.classList.remove("dark");
       }
+      // 夜↔日切换（含跨标签页）时编辑器 iframe 的注入样式要跟着翻面；
+      // MutationObserver 只监听 childList，类变化不会触发，须在此重同步
+      syncEditorIframes();
+    };
+    // Discuz 高级发帖的富文本编辑器在 iframe（#e_iframe）里，父页样式进不去，
+    // 需要往它的 contentDocument 注入夜间配色。色值须与 bbs.css 的
+    // --mcmodder-color-background-dark2 / --mcmodder-color-text 保持一致。
+    // 编辑器文档可能在首秒之后才就绪（此前用 documentElement 上的标记会把
+    // about:blank 空文档误判为已处理），故以注入的 style 元素为幂等标记，
+    // 并随 cleanBbsElements（观察者回调）反复重试。
+    // 仅夜间注入；日间反向幂等——移除已注入样式（否则日间编辑器残留深色底）。
+    const syncEditorIframes = () => {
+      const isNight = document.documentElement.classList.contains("dark");
+      document.querySelectorAll("iframe#e_iframe").forEach((frame) => {
+        const el = frame as HTMLIFrameElement;
+        // 编辑器切换富文本/源码模式会整文档重建 iframe 内容，load 事件逐次重试；
+        // 绑定标记挂在 iframe 元素上（元素本身跨文档重建存续）
+        if (el.dataset.mcmodderSync !== "1") {
+          el.dataset.mcmodderSync = "1";
+          el.addEventListener("load", () => syncEditorIframes());
+        }
+        const doc = el.contentDocument;
+        if (!doc?.body) return;
+        const existing = doc.getElementById("mcmodder-bbs-editor-dark");
+        if (!isNight) {
+          if (existing) existing.remove();
+          return;
+        }
+        if (existing) return;
+        const style = doc.createElement("style");
+        style.id = "mcmodder-bbs-editor-dark";
+        style.textContent =
+          "body { background-color: #242424 !important; color: #e2e8f0 !important; }";
+        (doc.head ?? doc.documentElement).appendChild(style);
+      });
     };
     updateClass(settings);
     GM_addValueChangeListener(
@@ -134,30 +169,8 @@ import bbsCss from "./css/bbs.css?raw";
             }
           });
       };
-      // Discuz 高级发帖的富文本编辑器在 iframe（#e_iframe）里，父页样式进不去，
-      // 需要往它的 contentDocument 注入夜间配色。色值须与 bbs.css 的
-      // --mcmodder-color-background-dark2 / --mcmodder-color-text 保持一致。
-      // 编辑器文档可能在首秒之后才就绪（此前用 documentElement 上的标记会把
-      // about:blank 空文档误判为已处理），故以注入的 style 元素为幂等标记，
-      // 并随 cleanBbsElements（观察者回调）反复重试。
-      const syncEditorIframes = () => {
-        document.querySelectorAll("iframe#e_iframe").forEach((frame) => {
-          const el = frame as HTMLIFrameElement;
-          // 编辑器切换富文本/源码模式会整文档重建 iframe 内容，load 事件逐次重试；
-          // 绑定标记挂在 iframe 元素上（元素本身跨文档重建存续）
-          if (el.dataset.mcmodderSync !== "1") {
-            el.dataset.mcmodderSync = "1";
-            el.addEventListener("load", () => syncEditorIframes());
-          }
-          const doc = el.contentDocument;
-          if (!doc?.body || doc.getElementById("mcmodder-bbs-editor-dark")) return;
-          const style = doc.createElement("style");
-          style.id = "mcmodder-bbs-editor-dark";
-          style.textContent =
-            "body { background-color: #242424 !important; color: #e2e8f0 !important; }";
-          (doc.head ?? doc.documentElement).appendChild(style);
-        });
-      };
+      // Discuz 高级发帖的富文本编辑器在 iframe（#e_iframe）里：注入/移除夜间配色
+      // 由 initBbsDarkMode 作用域上的 syncEditorIframes 统一处理（夜间感知、双向幂等）
       cleanBbsElements();
       setTimeout(cleanBbsElements, 100);
       setTimeout(cleanBbsElements, 500);

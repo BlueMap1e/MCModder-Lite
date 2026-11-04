@@ -318,7 +318,7 @@ html.dark .f_c {
 }
 
 html.dark #fastpostmessage {
-  background-color: var(--mcmodder-color-background);
+  background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);
   border: 1px solid var(--mcmodder-color-background-dark3);
 }
@@ -338,11 +338,13 @@ html.dark .bar {
   color: var(--mcmodder-color-text-dark2);
 }
 
+/* 输入框用抬升面而非页底色：多个页面（如个人资料）表单区背景透明，
+   页底色会让输入框与页面融为一体（用户实测）；亮面输入框对应日间白底语义 */
 html.dark input[type="text"],
 html.dark input[type="password"],
 html.dark select,
 html.dark textarea {
-  background-color: var(--mcmodder-color-background);
+  background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);
   border: 1px solid var(--mcmodder-color-background-dark3);
 }
@@ -398,14 +400,16 @@ html.dark .p_pop {
   box-shadow: 0 4px 6px -1px var(--mcmodder-color-bbs-shadow);
 }
 
+/* 发表主题悬浮菜单：站点 .p_pop a 带 !important 写死 #333，夜间低对比（用户实测）；
+   同强度反制，作用域带 html.dark 收紧 */
 html.dark .p_pop a {
-  color: var(--mcmodder-color-text);
+  color: var(--mcmodder-color-text) !important;
   border-bottom: 1px solid var(--mcmodder-color-background-dark3);
 }
 
 html.dark .p_pop a:hover {
   background-color: var(--mcmodder-color-background-dark2);
-  color: var(--mcmodder-color-accent);
+  color: var(--mcmodder-color-accent) !important;
 }
 
 html.dark .sign {
@@ -1427,6 +1431,8 @@ html.dark .fwin .flb {
 html.dark .fwin .flb em,
 html.dark .fwin .flb a {
   color: var(--mcmodder-color-text);
+  /* 站点 .m_c .flb em 写死白色 text-shadow，夜间浅色字上叠白晕显模糊（用户实测） */
+  text-shadow: none;
 }
 html.dark .fwin .flb a:hover {
   color: var(--mcmodder-color-link);
@@ -1462,6 +1468,31 @@ html.dark a:visited:hover {
 /* 高级发帖的 Discuz 编辑器容器（非浮窗路径；iframe 内部由 main.ts 注入） */
 html.dark #e_body.edt .area {
   background-color: var(--mcmodder-color-background-dark2);
+}
+
+/* 编辑器工具栏（.edt .bar）：按钮图标是透明底深色位图（editor.gif），站点给每个
+   按钮写死 #f2f2f2 近白边框、部分下拉写死白底（.edt .b2r a.dp、card_btn.png 白盘），
+   夜间成为白框网格且图标没入深底（用户实测）。对按钮整只反相一步到位：
+   深色图标变亮、近白边框变暗（#f2f2f2 → ≈#3b3b3b）、白底下拉变深；
+   文字预补偿为深色，反相后呈浅色。滤镜变量与 iframe 注入色同源维护。 */
+html.dark .edt .bar a {
+  filter: var(--mcmodder-color-bbs-editor-filter);
+  color: #1a1a1a;
+}
+
+/* 主题分类下拉（.ftid a）在表单区不在 .bar 内，且站点带 !important 文字色，
+   单独用显式配色反制；站点还平铺了白色 newarow.gif 箭头贴图，必须去掉，
+   否则白图叠在深色底上（背景色改了也没用），下拉提示用 ::after 补回 */
+html.dark .ftid a {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text) !important;
+}
+
+html.dark .ftid a::after {
+  content: " ▾";
+  color: var(--mcmodder-color-text-dark2);
 }
 
 /* 帖子标题链接 .xst：旧规则用链接蓝，但列表页里被本文件更早的
