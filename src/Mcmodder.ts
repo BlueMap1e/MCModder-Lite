@@ -725,11 +725,11 @@ export class Mcmodder {
       // 去除正文异常背景
       if (!this.configRepository.getSettings("disableAutoStyleFix")) {
         textArea
-          .find("*")
+          .find("[style]")
           .filter((_i, c) => $(c).css("background-color") === "rgb(255, 255, 255)")
           .css("background-color", "");
         textArea
-          .find("span")
+          .find("span[style]")
           .filter((_i, c) => $(c).css("color") === "rgb(0, 0, 0)")
           .css("color", "");
       }
@@ -741,9 +741,9 @@ export class Mcmodder {
       });
     }
 
-    // 夜间模式正文颜色自动适配
+    // 夜间模式正文颜色自动适配：只处理带内联 color 的节点，避免遍历整棵正文
     if (!this.configRepository.getSettings("disableAutoStyleFix")) {
-      textArea.find("*").each((_, _e) => {
+      textArea.find("[style]").each((_, _e) => {
         const e = _e as HTMLElement;
         const css = (e as HTMLElement).style.getPropertyValue("color");
         if (css) {
