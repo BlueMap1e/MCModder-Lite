@@ -85,7 +85,15 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
   styles.
 - Gate always-on observers by page / selector and give them a timeout; a document-level
-  observer that lives for the whole session is a bug.
+  observer that lives for the whole session is a bug. **Exception — `center.mcmod.cn` is an
+  SPA**: its content (including `.common-comment-block`) renders only after data fetches, so
+  any gate evaluated at `main()` time misses it; the editor observer must attach
+  unconditionally there (fixed 2026-11-06: the static gate left the lazy comment editor of
+  the message board permanently un-themed). Same caveat applies to any future "only if X
+  exists now" check. Corollary: when several defensive skips guard the same call path
+  (missing-global guard + attach gate + readiness bail), re-read the whole path — each is
+  correct alone, together they multiply silent-failure modes; a bail that can be permanent
+  must either retry or log loudly.
 
 ## Maintenance notes (2026-11)
 
