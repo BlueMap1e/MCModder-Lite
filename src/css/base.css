@@ -3272,3 +3272,50 @@ html.dark.mcmodder-tools-page legend {
 html.dark.mcmodder-tools-page fieldset {
   border-color: var(--mcmodder-color-background-dark3);
 }
+
+/* tctool（神秘时代研究助手）：未解锁要素行写死浅灰底 #f3f3f3 + #999 字，
+   深底上白花花一片且有「已选中」的误导感。可用行为透明深底（无需处理） */
+html.dark.mcmodder-tools-page .tctool-aspect-list > li {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .tctool-aspect-list > li.unavail {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text-dark2);
+}
+
+/* 工具页导航栏（成就/黄历/神秘代码/遇事不决等）：.mbx 面包屑的白色面板来自
+   mc_main.gif 位图拼片（.home/.line/.mbx_left/.mbx_right 同族），.class_menu
+   页签白底 #fcfcfc + li a 深字 #222。位图只能整块撤掉换深色面 */
+html.dark.mcmodder-tools-page .mbx,
+html.dark.mcmodder-tools-page .mbx .home,
+html.dark.mcmodder-tools-page .mbx .line,
+html.dark.mcmodder-tools-page .mbx .mbx_left,
+html.dark.mcmodder-tools-page .mbx .mbx_right {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.dark.mcmodder-tools-page .class_menu {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .class_menu li {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .class_menu li a {
+  color: var(--mcmodder-color-text-dark1);
+}
+/* 活动页签的站点橙色强调色在深底可读，保留 */
+
+/* 工具页短评（topic.frame.css）：回复引用块写死浅黄底 #fff7d9 + 虚线 #d9be53，
+   深底刺眼；#ReplyFloor 楼层号绿底绿字；.T_title 楼层标题 #444 深底不可见 */
+html.dark.mcmodder-tools-page .ReplyBlock {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page #ReplyFloor {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+html.dark.mcmodder-tools-page .topic .T_title {
+  color: var(--mcmodder-color-text);
+}
