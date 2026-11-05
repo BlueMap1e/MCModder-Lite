@@ -3147,3 +3147,110 @@ html.dark #edui1_toolbarboxouter.edui-editor-toolbarboxouter {
   );
   border-bottom-color: var(--mcmodder-color-primary-light);
 }
+
+/* 实用工具页（/tools/*，cbcreator 等自带 matrix 模板的子应用）：模板把内容面板
+   写死浅色（#content #eee、#breadcrumb #fff、.widget-box #f9f9f9、.modal-header
+   #efefef、.bx-wrapper #fff），脚本挂载后继承的浅色文字（#ddd）贴浅底不可读
+   （用户报告的「背景为白、字体模糊」）。选择器用 ToolsPageInit 打的
+   mcmodder-tools-page 标记限定——这些类名（.modal-header / .bx-wrapper /
+   .news_block）在主站其他页面也有同名 Bootstrap 类，不能放任全局。 */
+html.dark.mcmodder-tools-page body > #content {
+  background-color: var(--mcmodder-color-background);
+}
+html.dark.mcmodder-tools-page #breadcrumb {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-bottom-color: var(--mcmodder-color-background-dark2);
+}
+html.dark.mcmodder-tools-page #breadcrumb a,
+html.dark.mcmodder-tools-page #breadcrumb a:hover {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark.mcmodder-tools-page .widget-box {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark.mcmodder-tools-page .widget-title {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.dark.mcmodder-tools-page .widget-title .nav-tabs li a {
+  color: var(--mcmodder-color-text-dark2);
+  border-left-color: var(--mcmodder-color-background-dark2);
+  border-right-color: var(--mcmodder-color-background-dark2);
+  /* 模板写死 text-shadow: 0 1px 0 #fff（白色光晕），深底上即「字体模糊」 */
+  text-shadow: none;
+}
+html.dark.mcmodder-tools-page .widget-title .nav-tabs li a:hover {
+  color: var(--mcmodder-color-text);
+}
+/* 活动页签模板以 !important 写死浅底深字，需同强度反制 */
+html.dark.mcmodder-tools-page .widget-title .nav-tabs li.active a {
+  background-color: var(--mcmodder-color-background-dark1) !important;
+  color: var(--mcmodder-color-text) !important;
+}
+html.dark.mcmodder-tools-page .modal-header {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.dark.mcmodder-tools-page .modal-header h3 {
+  color: var(--mcmodder-color-text);
+  text-shadow: none;
+}
+html.dark.mcmodder-tools-page .bx-wrapper {
+  background-color: var(--mcmodder-color-background-dark1);
+  /* bxslider 默认 border: 5px solid #fff + box-shadow #ccc，深底上一圈白框 */
+  border-color: var(--mcmodder-color-background-dark2);
+  box-shadow: none;
+}
+
+/* 工具页表单控件与表格（cbcreator 等自带模板，同 marker 作用域）：
+   模板写死浅色，夜间统一压暗。 */
+
+/* 输入框：模板规则 input[type=text]{background:#fff} 特异性 (0,1,1) 压过全局裸
+   input 夜间规则 (0,0,1) → 未聚焦白底；聚焦又命中 .form-control:focus 深底，
+   两态分裂。这里用 html.dark.mcmodder-tools-page 前缀抬高特异性，两态统一深色 */
+html.dark.mcmodder-tools-page input,
+html.dark.mcmodder-tools-page textarea,
+html.dark.mcmodder-tools-page select {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: var(--mcmodder-color-text);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+/* 表格悬浮行：cbcreator.css 裸 tr:hover{background:#f6f6f6} 与 bootstrap
+   .table-hover tbody tr:hover > td{background:#f5f5f5}，深底上悬浮白块 */
+html.dark.mcmodder-tools-page tr:hover,
+html.dark.mcmodder-tools-page tr:hover > td,
+html.dark.mcmodder-tools-page tr:hover > th {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+/* bootstrap-switch：中段标签与 default 手柄写死 #fff/#eee 深色字，深底不可读。
+   primary/info/success/warning/danger 彩色手柄白字自身可读，保持不动 */
+html.dark.mcmodder-tools-page .bootstrap-switch {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .bootstrap-switch .bootstrap-switch-label {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+}
+html.dark.mcmodder-tools-page
+  .bootstrap-switch
+  .bootstrap-switch-handle-off.bootstrap-switch-default,
+html.dark.mcmodder-tools-page
+  .bootstrap-switch
+  .bootstrap-switch-handle-on.bootstrap-switch-default {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+}
+/* 物品选择下拉列表：模板写死 #fff */
+html.dark.mcmodder-tools-page .select-list {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+/* tellraw 预览的书页贴图（.json-block 的 book.png）是浅色位图：乘深灰压暗。
+   background-blend-mode 只混合本元素背景，不影响子元素——预览文字颜色是
+   tellraw 颜色预览的一部分（用户可选 fontColor_*），不能动 */
+html.dark.mcmodder-tools-page .json-block {
+  background-color: #666;
+  background-blend-mode: multiply;
+}
+html.dark.mcmodder-tools-page .json-page {
+  color: var(--mcmodder-color-text-dark2);
+}

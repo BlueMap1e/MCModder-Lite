@@ -18,6 +18,7 @@ import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
 import { SandboxInit } from "../init/SandboxInit";
 import { TabEditInit } from "../init/TabEditInit";
+import { ToolsPageInit } from "../init/ToolsPageInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
 import { VersionListInit } from "../init/VersionListInit";
@@ -48,6 +49,7 @@ export class InitLoader {
       new CenterInit(parent),
       new AdminInit(parent),
       new CommentInit(parent),
+      new ToolsPageInit(parent),
     );
   }
 }
