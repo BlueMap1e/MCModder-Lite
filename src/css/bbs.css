@@ -415,6 +415,18 @@ html.dark .p_pop a:hover {
   color: var(--mcmodder-color-accent) !important;
 }
 
+/* 编辑器其余弹层：.p_pop 家族已夜间化，漏网的三族仍是站点原生白底——
+   .p_pof（链接/图片/附件弹层，点 Url / 图片 / 附件按钮唤起，全屏编辑器
+   与浮窗共用同一套 Discuz 弹层）、.sllt（表情选择面板）、#draftlist_menu
+   （草稿列表，无类名）。弹层内的输入框已由 .px 夜间规则覆盖 */
+html.dark .p_pof,
+html.dark .sllt,
+html.dark #draftlist_menu {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+
 html.dark .sign {
   color: var(--mcmodder-color-text-dark3);
   border-top: 1px dashed var(--mcmodder-color-background-dark3);
