@@ -56,7 +56,9 @@ const userscriptMeta = {
     "https://api.mcmod.cn/*",
     "https://www.mcmod.cn/v2/*",
     "https://play.mcmod.cn/add/*",
-    "https://www.mcmod.cn/tools/*/*",
+    // 注意：不要排除 https://www.mcmod.cn/tools/*/* —— 实用工具页（成就生成器、命令方块
+    // 指令生成器等 7 个）与主站共用页头和全局夜间调色板，脚本挂载即可生效。
+    // 该排除规则继承自上游 1.x，曾导致工具页完全不挂载（2026-11-06 移除）。
     "https://*.mcmod.cn/ueditor/*",
     "https://www.mcmod.cn/script/*",
     "https://www.mcmod.cn/item/aspects/*",
