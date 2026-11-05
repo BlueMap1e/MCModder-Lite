@@ -52,7 +52,7 @@ export class VerifyPageInit extends Init {
       verifyStateTd.each((_, _entry) => {
         const entry = $(_entry);
         const verifyState = ["", "", "", "", ""];
-        const s = entry.find("p:first-child()");
+        const s = entry.find("p:first-child");
         const t = s.text();
         stateLang.forEach((e) => {
           if (t === e[1])
@@ -61,7 +61,7 @@ export class VerifyPageInit extends Init {
             );
         });
         verifyState[0] = s.get(0).outerHTML;
-        entry.find("p:not(p:first-child())").each((_, e) => {
+        entry.find("p:not(p:first-child)").each((_, e) => {
           const c = e.textContent.split(": "),
             h = e.outerHTML.replaceAll(c[0] + ": ", "");
           if (c[0] === PublicLangData.verify_list.verifynum)
@@ -103,7 +103,7 @@ export class VerifyPageInit extends Init {
           ) {
             tr.attr("edit-type", index.toString());
             counter[index][0]++;
-            const t = tr.find("td:nth-child(4) p:first-child() i").attr("class");
+            const t = tr.find("td:nth-child(4) p:first-child i").attr("class");
             stateIcon.forEach((e, i) => {
               if (t.includes(e)) counter[index][i]++;
             });

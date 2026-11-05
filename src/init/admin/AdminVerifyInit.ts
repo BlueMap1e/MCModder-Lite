@@ -153,9 +153,9 @@ export class AdminVerifyInit extends AdminBaseInit {
         if (!this.verifyFrame) return;
         this.verifyFrame.empty().removeClass("mcmodder-loading-container");
         $(mutation.target).contents().appendTo(this.verifyFrame);
-        this.verifyFrame.find("> p:first-child()").next().hide();
+        this.verifyFrame.find("> p:first-child").next().hide();
         this.verifyFrame
-          .find("> p:first-child()")
+          .find("> p:first-child")
           .append("<span>[展开]</span>")
           .attr("hide", "1")
           .click((e) => {

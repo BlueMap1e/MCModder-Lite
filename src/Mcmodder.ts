@@ -680,7 +680,7 @@ export class Mcmodder {
     }
 
     // 个人菜单（旧「UI 美化」开关已移除，以下行为恒启用）
-    const insertPos = $(".header-user .header-layer-block:first-child()");
+    const insertPos = $(".header-user .header-layer-block:first-child");
     if (insertPos.length) {
       const myProfile = this.configRepository.getAllProfile() as Partial<Profile>;
       // 头像地址与昵称来自站点资料，按不可信内容处理：URL 过 safeURL、文本转义

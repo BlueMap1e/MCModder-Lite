@@ -454,7 +454,7 @@ export class EditorInit extends Init {
       if ($(".edit-user-alert.locked").length) {
         // 改动说明提前
         const desc = $(
-          ".col-lg-12.left .common-rowlist-block:last-child() .text p:last-child()",
+          ".col-lg-12.left .common-rowlist-block:last-child .text p:last-child",
         ).text();
         $("<p>")
           .text("改动说明: " + desc)

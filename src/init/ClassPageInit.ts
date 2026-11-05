@@ -227,7 +227,7 @@ export class ClassPageInit extends Init {
           const name = a.textContent;
           if (id && name) this.parent.utils.updateClassNameIDMap(name, id);
 
-          const title = target.find("span[data-toggle=tooltip]:first-child()").text();
+          const title = target.find("span[data-toggle=tooltip]:first-child").text();
           if (title.includes("前置Mod")) {
             newDependences.push(Utils.abstractIDFromURL(href, "class"));
           } else if (title.includes("依赖")) {
@@ -309,7 +309,7 @@ export class ClassPageInit extends Init {
       );
       $("<div>")
         .attr("class", "mcmodder-info-right")
-        .insertAfter(".class-info-left .col-lg-12:first-child()");
+        .insertAfter(".class-info-left .col-lg-12:first-child");
       $(".class-info-right").children().clone().appendTo(".mcmodder-info-right");
       const src = $(".class-info-left").attr("class", "class-info-left mcmodder-class-source-info");
       src

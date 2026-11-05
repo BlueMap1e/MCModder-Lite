@@ -66,13 +66,13 @@ export class ItemPageInit extends Init {
     if (autoFoldTable) {
       $(".table.table-bordered.text-nowrap tbody")
         .filter((_, c) => $(c).children().length >= autoFoldTable)
-        .find("tr:first-child() th:last-child()")
+        .find("tr:first-child th:last-child")
         .append(' [<a class="collapsetoggle">隐藏</a>]')
         .find(".collapsetoggle")
         .click((e) => {
           const button = $(e.currentTarget);
           const container = button.parent().parent().parent();
-          const target = container.find("tr:not(tr:first-child())");
+          const target = container.find("tr:not(tr:first-child)");
           if (button.text() === "显示") {
             target.show();
             button.text("隐藏");
@@ -125,8 +125,8 @@ export class ItemPageInit extends Init {
       $("table.table-bordered.righttable").each((_, e) => {
         const target = $(e);
         target.find("tr").first().remove();
-        const mainTr = target.find("tr:first-child()");
-        target.find("tr:not(tr:first-child())").each((_, tr) => {
+        const mainTr = target.find("tr:first-child");
+        target.find("tr:not(tr:first-child)").each((_, tr) => {
           mainTr.append(tr.innerHTML);
           tr.remove();
         });

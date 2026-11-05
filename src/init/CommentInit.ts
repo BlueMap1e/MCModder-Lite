@@ -219,7 +219,7 @@ export class CommentInit extends Init {
     // 无限制留言板
     const commentClassName = "common-comment-block lazy";
     const messageCenter =
-      $(".center-block:last-child()").get(0) ||
+      $(".center-block:last-child").get(0) ||
       $(".common-comment-block.lazy .comment-editor").get(0) ||
       $(".author-row").get(0);
     const messageBoard = document.getElementsByClassName(commentClassName);

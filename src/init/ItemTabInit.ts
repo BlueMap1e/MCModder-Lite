@@ -56,7 +56,7 @@ export class ItemTabInit extends Init {
       e.innerHTML = '<th class="title item-table-id">合成表 ID</th>' + e.innerHTML;
     });
     $("div.item-table-frame > table.item-table-block > tbody > tr").each((_, e) => {
-      const idTd = $('<td class="text item-table-id"><span class="mcmodder-slim-dark">' + $(e).find("td.text.item-table-remarks ul.table-tool a:first-child()").first().prop("href").split("/edit/")[1].split("/")[0] + '</span></td>').appendTo(e);
+      const idTd = $('<td class="text item-table-id"><span class="mcmodder-slim-dark">' + $(e).find("td.text.item-table-remarks ul.table-tool a:first-child").first().prop("href").split("/edit/")[1].split("/")[0] + '</span></td>').appendTo(e);
       e.insertBefore(idTd[0], e.childNodes[0]);
     })
     $("div.item-table-frame > table.item-table-block td.text.item-table-gui").each((_, e) => {
@@ -143,7 +143,7 @@ export class ItemTabInit extends Init {
       $(p).html(`<span class="mcmodder-recipe-arrow">${guiID ? ((x < 0) ? '<span class="mcmodder-tab-item-icon" style="background-image: url(//i.mcmod.cn/item/icon/32x32/' + Math.floor(guiID / 1e4) + '/' + guiID + '.png); width: 32px; height: 32px; display: inline-block; position: absolute; left: 12px; background-size: cover;"></span>' : '<span class="mcmodder-tab-item-icon" style="background-image: url(' + McmodderValues.assets.sprite + '); background-position: -' + x + 'px -' + y + 'px; width: 34px; height: 34px; display: inline-block; position: absolute; left: 12px;"></span>') : ''}</span>`);
     });
     $("div.item-table-frame > table.item-table-block td.text.item-table-count span.noecho").remove();
-    $("fieldset.power_area > p:not(fieldset.power_area > p:last-child())").append(" ·");
+    $("fieldset.power_area > p:not(fieldset.power_area > p:last-child)").append(" ·");
     $(".item-table-tips").remove(); */
   }
 }
