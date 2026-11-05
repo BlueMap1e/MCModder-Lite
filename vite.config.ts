@@ -122,6 +122,9 @@ const devMonkeyClientCacheBust: Plugin = {
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  // GreasyFork 要求用户脚本不得混淆或压缩：GF_UNMINIFIED=1 时产出未压缩变体，
+  // 供向 GreasyFork 提交使用；正常构建保持 esbuild 压缩不变。
+  build: { minify: process.env.GF_UNMINIFIED ? false : "esbuild" },
   plugins: [
     devPrivateNetworkAccess,
     devMonkeyClientCacheBust,
