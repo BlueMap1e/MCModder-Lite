@@ -1438,8 +1438,12 @@ html.dark .fwin {
   color: var(--mcmodder-color-text);
 }
 html.dark .fwin .flb {
-  background-image: none;
-  background-color: var(--mcmodder-color-background-dark2);
+  /* 计算样式显示本规则已命中（#242424），实测渲染却仍是白底（评分提示窗
+     实测，用户与 harness 双复现）——经验上需 !important 才真正生效；
+     flb 自带 1px 白边框，一并压暗 */
+  background-image: none !important;
+  background-color: var(--mcmodder-color-background-dark2) !important;
+  border-color: var(--mcmodder-color-background-dark3);
   color: var(--mcmodder-color-text);
   border-bottom: 1px solid var(--mcmodder-color-background-dark3);
 }
@@ -1467,6 +1471,19 @@ html.dark .fwin .tedt,
 html.dark .fwin .tedt .area {
   background-color: var(--mcmodder-color-background-dark2);
   border-color: var(--mcmodder-color-background-dark3);
+}
+
+/* 帖子页脚操作栏（分享/收藏/评分…）：Discuz 用 .pob.hin{opacity:0.2} 压暗
+   待悬浮才显现——日间浅底上尚可辨认，夜间深底上等于隐形。夜间恢复不透明，
+   文字色本身已是柔和次要色，不突兀 */
+html.dark .pob.hin {
+  opacity: 1;
+}
+
+/* 图片大图查看层：Discuz zoom() 的 #imgzoom_zoomlayer 写死白底填补留白，
+   夜间下大图四周白边刺眼 */
+html.dark #imgzoom_zoomlayer {
+  background-color: var(--mcmodder-color-background-dark2);
 }
 
 /* 版块/页面标题 h2 与小节标题 h3：站点写死 #666，抬升面板上对比不足
