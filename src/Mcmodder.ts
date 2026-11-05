@@ -110,6 +110,9 @@ export class Mcmodder {
 
   private callEditor(attempt = 0) {
     const useAdvanced = !!$(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href);
+    Utils.mmDebug(
+      `callEditor#${attempt} editor=${typeof editor} iframe=${typeof editor !== "undefined" ? String(!!editor?.iframe) : "-"}`,
+    );
     setTimeout(() => {
       // 站点主编辑器挂在全局 editor 上；部分场景（如 center 留言板）赋值时机
       // 或变量名不同，兜底取 UE.getEditor 登记的最后一个实例
@@ -117,16 +120,19 @@ export class Mcmodder {
         (typeof editor !== "undefined" && editor) ||
         (window as any).UE?.instances?.[(window as any).UE.instances.length - 1];
       if (!editorInstance) {
+        Utils.mmDebug("callEditor: editorInstance 缺失");
         console.warn("[MCModder-Lite] 未找到编辑器实例，跳过增强。");
         return;
       }
       // iframe / document 由 UEditor 异步渲染，慢页面上 300ms 时可能尚未就绪
       // （center 留言板实测：静默跳过后永不重试，夜间化随之失效）——轮询等待
       if (!editorInstance.iframe || !editorInstance.document) {
+        Utils.mmDebug(`callEditor: iframe 未就绪（第 ${attempt} 轮），重试`);
         if (attempt < 20) this.callEditor(attempt + 1);
         else console.warn("[MCModder-Lite] 编辑器 iframe 就绪超时，跳过增强。", editorInstance);
         return;
       }
+      Utils.mmDebug("callEditor: 挂载 UEditor");
       try {
         if (useAdvanced) new AdvancedUEditor(editorInstance, this);
         else new UEditor(editorInstance, this);
@@ -151,6 +157,7 @@ export class Mcmodder {
         /_iframeholder$/.test((mutation.target as HTMLElement).id) &&
         mutation.addedNodes.length
       ) {
+        Utils.mmDebug("观察者命中 #" + (mutation.target as HTMLElement).id);
         this.callEditor();
         this.generalEditorObserver.disconnect();
         return;
@@ -805,21 +812,28 @@ export class Mcmodder {
     $(`<div class="mcmodder-rednum">`).appendTo("#mcmodder-message-center");
     this.applyBellNotify();
 
-    if (typeof editor != "undefined") this.callEditor();
-    else if (
+    if (typeof editor != "undefined") {
+      Utils.mmDebug("main: editor 已存在，直接 callEditor");
+      this.callEditor();
+    } else if (
       document.querySelector("#edui1_iframeholder, #edui1, .edui-default, .common-comment-block") ||
+      window.location.hostname === "center.mcmod.cn" ||
       /\/(edit|add|sandbox)\//.test(window.location.pathname)
     ) {
       // 只有确实可能出现编辑器的页面才挂全文档观察者。
       // .common-comment-block 必须在列：资料页 / 个人空间的短评编辑器是懒创建的
-      // （聚焦输入区时才 UE.getEditor），页面加载时 #edui1 / .edui-default 均不存在，
-      // 漏掉它曾导致短评编辑器从未被夜间化——深色容器透出 iframe 里站点默认的
-      // 黑字黑光标，对比度极低（回归修复 2026-11-06）。观察者在编辑器出现后
-      // 自行 disconnect，编辑器创建时机不确定，不能设超时。
+      // （聚焦输入区时才 UE.getEditor），页面加载时 #edui1 / .edui-default 均不存在。
+      // center.mcmod.cn 必须无条件在列：个人中心是 SPA，主页内容（含短评块）在
+      // 数据拉取后才渲染——门控在 main() 时求值必然扑空，而留言板编辑器晚至
+      // 数秒后才懒加载，观察者一旦缺席便无人接管（回归修复 2026-11-06）。
+      // 观察者在编辑器出现后自行 disconnect，编辑器创建时机不确定，不能设超时。
       this.generalEditorObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
+      Utils.mmDebug("main: 观察者已挂载");
+    } else {
+      Utils.mmDebug("main: 门控未通过，观察者未挂载");
     }
 
     // TODO: 取消锁定导航栏
