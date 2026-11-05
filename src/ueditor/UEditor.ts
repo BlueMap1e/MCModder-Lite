@@ -101,14 +101,12 @@ export class UEditor {
    */
   protected init(editor: any) {
     const iframe = editor?.iframe;
-    Utils.mmDebug("init: 进入");
 
     this.outerFrame = $(iframe).parents("#editor-ueeditor").get(0) as HTMLElement;
     this.$outerFrame = $(this.outerFrame);
     this.innerFrame = $(iframe).parents("#edui1").get(0) as HTMLElement;
     this.$innerFrame = $(this.innerFrame);
     if (!this.outerFrame || !this.innerFrame) {
-      Utils.mmDebug(`init: 容器未就绪 outer=${!!this.outerFrame} inner=${!!this.innerFrame}`);
       console.warn("[MCModder-Lite] 编辑器外层 DOM 尚未就绪，跳过增强。");
       return;
     }
@@ -126,7 +124,6 @@ export class UEditor {
     this.$head = $(this.head || "");
     this.$body = $(this.body || "");
     if (!this.body || !this.document || !this.head) {
-      Utils.mmDebug("init: 正文 DOM 未就绪");
       console.warn("[MCModder-Lite] 编辑器正文 DOM 尚未就绪，跳过增强。");
       return;
     }
@@ -145,7 +142,6 @@ export class UEditor {
       // 而 UEditor 又在 iframe 内写死了 p { color:#333 }，于是出现深色底 + 深色字。
       e.$document?.find("html").toggleClass("dark", isDark);
     });
-    Utils.mmDebug(`init: 完成 css注入 dark=${isDark}`);
 
     // 弹窗内容 iframe 的样式注入整页挂一次即可，多个编辑器实例不会重复挂载
     UEditor.attachDialogStyleListener(this.parent);

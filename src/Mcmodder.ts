@@ -110,9 +110,6 @@ export class Mcmodder {
 
   private callEditor(attempt = 0) {
     const useAdvanced = !!$(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href);
-    Utils.mmDebug(
-      `callEditor#${attempt} editor=${typeof editor} iframe=${typeof editor !== "undefined" ? String(!!editor?.iframe) : "-"}`,
-    );
     setTimeout(() => {
       // 站点主编辑器挂在全局 editor 上；部分场景（如 center 留言板）赋值时机
       // 或变量名不同，兜底取 UE.getEditor 登记的最后一个实例
@@ -120,19 +117,16 @@ export class Mcmodder {
         (typeof editor !== "undefined" && editor) ||
         (window as any).UE?.instances?.[(window as any).UE.instances.length - 1];
       if (!editorInstance) {
-        Utils.mmDebug("callEditor: editorInstance 缺失");
         console.warn("[MCModder-Lite] 未找到编辑器实例，跳过增强。");
         return;
       }
       // iframe / document 由 UEditor 异步渲染，慢页面上 300ms 时可能尚未就绪
       // （center 留言板实测：静默跳过后永不重试，夜间化随之失效）——轮询等待
       if (!editorInstance.iframe || !editorInstance.document) {
-        Utils.mmDebug(`callEditor: iframe 未就绪（第 ${attempt} 轮），重试`);
         if (attempt < 20) this.callEditor(attempt + 1);
         else console.warn("[MCModder-Lite] 编辑器 iframe 就绪超时，跳过增强。", editorInstance);
         return;
       }
-      Utils.mmDebug("callEditor: 挂载 UEditor");
       try {
         if (useAdvanced) new AdvancedUEditor(editorInstance, this);
         else new UEditor(editorInstance, this);
@@ -157,7 +151,6 @@ export class Mcmodder {
         /_iframeholder$/.test((mutation.target as HTMLElement).id) &&
         mutation.addedNodes.length
       ) {
-        Utils.mmDebug("观察者命中 #" + (mutation.target as HTMLElement).id);
         this.callEditor();
         this.generalEditorObserver.disconnect();
         return;
@@ -812,10 +805,8 @@ export class Mcmodder {
     $(`<div class="mcmodder-rednum">`).appendTo("#mcmodder-message-center");
     this.applyBellNotify();
 
-    if (typeof editor != "undefined") {
-      Utils.mmDebug("main: editor 已存在，直接 callEditor");
-      this.callEditor();
-    } else if (
+    if (typeof editor != "undefined") this.callEditor();
+    else if (
       document.querySelector("#edui1_iframeholder, #edui1, .edui-default, .common-comment-block") ||
       window.location.hostname === "center.mcmod.cn" ||
       /\/(edit|add|sandbox)\//.test(window.location.pathname)
@@ -831,9 +822,6 @@ export class Mcmodder {
         childList: true,
         subtree: true,
       });
-      Utils.mmDebug("main: 观察者已挂载");
-    } else {
-      Utils.mmDebug("main: 门控未通过，观察者未挂载");
     }
 
     // TODO: 取消锁定导航栏

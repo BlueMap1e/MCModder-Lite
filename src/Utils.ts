@@ -4,7 +4,6 @@ import {
   GM_getValue,
   GM_setValue,
   GM_xmlhttpRequest,
-  unsafeWindow,
   type GmResponseEvent,
   type GmResponseType,
   type GmXmlhttpRequestOption,
@@ -132,21 +131,6 @@ export class Utils {
       tc2: configs.getSettings("themeColor2")!,
     };
   };
-
-  /**
-   * 临时调试：把编辑器挂载过程的标记写到页面侧的 `__mmEditorLog` 数组，
-   * 供用户在控制台读取（harness 无法复现 center 留言板场景时的取证通道）。
-   * 问题定位后整体移除。
-   */
-  static mmDebug(msg: string) {
-    try {
-      const w = unsafeWindow as unknown as { __mmEditorLog?: string[] };
-      if (!Array.isArray(w.__mmEditorLog)) w.__mmEditorLog = [];
-      w.__mmEditorLog.push(`+${Math.round(performance.now())}ms ${msg}`);
-    } catch {
-      /* 遥测失败不影响功能 */
-    }
-  }
 
   /** 将 `value` 限制在 `[min, max]` 区间内 */
   static clamp(value: number, min = 0, max = 1) {
