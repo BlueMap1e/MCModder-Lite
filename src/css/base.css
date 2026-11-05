@@ -3319,3 +3319,59 @@ html.dark.mcmodder-tools-page #ReplyFloor {
 html.dark.mcmodder-tools-page .topic .T_title {
   color: var(--mcmodder-color-text);
 }
+
+/* tctool：双击要素弹出的 jQuery UI 对话框，白底 #fff + titlebar #e9e9e9。
+   关闭钮是深色 base64 图标（tctool.css 内联），深底上隐形，用滤镜反相 */
+html.dark.mcmodder-tools-page .ui-dialog {
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+html.dark.mcmodder-tools-page .ui-dialog .ui-dialog-titlebar {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+}
+/* jquery-ui 的 .ui-widget-content 写死 color:#333，压过 .ui-dialog 上的继承 */
+html.dark.mcmodder-tools-page .ui-dialog .ui-dialog-content {
+  color: var(--mcmodder-color-text);
+}
+html.dark.mcmodder-tools-page .ui-dialog .ui-dialog-titlebar-close {
+  filter: invert(1);
+}
+
+/* 成就生成器的 spectrum 取色器：.sp-replacer #eee、.sp-container #ececec。
+   色板梯度（.sp-sat/.sp-val/.sp-hue）与预览色块（.sp-preview-inner）是功能
+   本体，不动 */
+html.dark.mcmodder-tools-page .sp-replacer {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .sp-container {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .sp-picker-container {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .sp-ddim {
+  filter: invert(1);
+}
+
+/* 遇事不决：.ItemMenu 页签 tools.frame.css 写死 #f9f9f9 底同色边框、
+   活动项 #222 深字；分页选中项 .Pbtn_on 被自家全站规则 background:
+   transparent !important 打掉底色、站点又给 #222 深字 → 同强度反制，
+   选中态给 dark2 面与亮字，比未选中的 #888 更醒目 */
+html.dark.mcmodder-tools-page .tools_block .ItemMenu {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark.mcmodder-tools-page .tools_block .ItemMenu li {
+  color: var(--mcmodder-color-text-dark2);
+}
+html.dark.mcmodder-tools-page .tools_block .ItemMenu li.on {
+  color: var(--mcmodder-color-text);
+}
+html.dark.mcmodder-tools-page .pages_system .Pbtn_on {
+  background-color: var(--mcmodder-color-background-dark2) !important;
+  color: var(--mcmodder-color-text) !important;
+  border-color: var(--mcmodder-color-background-dark3);
+}
