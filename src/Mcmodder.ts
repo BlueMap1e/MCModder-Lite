@@ -792,15 +792,19 @@ export class Mcmodder {
 
     if (typeof editor != "undefined") this.callEditor();
     else if (
-      document.querySelector("#edui1_iframeholder, #edui1, .edui-default") ||
+      document.querySelector("#edui1_iframeholder, #edui1, .edui-default, .common-comment-block") ||
       /\/(edit|add|sandbox)\//.test(window.location.pathname)
     ) {
-      // 只有确实可能出现编辑器的页面才挂全文档观察者，并限制最长等待时间
+      // 只有确实可能出现编辑器的页面才挂全文档观察者。
+      // .common-comment-block 必须在列：资料页 / 个人空间的短评编辑器是懒创建的
+      // （聚焦输入区时才 UE.getEditor），页面加载时 #edui1 / .edui-default 均不存在，
+      // 漏掉它曾导致短评编辑器从未被夜间化——深色容器透出 iframe 里站点默认的
+      // 黑字黑光标，对比度极低（回归修复 2026-11-06）。观察者在编辑器出现后
+      // 自行 disconnect，编辑器创建时机不确定，不能设超时。
       this.generalEditorObserver.observe(document.body, {
         childList: true,
         subtree: true,
       });
-      window.setTimeout(() => this.generalEditorObserver.disconnect(), 30000);
     }
 
     // TODO: 取消锁定导航栏
