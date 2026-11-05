@@ -108,7 +108,7 @@ export class Mcmodder {
     this.main();
   }
 
-  private callEditor() {
+  private callEditor(attempt = 0) {
     const useAdvanced = !!$(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href);
     setTimeout(() => {
       // 站点主编辑器挂在全局 editor 上；部分场景（如 center 留言板）赋值时机
@@ -118,6 +118,13 @@ export class Mcmodder {
         (window as any).UE?.instances?.[(window as any).UE.instances.length - 1];
       if (!editorInstance) {
         console.warn("[MCModder-Lite] 未找到编辑器实例，跳过增强。");
+        return;
+      }
+      // iframe / document 由 UEditor 异步渲染，慢页面上 300ms 时可能尚未就绪
+      // （center 留言板实测：静默跳过后永不重试，夜间化随之失效）——轮询等待
+      if (!editorInstance.iframe || !editorInstance.document) {
+        if (attempt < 20) this.callEditor(attempt + 1);
+        else console.warn("[MCModder-Lite] 编辑器 iframe 就绪超时，跳过增强。", editorInstance);
         return;
       }
       try {
