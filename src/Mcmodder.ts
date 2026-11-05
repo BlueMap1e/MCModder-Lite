@@ -111,13 +111,18 @@ export class Mcmodder {
   private callEditor() {
     const useAdvanced = !!$(".edit-tools").length || /\/sandbox\/[0-9]+.html/.test(this.href);
     setTimeout(() => {
-      if (typeof editor === "undefined" || !editor) {
+      // 站点主编辑器挂在全局 editor 上；部分场景（如 center 留言板）赋值时机
+      // 或变量名不同，兜底取 UE.getEditor 登记的最后一个实例
+      const editorInstance =
+        (typeof editor !== "undefined" && editor) ||
+        (window as any).UE?.instances?.[(window as any).UE.instances.length - 1];
+      if (!editorInstance) {
         console.warn("[MCModder-Lite] 未找到编辑器实例，跳过增强。");
         return;
       }
       try {
-        if (useAdvanced) new AdvancedUEditor(editor, this);
-        else new UEditor(editor, this);
+        if (useAdvanced) new AdvancedUEditor(editorInstance, this);
+        else new UEditor(editorInstance, this);
       } catch (error) {
         console.error("[MCModder-Lite] 编辑器增强初始化失败：", error);
         if (!this.editorErrorNotified) {
@@ -133,12 +138,15 @@ export class Mcmodder {
 
   private readonly generalEditorObserver = new MutationObserver((mutationList) => {
     for (const mutation of mutationList) {
+      // 匹配任意 eduiN_iframeholder：多编辑器 / 多实例场景下编号会递增
+      // （如 center 留言板），精确匹配 #edui1 会漏掉后续实例
       if (
-        (mutation.target as HTMLElement).id === "edui1_iframeholder" &&
+        /_iframeholder$/.test((mutation.target as HTMLElement).id) &&
         mutation.addedNodes.length
       ) {
         this.callEditor();
         this.generalEditorObserver.disconnect();
+        return;
       }
     }
   });
