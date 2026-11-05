@@ -3246,11 +3246,29 @@ html.dark.mcmodder-tools-page .select-list {
 }
 /* tellraw 预览的书页贴图（.json-block 的 book.png）是浅色位图：乘深灰压暗。
    background-blend-mode 只混合本元素背景，不影响子元素——预览文字颜色是
-   tellraw 颜色预览的一部分（用户可选 fontColor_*），不能动 */
+   tellraw 颜色预览的一部分（用户可选 fontColor_*），只在 .json-area 上给
+   无显式色的默认文字兜底白色（fontColor_* 类有自身 color，不受继承影响） */
 html.dark.mcmodder-tools-page .json-block {
-  background-color: #666;
+  background-color: #3f3f3f;
   background-blend-mode: multiply;
 }
 html.dark.mcmodder-tools-page .json-page {
   color: var(--mcmodder-color-text-dark2);
+}
+html.dark.mcmodder-tools-page .json-area {
+  color: #fff;
+}
+/* 默认灰字（fontColor_font_1 = #777）在压暗后的纸面上对比不足，提亮一档
+   保持灰色调；其余 fontColor_* 语义色原样保留 */
+html.dark.mcmodder-tools-page .json-area .fontColor_font_1 {
+  color: #b3b3b3;
+}
+
+/* 工具页 fieldset：模板写死 legend 深灰字（#222，如「模式」「规则」「难度」）
+   与 #DDD 边框，深底上标题不可见 */
+html.dark.mcmodder-tools-page legend {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark.mcmodder-tools-page fieldset {
+  border-color: var(--mcmodder-color-background-dark3);
 }
