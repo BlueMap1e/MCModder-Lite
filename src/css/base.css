@@ -3318,6 +3318,31 @@ html.dark.mcmodder-tools-page tr:hover > td,
 html.dark.mcmodder-tools-page tr:hover > th {
   background-color: var(--mcmodder-color-background-dark2);
 }
+/* 命令方块指令生成器（/tools/cbcreator/）文字对比度：模板把 h6 分组标题
+   继承 body 的 #444（日间设计），夜间贴深底对比度仅 1.9:1；红色版本标注
+   .text-error（#b94a48）同理偏暗。侧栏当前项与 hover 态写死高饱和蓝底
+   （#27a9e3，matrix 模板 .bg_lb / #sidebar>ul>li:hover）白字，白字压任何
+   中等亮度蓝都到不了 4.5:1，故不调蓝而换调色板深底——与上方 .widget-title
+   页签的夜间处理保持一致。 */
+html.dark.mcmodder-tools-page h6 {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark.mcmodder-tools-page .text-error {
+  color: var(--mcmodder-color-danger-dark2);
+}
+html.dark.mcmodder-tools-page #sidebar ul li.active,
+html.dark.mcmodder-tools-page #sidebarDIV ul li.active {
+  background-color: var(--mcmodder-color-background-dark2) !important;
+}
+/* 活动项链接继承 matrix 的灰字（#999 级），抬升底上只剩 3.4:1，需提亮 */
+html.dark.mcmodder-tools-page #sidebar ul li.active a,
+html.dark.mcmodder-tools-page #sidebarDIV ul li.active a {
+  color: var(--mcmodder-color-text);
+}
+html.dark.mcmodder-tools-page #sidebar > ul > li:hover,
+html.dark.mcmodder-tools-page #sidebarDIV > ul > li:hover {
+  background-color: var(--mcmodder-color-background-dark2);
+}
 /* bootstrap-switch：中段标签与 default 手柄写死 #fff/#eee 深色字，深底不可读。
    primary/info/success/warning/danger 彩色手柄白字自身可读，保持不动 */
 html.dark.mcmodder-tools-page .bootstrap-switch {
