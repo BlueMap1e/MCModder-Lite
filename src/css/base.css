@@ -3187,6 +3187,51 @@ html.dark .az_block img {
   filter: brightness(0.8);
 }
 
+/* CAPP 服务器页（/sv/，sv.frame.css）：面板写死白底 + 平铺 GIF 纹理底图
+   （面包屑 mc_main.gif、内容块 sv_block.gif），夜间整页发白。纹理底图直接
+   去掉换调色板深底，标题灰 #777 与 #DDD 边框一并适配。类名 sv_* 为该页专属。 */
+html.dark body .mbx {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+  border-radius: 3px;
+}
+/* 面包屑当前页文字：站点写死 #555（日间设计），夜间贴深底过暗 */
+html.dark .mbx .item,
+html.dark .mbx .item:visited {
+  color: var(--mcmodder-color-text-dark1);
+}
+/* 面包屑两端的圆角端帽与分隔切片是精灵图（mc_main.gif 浅色切片），夜间藏掉，
+   圆角由上面的 border-radius 承担 */
+html.dark .mbx_left,
+html.dark .mbx_right,
+html.dark .mbx .line {
+  display: none;
+}
+html.dark .sv_center {
+  background-color: var(--mcmodder-color-background);
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .sv_center .left .block,
+html.dark .sv_center .left .sm_block .sm,
+html.dark .sv_center .right .block {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .sv_center .left .block ul,
+html.dark .sv_center .left .sm_block ul,
+html.dark .sv_center .right .block ul,
+html.dark .sv_center .right .sm_block ul {
+  background-color: transparent;
+}
+html.dark .sv_center .left .block .title,
+html.dark .sv_center .left .sm_block .title,
+html.dark .sv_center .right .block .title,
+html.dark .sv_center .right .sm_block .title {
+  color: var(--mcmodder-color-text-dark1);
+  border-bottom-color: var(--mcmodder-color-background-dark2);
+}
+
 /* 开发日志页（/log/）：站点 log.frame.css 把日期标题条写死 #F5F5F5 底 + #222 字，
    夜间下是一条刺眼的浅色横条（.log-frame > p 已有抬升，唯此处遗漏）；
    红色更新条数（#F20）在深底上偏暗，一并抬升。 */
