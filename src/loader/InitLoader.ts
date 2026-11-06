@@ -13,6 +13,7 @@ import { ItemListInit } from "../init/ItemListInit";
 import { ItemPageInit } from "../init/ItemPageInit";
 import { ModlistInit } from "../init/ModlistInit";
 import { OredictPageInit } from "../init/OredictPageInit";
+import { PlayServerPageInit } from "../init/PlayServerPageInit";
 import { PostPageInit } from "../init/PostPageInit";
 import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
@@ -50,6 +51,7 @@ export class InitLoader {
       new AdminInit(parent),
       new CommentInit(parent),
       new ToolsPageInit(parent),
+      new PlayServerPageInit(parent),
     );
   }
 }
