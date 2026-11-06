@@ -3208,6 +3208,30 @@ html.dark .main .nav ul li.t24:not(:hover) {
   color: #cb90d4;
 }
 
+/* 个人中心名片页（center /#/card/）：彩色名片卡的底色是站点内联样式
+   （style="background: RGB(...)"，每张卡颜色不同），夜间下全饱和度贴深底刺眼。
+   内联样式只能以同通道 !important 反制——用半透明深色渐变叠底压暗，
+   保留卡片色相与白字对比。名片预览位的嵌套边框与占位灰块来自主站 style.css
+   的 .badge-frame 规则（注意完整选择器带 .common-user-card .card-container
+   前缀，特异性 0,6,0——夜间规则必须带上同等前缀，否则被压成死规则）：
+   .i2 近白框 + .img 大面积 #847e87 灰块，夜间换调色板深色。 */
+html.dark .center-card-block.background .center-card-border {
+  background-image: linear-gradient(rgba(17, 17, 17, 0.45), rgba(17, 17, 17, 0.45)) !important;
+}
+html.dark .common-user-card .card-container .badge-frame .block .icon .i1,
+html.dark .center-card-block.badges .center-card-border .icon .i1 {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .common-user-card .card-container .badge-frame .block .icon .i2,
+html.dark .center-card-block.badges .center-card-border .icon .i2 {
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .common-user-card .card-container .badge-frame .block .icon .img,
+html.dark .center-card-block.badges .center-card-border .icon .img {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
 /* 贡献榜等页面的内联 UEditor 工具栏：站点以实例 ID（#edui1_toolbarboxouter）写死
    #fafafa，ID 优先级压过类选择器，需以同 ID 夜间规则反制。样式取自上方
    .edui-editor-toolbarboxouter 的既有夜间渐变；多实例（edui2+）页面出现时需补充。 */
