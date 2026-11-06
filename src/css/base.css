@@ -2980,6 +2980,12 @@ html.dark img[alt="link style"],
 html.dark .news_block .right .addArea {
   filter: invert(100%);
 }
+/* 主页快捷工具区（.addArea）沿用 2.0.1 以来的整块反相：日间 sprite 是深色图标，
+   反相后贴深底仍可读，站点 #222 文字反相成 #ddd。
+   【回归教训 2026-11-07】不要给反相区域内的文字再叠加浅色规则——#bdbdbd 会被
+   反相成 #424242 深字（d4ec481 叠加 text-dark1 即此因，审计探针读计算色显示
+   「已修复」，实际渲染是深字，计算色与渲染色在此处相反）；filter 也会禁用
+   子像素抗锯齿，文字发糊是反相方案的固有代价，叠加调色只会更糟。 */
 /* 确认/取消按钮的文字继承自 .edui-dialog-foot 的浅色文字色，会被上面的 invert(100%)
    一并反转成近黑，落在同样被反转成深色的按钮底图（icons-all.gif，原图白底）上几乎不可见。
    注意按钮文字标签是 <div class="edui-label">，会被本文件前部 body/div 大组直接命中为
@@ -3168,10 +3174,8 @@ html.dark .common-slogan .shadow {
 html.dark .tools-list .mcmodder-content-block p.title {
   color: var(--mcmodder-color-text-dark1);
 }
-/* 首页「添加模组」等快捷入口：站点写死 #222，深底上不可见 */
-html.dark .news_block .addArea a {
-  color: var(--mcmodder-color-text-dark1);
-}
+/* 首页快捷工具区文字由 invert(100%) 反相方案负责（见 .addArea 处注释），
+   此处不要再设文字色——叠加浅色会被反相成深字（2026-11-07 回归教训）。 */
 
 /* 首页内容图片（最受欢迎/科技/贡献榜等 *_block 组件，index_v3 专属类名）：
    封面图多为白底，夜间下整块刺眼。压亮度而非降透明度——降透明度会让深色页底
