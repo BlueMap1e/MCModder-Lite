@@ -41,6 +41,17 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
 
 - **Reuse the existing mechanism.** Each feature area has one established entry point
   (see "Where to change what"); do not add a second convention for the same job.
+- **Userscript metadata `namespace` must never equal upstream Mcmodder's** (upstream uses
+  `http://www.mcmod.cn/`; ours is `https://github.com/BlueMap1e/MCModder-Lite`). Tampermonkey
+  identifies scripts by namespace+name: a shared namespace makes installs/updates drift
+  between the two scripts and cross-contaminates their GM storage (2026-11-07 incident).
+  Changing our namespace again orphans every existing install's settings — do not touch it
+  without a migration plan.
+- **Never put a literal `<style>` / `</style>` string anywhere in `src/css/*.css`,
+  comments included.** `Utils.addStyle` injects CSS through jQuery `.html()`, which parses
+  the text as HTML — a literal tag inside a comment splits the whole stylesheet in two and
+  silently kills every rule after it (2026-11-07 incident). Refer to tags in prose as
+  "style 元素".
 - **`CHANGELOG.md` is user-owned.** Never edit it unless explicitly instructed.
 - Comments, config titles/descriptions, and UI copy are Chinese, matching the existing style.
 - **Every setting must be read by code.** Before adding a setting, add the reader; before
