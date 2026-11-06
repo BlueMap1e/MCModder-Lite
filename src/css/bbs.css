@@ -74,8 +74,26 @@ html.dark .top-main .def-nav:hover {
 
 html.dark .top-main .search_box input#key {
   background-color: var(--mcmodder-color-background-dark1);
-  color: var(--mcmodder-color-text);
+  /* 站点 JS（mc.functions.js 的 SearchOn/SearchOut）在拿焦/失焦时写内联 color
+     （打字 #222、占位 #A0A0A0），内联压过一切非 !important 声明——打字的字符
+     因此在深底上不可见，必须同强度反制。占位符会随之一起变亮：该输入框用
+     value 冒充占位符（旧式写法），CSS 无法区分两态，可读性优先。 */
+  color: var(--mcmodder-color-text) !important;
   border: 1px solid var(--mcmodder-color-background-dark3);
+}
+
+/* 搜索按钮与展开的搜索框：站点原色 #3d454c 与旧版顶栏同色，日间融合是天生的；
+   顶栏夜间化改用 dark2 后没人跟着改这两个，按钮成了顶栏上的突兀补丁，hover 的
+   原生差异（#323a40）也被淹没。按钮默认融入顶栏，hover 给 dark3 抬升做区分；
+   展开的搜索框与顶栏同色（与日间站点的无缝下拉设计一致）。 */
+html.dark .top-main .search_btn {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .top-main .search_btn:hover {
+  background-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .top-main .search_box {
+  background-color: var(--mcmodder-color-background-dark2);
 }
 
 html.dark .top-main .search_box input#btn {
