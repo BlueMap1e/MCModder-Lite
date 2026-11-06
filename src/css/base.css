@@ -3135,6 +3135,17 @@ html.dark .news_block .addArea a {
   color: var(--mcmodder-color-text-dark1);
 }
 
+/* 开发日志页（/log/）：站点 log.frame.css 把日期标题条写死 #F5F5F5 底 + #222 字，
+   夜间下是一条刺眼的浅色横条（.log-frame > p 已有抬升，唯此处遗漏）；
+   红色更新条数（#F20）在深底上偏暗，一并抬升。 */
+html.dark .log-frame .block .title {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .log-frame .block .title span {
+  color: var(--mcmodder-color-danger-dark2);
+}
+
 /* 贡献榜等页面的内联 UEditor 工具栏：站点以实例 ID（#edui1_toolbarboxouter）写死
    #fafafa，ID 优先级压过类选择器，需以同 ID 夜间规则反制。样式取自上方
    .edui-editor-toolbarboxouter 的既有夜间渐变；多实例（edui2+）页面出现时需补充。 */
