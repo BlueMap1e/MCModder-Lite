@@ -48,7 +48,10 @@ const userscriptMeta = {
   downloadURL:
     "https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js",
   icon: "https://www.mcmod.cn/static/public/images/favicon.ico",
-  namespace: "http://www.mcmod.cn/",
+  // namespace 必须与上游 Mcmodder（同为 http://www.mcmod.cn/）不同：TM 以
+  // namespace+name 认脚本，同空间会导致安装/更新身份在两个脚本间漂移，
+  // 设置存储随之串仓（2026-11-07 事故）。发版后旧用户需删除旧条目重装一次。
+  namespace: "https://github.com/BlueMap1e/MCModder-Lite",
   "run-at": "document-start",
   match: ["https://*.mcmod.cn/*"],
   exclude: [
