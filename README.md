@@ -6,7 +6,7 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE)
 [![Install](https://img.shields.io/badge/install-latest-brightgreen.svg)](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)
 
-重点优化夜间模式与开箱即用体验，剔除大量功能追求轻量化与精简。
+重点优化夜间模式与开箱即用体验，剔除部分功能，追求轻量化与精简。
 
 需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
 
@@ -27,13 +27,13 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 
 ## 修改详情
 
-按个人使用习惯调整了上游功能。
+按个人使用习惯调整了上游功能，并进行持续Bug修复。
 
 **移除**：云端表态、GIF 编辑器、结构编辑器、ECharts 图表、成就系统。无账号体系与云端同步。
 
 **保留**：自动链接面板（同模组置顶、键盘选）、短评跨页与楼层跳转、待审列表按时间段自动展开、每日自动签到、日间 / 夜间 / 跟随系统三态开关。
 
-**修复**：表格墙（正文以表格结尾无法换行）、长正文统计卡顿、编辑器启用时序、`?mrid` 清空正文，以及夜间模式遗漏的地方。
+**修复**：表格墙（正文以表格结尾无法换行）、长正文统计卡顿、Markdown与HTML编辑器启用时序、`?mrid` 清空正文。多处夜间模式适配与完善。
 
 **安全**：外部内容一律按纯文本渲染，链接只放行 http(s)；请求失败直接报错，不再一直转圈。
 
