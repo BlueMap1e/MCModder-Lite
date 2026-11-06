@@ -1521,8 +1521,6 @@ body > .container > *,
 .center-main.attitude li,
 .bootstrap-tagsinput .tag,
 .list_item,
-.ta_date,
-.ta_calendar,
 .logreg-suggest,
 .logreg-panel,
 .common-menu-page,
@@ -3614,4 +3612,118 @@ html.dark.mcmodder-tools-page .pages_system .Pbtn_on {
   background-color: var(--mcmodder-color-background-dark2) !important;
   color: var(--mcmodder-color-text) !important;
   border-color: var(--mcmodder-color-background-dark3);
+}
+
+/* 找服玩（play.mcmod.cn）首页工具列表：iconfont-server 多色图标的暗部写死
+   #333/#242424/#292C40 系（适配日间白底，见 alicdn sprite symbol），夜间贴深底
+   几乎不可见。图标内含红系点缀，纯 invert 会把红点反成青色，故用
+   invert + hue-rotate(180deg)：亮度反转、色相近似保留（红点仍偏红）。 */
+html.dark .index-tool .iconfont-server {
+  filter: invert(1) hue-rotate(180deg);
+}
+/* 找服玩图片降亮（与上方首页内容图片同法，brightness 压白不伤深色细节）：
+   img.favicon —— 服务器封面/列表图标（.favicon 为 serverlist 专属类，主站不用）；
+   .common-index-block .body-content img —— 首页各榜单内容图（热门模组/整合包封面等
+   多数无类名，只能按容器收；容器为 serverlist 首页专属）。 */
+html.dark img.favicon,
+html.dark .favicon img,
+html.dark .common-index-block .body-content img {
+  filter: brightness(0.8);
+}
+
+/* 找服玩服务器详情页：历史在线人数的日期范围选择器（pickerDateRange 插件，
+   ta_* 类，dateRange.css 写死日间配色）。此前 .ta_date/.ta_calendar 被上游
+   放进全局面板统一底色大列表（半透明），日历面板透出页面网格、日间也受累，
+   已从该列表摘出恢复站点白底；夜间在此给整套深色面板。 */
+/* 日期条按钮：深底浅字 + dark3 边框；站点 hover 只去渐变，这里给抬升差异。
+   background-image 必须显式清掉：dateRange.css 的 -moz-linear-gradient /
+   -webkit-gradient 老式浅色渐变在 Firefox（Zen 内核）里仍有效，会画在
+   background-color 之上（Chromium 里这些语法无效，探针测不出该差异）。 */
+html.dark .ta_date {
+  background-color: var(--mcmodder-color-background-dark1);
+  background-image: none;
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .ta_date:hover {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+}
+html.dark .ta_date .date_title {
+  color: var(--mcmodder-color-text);
+  border-right-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .ta_date .i_orderd {
+  border-top-color: var(--mcmodder-color-text-dark2);
+}
+/* 日历面板：不透明深底，压掉半透明透网格问题 */
+html.dark .ta_calendar {
+  background-color: var(--mcmodder-color-background);
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .ta_calendar table caption {
+  color: var(--mcmodder-color-text);
+}
+html.dark .ta_calendar table thead tr {
+  background: none;
+  box-shadow: none;
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .ta_calendar table thead th {
+  color: var(--mcmodder-color-text-dark1);
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .ta_calendar table tbody td {
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .ta_calendar td.ta_dateRangeGray {
+  color: var(--mcmodder-color-text-dark3);
+}
+/* 上/下月箭头是浅色贴图 sprite，整块反相成深底浅箭头（hover 换帧不受影响） */
+html.dark .ta_calendar .i_pre,
+html.dark .ta_calendar .i_next {
+  filter: invert(1);
+}
+/* 今天/选中日的蓝色圆贴图在深底上偏亮，略压一档；形状与站点一致不动 */
+html.dark .ta_calendar td.today {
+  filter: brightness(0.8);
+}
+/* 范围选择端点（td.first/td.last）的 sprite 是白底蓝圈，滤镜压不净白底，
+   直接弃贴图改芯片式：深底 + 主色字（置于 today 规则之后，两类叠加时以芯片为准） */
+html.dark .ta_calendar td.first,
+html.dark .ta_calendar td.last {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-primary);
+  border-radius: 2px;
+}
+/* 底栏与起止日期输入框（输入框深底来自全局 input 规则，字色日间 #555 无人管） */
+html.dark .ta_calendar_footer {
+  background: var(--mcmodder-color-background-dark1);
+  border-top-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .ta_ipt_text,
+html.dark .ta_ipt_text_s {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+/* 按钮：取消换深色底；确定（primary）浅绿底深绿字在深底上突兀，换主色底白字 */
+html.dark .ta_btn {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+html.dark .ta_btn:hover {
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+html.dark .ta_btn_primary {
+  background-color: var(--mcmodder-color-primary);
+  background-image: none;
+  border-color: var(--mcmodder-color-primary);
+  color: #fff;
+}
+html.dark .ta_btn_primary:hover {
+  filter: brightness(1.1);
 }
