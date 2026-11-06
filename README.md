@@ -1,12 +1,14 @@
 # MCModder-Lite
 
-MC 百科（[mcmod.cn](https://www.mcmod.cn)）的轻量编审辅助脚本，基于 [Charcoal-Black/Mcmodder](https://github.com/Charcoal-Black/Mcmodder)（AGPL-3.0）分叉并独立维护。
+MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚本，基于 [Charcoal-Black/Mcmodder](https://github.com/Charcoal-Black/Mcmodder)（AGPL-3.0）分叉并独立维护。
 
 [![Build](https://github.com/BlueMap1e/MCModder-Lite/actions/workflows/build.yaml/badge.svg)](https://github.com/BlueMap1e/MCModder-Lite/actions/workflows/build.yaml)
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE)
 [![Install](https://img.shields.io/badge/install-latest-brightgreen.svg)](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)
 
-给百科补上夜间模式，顺带把编辑、审核里最常用的功能做顺。需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
+重点优化夜间模式与开箱即用体验，剔除大量功能追求轻量化。
+
+需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
 
 ## 安装
 
