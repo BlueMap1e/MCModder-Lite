@@ -3146,6 +3146,68 @@ html.dark .log-frame .block .title span {
   color: var(--mcmodder-color-danger-dark2);
 }
 
+/* 首页右侧分类导航（.main .nav）：站点写死 ul opacity:.7 + 浅底浅字，夜间下整块
+   透出暗色页底——分类贴片发闷、「教程/顶部」深底深字几乎不可见（上游靠页底背景图
+   提亮来掩盖，本质未修）。夜间将面板不透明化并换皮肤底色；分类贴片保留站点的
+   色相编码（文字取日间同色相的提亮固定值，随杂色板惯例不随主题变化）；
+   hover 沿用站点「实色贴片 + 白字」的设计，贴片基础规则以 :not(:hover) 让路。 */
+html.dark .main .nav ul {
+  opacity: 1;
+  background-color: var(--mcmodder-color-background-transparent);
+  border-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .main .nav ul li {
+  color: var(--mcmodder-color-text-dark1);
+}
+/* 中性项（教程/顶部/检索）站点 hover 是浅灰底闪片，夜间改深色反馈 */
+html.dark .main .nav ul li.today:hover,
+html.dark .main .nav ul li.bt:hover,
+html.dark .main .nav ul li.category:hover,
+html.dark .main .nav ul li.pyaz:hover {
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+html.dark .main .nav ul .line {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+/* 分类贴片：站点 .t1 系规则特异性压过皮肤底色，需逐项夜间反制 */
+html.dark .main .nav ul li.t1:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #7fb9dc;
+}
+html.dark .main .nav ul li.t2:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #e2878f;
+}
+html.dark .main .nav ul li.t3:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #d4b06a;
+}
+html.dark .main .nav ul li.t4:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #94ca6b;
+}
+html.dark .main .nav ul li.t5:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #c08a5e;
+}
+html.dark .main .nav ul li.t6:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #cfcfcf;
+}
+html.dark .main .nav ul li.t7:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #b3b3b3;
+}
+html.dark .main .nav ul li.t23:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #74cdd6;
+}
+html.dark .main .nav ul li.t24:not(:hover) {
+  background-color: var(--mcmodder-color-background-transparent);
+  color: #cb90d4;
+}
+
 /* 贡献榜等页面的内联 UEditor 工具栏：站点以实例 ID（#edui1_toolbarboxouter）写死
    #fafafa，ID 优先级压过类选择器，需以同 ID 夜间规则反制。样式取自上方
    .edui-editor-toolbarboxouter 的既有夜间渐变；多实例（edui2+）页面出现时需补充。 */
