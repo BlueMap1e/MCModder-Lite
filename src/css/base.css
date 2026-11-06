@@ -613,10 +613,48 @@ body #remote input.text,
 .common-comment-block textarea,
 .close:not(.webui-popover-inner .close),
 .close:not(.webui-popover-inner .close):focus,
-.close:not(.webui-popover-inner .close):hover,
-body .top-main .pulldown .top_content {
+.close:not(.webui-popover-inner .close):hover {
   background-color: var(--mcmodder-color-background-transparent);
   color: var(--mcmodder-color-text);
+}
+/* 主页导航下拉面板（top_content：用户菜单 / 功能导航大面板）：原皮肤在此给
+   半透明底，压在主页底图上浅灰字可读性差。改回皮肤半透明底 + backdrop 毛玻璃
+   模糊兜底可读性（丑的根源是裸透明 + #888 浅灰字，不是半透明本身），配圆角与
+   投影强化悬浮感；链接灰 #888 加深，分割线改为内缩细线，夜间换调色板深色。 */
+body .top-main .pulldown .top_content {
+  background-color: var(--mcmodder-color-background-transparent);
+  backdrop-filter: blur(12px);
+  border-radius: 6px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.25);
+  color: #333;
+}
+body .top-main .info .user-info .top_content a,
+body .top-main .info .more-info .top_content a,
+.top-main .navs .app-url .top_content a,
+.top-main .navs .app-url .top_content a:hover {
+  color: #555;
+}
+/* 分组分割线：站点是通栏 1px 硬边框，改为内缩的浅色细线 */
+body .top-main .pulldown .separate-li {
+  border-top: 0;
+  height: 1px;
+  margin: 5px 14px;
+  background-color: #e3e4e8;
+}
+html.dark body .top-main .pulldown .top_content {
+  color: var(--mcmodder-color-text);
+}
+html.dark body .top-main .info .user-info .top_content a,
+html.dark body .top-main .info .more-info .top_content a,
+html.dark .top-main .navs .app-url .top_content a,
+html.dark .top-main .navs .app-url .top_content a:hover {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark body .top-main .pulldown .separate-li {
+  background-color: var(--mcmodder-color-background-dark3);
+}
+html.dark body .top-main .pulldown .arrow {
+  border-bottom-color: var(--mcmodder-color-background-dark2);
 }
 .input-group-text {
   color: var(--mcmodder-color-text-dark2);
