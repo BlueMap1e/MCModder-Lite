@@ -1069,7 +1069,13 @@ body .header-container {
   width: calc(100% - 2 * var(--mcmodder-width-padding-3));
 }
 @media (min-width: 991px) {
-  .common-text > .common-text-menu,
+  /* ToC 由站点 JS 插在 .common-text 深处（p > span 之内），原来的
+     .common-text > .common-text-menu 直接子元素选择器永不命中（死规则）→
+     ToC 以近全宽 inline-block 落在上条规则收窄出的空间里，而 .item-data 被
+     本文件改成了 220px 浮动，放不下就整块换行到浮块底部，空缺随浮块高度放大。
+     改为 :has 门控的后代选择器：仅当 maintext 内确有 .item-data 浮块时收窄 ToC
+     （宽出浮块 40px 作余量），其余页面维持原宽；竖排样式（width:auto）不参与。 */
+  .common-center .maintext:has(.item-data) .common-text-menu:not(.style-vertical),
   .common-center .maintext .quote_text {
     width: calc(100% - 260px);
   }
