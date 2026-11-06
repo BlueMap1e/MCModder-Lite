@@ -6,32 +6,32 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 [![License: AGPL-3.0](https://img.shields.io/badge/license-AGPL--3.0-blue.svg)](./LICENSE)
 [![Install](https://img.shields.io/badge/install-latest-brightgreen.svg)](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)
 
-重点优化夜间模式与开箱即用体验，剔除大量功能追求轻量化。
+重点优化夜间模式与开箱即用体验，剔除大量功能追求轻量化与精简。
 
 需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
 
 ## 安装
 
 1. 安装用户脚本管理器：
-   - Chrome / Edge：[篡改猴 Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
-   - Firefox / Zen：[篡改猴 Tampermonkey](https://addons.mozilla.org/firefox/addon/tampermonkey/)（[Violentmonkey](https://addons.mozilla.org/firefox/addon/violentmonkey/) 亦可）
+   - Chrome：[篡改猴 Tampermonkey](https://chromewebstore.google.com/detail/tampermonkey/dhdgffkkebhmkfjojejmpbldmpobfkfo)
+   - Firefox：[篡改猴 Tampermonkey](https://addons.mozilla.org/firefox/addon/tampermonkey/)（[Violentmonkey](https://addons.mozilla.org/firefox/addon/violentmonkey/) 亦可）
 2. 打开[一键安装链接](https://github.com/BlueMap1e/MCModder-Lite/releases/latest/download/mcmodder-lite.user.js)，在安装页点「安装」。
    - 点了没反应时，去 [Release 页面](https://github.com/BlueMap1e/MCModder-Lite/releases/latest) 手动下载 `mcmodder-lite.user.js`，拖进篡改猴。
 3. 打开任意百科页面即生效。设置入口在个人中心 →「设置」。
 
-**不要与上游 Mcmodder 同时安装。** 两者会同时改写百科页面，夜间按钮、悬浮预览、表格墙会互相打架。先停用上游，再装这个。
+如果与上游 Mcmodder 同时安装，尽量**不要同时打开**。 两者很可能会制造冲突。
 
-本脚本不读取也不改写登录 cookie，因此没有内置的多账号切换。需要多账号请在浏览器里用多用户配置（或 Firefox 容器）各登一个。
+出于轻量化，网络安全与常见的使用习惯考虑，MCModder-Lite移除了多账号功能。
 
-内置自动更新，发版后篡改猴会提示升级，设置与数据保留。主测 Firefox / Zen，Chrome / Edge 同源可用；Safari 与移动端未测。
+内置自动更新，发版后篡改猴会提示升级，设置与数据保留。主测 Firefox ，Chrome / Edge 同源可用；Safari 与移动端未测。
 
 ## 修改详情
 
 按个人使用习惯调整了上游功能。
 
-**移除**：云端表态、GIF 编辑器、结构编辑器、ECharts 图表、成就系统。包体约 2.4 MB，比上游小约五分之一；无账号体系与云端同步。
+**移除**：云端表态、GIF 编辑器、结构编辑器、ECharts 图表、成就系统。无账号体系与云端同步。
 
-**留存**：自动链接面板（同模组置顶、键盘选）、短评跨页与楼层跳转、待审列表按时间段自动展开、每日自动签到、日间 / 夜间 / 跟随系统三态开关。
+**保留**：自动链接面板（同模组置顶、键盘选）、短评跨页与楼层跳转、待审列表按时间段自动展开、每日自动签到、日间 / 夜间 / 跟随系统三态开关。
 
 **修复**：表格墙（正文以表格结尾无法换行）、长正文统计卡顿、编辑器启用时序、`?mrid` 清空正文，以及夜间模式遗漏的地方。
 
