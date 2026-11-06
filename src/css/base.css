@@ -3135,6 +3135,20 @@ html.dark .news_block .addArea a {
   color: var(--mcmodder-color-text-dark1);
 }
 
+/* 首页内容图片（最受欢迎/科技/贡献榜等 *_block 组件，index_v3 专属类名）：
+   封面图多为白底，夜间下整块刺眼。压亮度而非降透明度——降透明度会让深色页底
+   透过浅色图反而发灰发脏，brightness 只压白而不伤图内深色细节。 */
+html.dark .news_block img,
+html.dark .class_block img,
+html.dark .list_block img,
+html.dark .chart_block img,
+html.dark .card_block img,
+html.dark .post_block img,
+html.dark .star_block img,
+html.dark .az_block img {
+  filter: brightness(0.8);
+}
+
 /* 开发日志页（/log/）：站点 log.frame.css 把日期标题条写死 #F5F5F5 底 + #222 字，
    夜间下是一条刺眼的浅色横条（.log-frame > p 已有抬升，唯此处遗漏）；
    红色更新条数（#F20）在深底上偏暗，一并抬升。 */
