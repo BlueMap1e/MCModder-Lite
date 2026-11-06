@@ -56,8 +56,10 @@ const ANIM_MS = 160;
 let hideTimer: number | undefined;
 
 /**
- * 是否需要向上弹出：下方放不下而上方放得下时向上；两侧都放得下但上方更宽裕时也向上
- * （上方的可用空间扣除了吸顶导航高度，避免列表被页头遮住）。
+ * 是否需要向上弹出：仅当下方放不下而上方放得下时向上（避免列表被视口下缘截断；
+ * 上方的可用空间扣除吸顶导航高度，避免列表被页头遮住）。
+ * 下方放得下时一律向下，保证各处弹层展开方向一致（否则页面顶部的下拉会因
+ * 「上方更宽裕」而向上弹，与其它下拉方向相反）。
  */
 const expandUpward = computed(() => {
   const rect = rectRef.value;
@@ -66,12 +68,7 @@ const expandUpward = computed(() => {
   }
   const topSpace = rect.top - Values.headerContainerHeight;
   const bottomSpace = innerHeight - rect.bottom;
-  if (bottomSpace < listHeight.value && topSpace >= listHeight.value) {
-    return true;
-  } else if (bottomSpace >= listHeight.value && topSpace > bottomSpace) {
-    return true;
-  }
-  return false;
+  return bottomSpace < listHeight.value && topSpace >= listHeight.value;
 });
 
 /** 列表的定位与尺寸样式（相对锚点：向下为锚点下方，向上为锚点上方且减去自身高度） */
