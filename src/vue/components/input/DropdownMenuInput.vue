@@ -10,6 +10,7 @@
       :aria-expanded="selected"
       :value="content"
       @click="onClick"
+      @mousedown="onMouseDown"
       @focus="onFocus"
       @blur="onBlur"
     />
@@ -78,6 +79,15 @@ const { valueRef, getValue, onChange } = useInputBase({
 /** 从输入元素读取当前值（候选列表写回的是 `valueInput` 的 `value`，故这里是数字） */
 function getDOMValue() {
   return Number(valueInputRef.value!.value);
+}
+
+/**
+ * 按钮本质是只读 input，双击/连点会触发浏览器原生的「选中文字」行为。
+ * 只拦截 `detail > 1`（第二击起）的 mousedown 默认行为即可消除选中，
+ * 单击的聚焦与展开流程不受影响（站点原生用 `<button>`，无此问题）。
+ */
+function onMouseDown(e: MouseEvent) {
+  if (e.detail > 1) e.preventDefault();
 }
 
 /** 点击按钮：已展开且不是「刚聚焦」时才收起（点自己弹出的那次不算） */
