@@ -3245,6 +3245,23 @@ html.dark #edui1_toolbarboxouter.edui-editor-toolbarboxouter {
   border-bottom-color: var(--mcmodder-color-primary-light);
 }
 
+/* 编辑器「快速排版工具」弹窗（2026-11 上线，站点 JS 往 swal2 弹窗里注入
+   style 元素与 .qlayout-card 结构）：卡片写死白底 + #f9fafb 头部 + #e5e7eb 边框，
+   夜间下继承弹窗的浅色文字（#ddd）贴白底即「白底白字」。注入的站点样式晚于
+   本脚本样式表入档，同特异性下后到的赢，故需 .swal2-popup 前缀抬高特异性。
+   类名 qlayout-* 为站点专用前缀，可安全全局作用域。
+   【注意】CSS 注释里严禁出现 style 开/闭标签字面量——Utils.addStyle 经 jQuery
+   .html() 注入，CSS 文本会被当 HTML 解析，字面量标签会把样式表从中间劈断。 */
+html.dark .swal2-popup .qlayout-card {
+  background-color: var(--mcmodder-color-background);
+  border-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-text);
+}
+html.dark .swal2-popup .qlayout-card-header {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-bottom-color: var(--mcmodder-color-background-dark2);
+}
+
 /* 实用工具页（/tools/*，cbcreator 等自带 matrix 模板的子应用）：模板把内容面板
    写死浅色（#content #eee、#breadcrumb #fff、.widget-box #f9f9f9、.modal-header
    #efefef、.bx-wrapper #fff），脚本挂载后继承的浅色文字（#ddd）贴浅底不可读
