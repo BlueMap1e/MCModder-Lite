@@ -373,12 +373,20 @@ export const settings = [
         label: "表格",
         settings: [
           {
+            id: "autoFoldTableEnabled",
+            title: "启用表格自动折叠",
+            description:
+              "自动折叠资料页正文中超过设定行数的表格。默认关闭，以避免正常的长表格被误折叠。",
+            type: "checkbox",
+          },
+          {
             id: "autoFoldTable",
-            title: "表格自动折叠",
-            description: "自动折叠正文内容中超过设定行数的表格。设置为 0 以禁用。",
+            title: "表格自动折叠行数",
+            description: "超过设定行数的表格将被自动折叠。",
             type: "number",
             value: 10,
             range: [0, null],
+            visible: (ctx) => ctx.configs.getSettings("autoFoldTableEnabled"),
           },
           {
             id: "tableFix",

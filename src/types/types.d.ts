@@ -165,6 +165,7 @@ interface Settings {
   hoverDescription: boolean;
   hoverImage: boolean;
   imageLocalizedCheck: boolean;
+  autoFoldTableEnabled: boolean;
   autoFoldTable: number;
   tableFix: boolean;
   tableThemeColor: boolean;

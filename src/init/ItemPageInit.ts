@@ -62,7 +62,9 @@ export class ItemPageInit extends Init {
     $(".maintext .table")
       .filter((_, c) => $(c).css("width") === "100%")
       .css("width", "unset");
-    const autoFoldTable = this.configs.getSettings("autoFoldTable");
+    const autoFoldTable = this.configs.getSettings("autoFoldTableEnabled")
+      ? this.configs.getSettings("autoFoldTable")
+      : 0;
     if (autoFoldTable) {
       $(".table.table-bordered.text-nowrap tbody")
         .filter((_, c) => $(c).children().length >= autoFoldTable)
