@@ -36,6 +36,11 @@ if (viteVersion !== version) {
   );
   process.exit(1);
 }
+// release notes 取自 CHANGELOG 的对应小节；小节缺失会导致 release notes 为空
+if (!readFileSync(`${root}CHANGELOG.md`, "utf8").includes(`## [${version}]`)) {
+  console.error(`CHANGELOG.md 缺少 "## [${version}]" 小节，发版 release notes 会为空，请先补齐再打包。`);
+  process.exit(1);
+}
 
 /* ---------- 构建（两遍，产物各自落盘互不覆盖） ---------- */
 
