@@ -437,8 +437,8 @@ export class UEditor {
   protected autoCalculateHeight() {
     let height = 50;
     if (this.$body && this.$body.children().length && this.window) {
-      const rect = this.$body.children().last().get(0).getBoundingClientRect();
-      height += rect.top + rect.height + this.window.pageYOffset;
+      const rect = this.$body.children().last().get(0)?.getBoundingClientRect();
+      if (rect) height += rect.top + rect.height + this.window.pageYOffset;
     }
     /* this.$body.children().each((_, e) => {
       let cs = getComputedStyle(e);

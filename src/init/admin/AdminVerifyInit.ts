@@ -183,8 +183,10 @@ export class AdminVerifyInit extends AdminBaseInit {
     });
 
     const interval = this.configs.getSettings("alwaysNotifyVerification") ?? 0;
+    // 先无条件清掉旧定时器再按需重设：关闭设置（≤0.1）或后台 SPA 重复进入本页时，
+    // 否则旧 interval 会一直空转到页面卸载
+    clearInterval(this.notifyTimer);
     if (interval > 0.1) {
-      clearInterval(this.notifyTimer);
       this.notifyTimer = window.setInterval(
         () => {
           if ($(".page-header .title").text() != "模组区内容审核") {
@@ -368,9 +370,16 @@ export class AdminVerifyInit extends AdminBaseInit {
   private parseVerifyInfo() {
     let currentPos = 0;
     const verifyInfo: Record<string, string> = {};
-    const verifyInfoText = this.verifyFrame!.children("p")
+    const firstP = this.verifyFrame!.children("p")
       .filter((_, p) => p.textContent.startsWith("操作类型"))
-      .get(0).firstChild as Text;
+      .get(0);
+    const verifyInfoText = firstP?.firstChild as Text | undefined;
+    // 站点改版 / 结构不符时静默缺字段比 TypeError 中断整个 init 更可取，
+    // 但要留一条警告便于发现（AGENTS：可能永久生效的跳过需显式记录）
+    if (!verifyInfoText || !(verifyInfoText instanceof Text)) {
+      console.warn("[MCModder-Lite] 审核项缺少「操作类型」段落，基本信息解析跳过。");
+      return verifyInfo;
+    }
     verifyInfoText.data.split("，").forEach((text) => {
       const colon = text.indexOf("：");
       if (colon < 0) return;

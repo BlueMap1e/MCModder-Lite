@@ -115,7 +115,8 @@ export class VerifyPageInit extends Init {
         const e = $(_e);
         const d = e.find("td:nth-child(4)");
         let t = "item";
-        if (!d.find("i").get(0).classList.contains("fa-spinner")) return;
+        const icon = d.find("i").get(0);
+        if (!icon || !icon.classList.contains("fa-spinner")) return;
         switch (Number(e.attr("edit-type"))) {
           case 3:
             t = "class";

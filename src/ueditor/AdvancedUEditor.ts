@@ -274,7 +274,10 @@ export class AdvancedUEditor extends UEditor {
     ).forEach((data) => {
       const editToolButton = editTools.find(`.${data[0]} a`);
       if (editToolButton.length) {
-        (editToolButton.get(0).lastChild as Text).data = data[1];
+        // 按钮末子节点是标签文本（Text）；重复初始化时末尾已是我们追加的快捷键
+        // 标记（非 Text），此时不能再改字，只跳过重命名
+        const label = editToolButton.get(0).lastChild;
+        if (label instanceof Text) label.data = data[1];
         editToolButton.append(` ${Utils.keyToHTML(data[2])}`);
       }
     });

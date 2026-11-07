@@ -36,7 +36,11 @@ export class HomePageInit extends Init {
 
   private initRecentlyVisitedMods() {
     const v4 = this.parent.isV4;
-    const recentlyVisitedMods = this.configs.getSettings("recentlyVisitedMods")?.reverse() ?? [];
+    // 反转必须在副本上进行：getSettings 返回的是 StorageBuffer 缓存的活数组，
+    // 原地 reverse() 会污染同页后续读取
+    const recentlyVisitedMods = [
+      ...(this.configs.getSettings("recentlyVisitedMods") ?? []),
+    ].reverse();
     const maxPage = Math.ceil(recentlyVisitedMods.length / 10);
     if (maxPage === 0) return;
     let page = 0;
