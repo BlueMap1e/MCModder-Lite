@@ -11,10 +11,12 @@ type LinkMarkReplaceRule = {
 
 export class MainText {
   private readonly configs: ConfigRepository;
+  private readonly utils: Utils;
   private readonly container: JQuery;
 
   constructor(parent: Mcmodder, container: Node | JQuery) {
     this.configs = parent.configRepository;
+    this.utils = parent.utils;
     this.container = $(container);
 
     if (this.configs.getSettings("linkCheck")) {
@@ -120,31 +122,50 @@ export class MainText {
 
   private singleImageLocalizedCheck(img: HTMLImageElement) {
     const src = img.dataset.src ?? img.src;
-    fetch(src, { method: "HEAD" }).then((resp) => {
-      const container = $(img).parent();
-      if (resp.status != 200) return;
-      const size = Number(resp.headers.get("content-length"));
-      const contentType = resp.headers.get("content-type") ?? "?";
-      const isLocalized = src.includes("mcmod.cn");
-      if (isLocalized) return;
-      if (size > Values.ueditorFileMaxSize)
-        container // editor.options.fileMaxSize
-          .append(
-            `<span class="badge badge-warning mcmodder-localize-check>该图片尚未本地化，但是体积 (${Utils.getFormattedSize(size)}) 超过了本地图床最大体积限制</span>`,
-          )
-          .css("border", "10px solid var(--mcmodder-color-warning)");
-      else if (!["image/png", "image/jpg", "image/jpeg", "image/gif"].includes(contentType))
-        container // editor.options.fileAllowFiles ?
-          .append(
-            `<span class="badge badge-warning mcmodder-localize-check">该图片尚未本地化，但是使用了本地图床不支持的文件格式 (${contentType})</span>`,
-          )
-          .css("border", "10px solid var(--mcmodder-color-warning)");
-      else
-        container
-          .append(
-            '<span class="badge badge-danger mcmodder-localize-check">该图片尚未本地化！</span>',
-          )
-          .css("border", "10px solid var(--mcmodder-color-danger)");
-    });
+    this.utils
+      .createRequest({ url: src, method: "HEAD" }, "图像本地化检测：探测图片体积与类型")
+      .then((resp) => {
+        const container = $(img).parent();
+        if (resp.status != 200) return;
+        // GM_xmlhttpRequest 的 responseHeaders 是 "key: value" 换行串（不是 fetch 的
+        // Headers 对象），解析成小写键的对象再取值
+        const headers = Object.fromEntries(
+          resp.responseHeaders
+            .split(/\r?\n/)
+            .map((line) => {
+              const colon = line.indexOf(":");
+              return colon < 0
+                ? ["", ""]
+                : [line.slice(0, colon).trim().toLowerCase(), line.slice(colon + 1).trim()];
+            })
+            .filter(([key]) => key),
+        );
+        const size = Number(headers["content-length"]);
+        const contentType = headers["content-type"] ?? "?";
+        const isLocalized = src.includes("mcmod.cn");
+        if (isLocalized) return;
+        if (size > Values.ueditorFileMaxSize)
+          container // editor.options.fileMaxSize
+            .append(
+              `<span class="badge badge-warning mcmodder-localize-check">该图片尚未本地化，但是体积 (${Utils.getFormattedSize(size)}) 超过了本地图床最大体积限制</span>`,
+            )
+            .css("border", "10px solid var(--mcmodder-color-warning)");
+        else if (!["image/png", "image/jpg", "image/jpeg", "image/gif"].includes(contentType))
+          container // editor.options.fileAllowFiles ?
+            .append(
+              `<span class="badge badge-warning mcmodder-localize-check">该图片尚未本地化，但是使用了本地图床不支持的文件格式 (${contentType})</span>`,
+            )
+            .css("border", "10px solid var(--mcmodder-color-warning)");
+        else
+          container
+            .append(
+              '<span class="badge badge-danger mcmodder-localize-check">该图片尚未本地化！</span>',
+            )
+            .css("border", "10px solid var(--mcmodder-color-danger)");
+      })
+      .catch(() => {
+        // 外链图床探测失败（未列入 @connect 的域被篡改猴拦截、网络原因等）：
+        // 探测是尽力而为，createRequest 内部已有 console.warn 与去抖提示，这里不重复打扰
+      });
   }
 }
