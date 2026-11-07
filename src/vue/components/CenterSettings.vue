@@ -13,6 +13,8 @@
     />
   </div>
 
+  <p class="center-setting-apply-hint">提示：多数设置修改后需刷新页面才会生效。</p>
+
   <p
     class="center-setting-search-empty text-muted mcmodder-interpolate-container"
     :class="{ collapsed: !(isSearching && !hasVisibleSetting) }"
@@ -502,6 +504,12 @@ onBeforeUnmount(() => treeObserver?.disconnect());
 
 .center-setting-search-empty {
   font-size: 14px;
+}
+
+.center-setting-apply-hint {
+  margin: 0;
+  font-size: 12px;
+  color: var(--mcmodder-color-text-dark3);
 }
 
 .center-block-settings {
