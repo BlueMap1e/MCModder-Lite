@@ -433,6 +433,14 @@ html.dark .p_pop a:hover {
   color: var(--mcmodder-color-accent) !important;
 }
 
+/* 键盘选中行：at.js（@朋友 列表）给当前项打 class="a"，首屏 curatli=0 →
+   第一行恒带此标记；站点让 .p_pop a.a 与 :hover 共用 #E5EDF2 高亮，
+   :hover 上面已盖、选中态漏了 → 第一行闪白。与 hover 同待遇。 */
+html.dark .p_pop a.a {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-accent) !important;
+}
+
 /* 编辑器其余弹层：.p_pop 家族已夜间化，漏网的三族仍是站点原生白底——
    .p_pof（链接/图片/附件弹层，点 Url / 图片 / 附件按钮唤起，全屏编辑器
    与浮窗共用同一套 Discuz 弹层）、.sllt（表情选择面板）、#draftlist_menu
@@ -1693,4 +1701,29 @@ html.dark .buddy > li {
 
 html.dark .buddy > li h3 {
   color: var(--mcmodder-color-text-dark1);
+}
+
+/* 论坛提醒页（home.php?mod=space&do=notice）与私信页（do=pm）：
+   本站模板是定制的，提醒列表容器为 .xld（dl.cl 行，头像/系统图标 systempm.png
+   在 dd.m.avt，行尾「屏蔽」按钮 a.d.b 是 op.png 精灵图 20x20）、私信列表容器
+   为 .bbda（dd.m.avt 头像）。白底小图与浅色精灵图夜间刺眼，与主站内容图片
+   同法降亮，只压亮度不动形状。 */
+html.dark .xld img,
+html.dark .xld .d,
+html.dark .bbda img,
+html.dark .bbda .d {
+  filter: brightness(0.8);
+}
+
+/* 勋章页（home.php?mod=medal 及 action=log）：勋章图 f_*.png 为白底小图，
+   夜间刺眼，与提醒页图标同法降亮。 */
+html.dark .mg_img img {
+  filter: brightness(0.8);
+}
+/* 勋章的白色卡片底是烤在 magic_imgbg.gif 贴图里的（.mg_img 的 background-image，
+   76x76），夜间换调色板深底 + 圆角（与 CAPP 页纹理底图同法）；勋章图本体另有降亮。 */
+html.dark .mg_img {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark2);
+  border-radius: 6px;
 }
