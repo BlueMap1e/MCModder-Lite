@@ -16,9 +16,12 @@
  */
 import { execSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
+import { fileURLToPath } from "node:url";
 import { deflateRawSync } from "node:zlib";
 
-const root = new URL("..", import.meta.url).pathname.replace(/^\/([A-Za-z]:)/, "$1");
+// fileURLToPath 而非手拼 URL.pathname：路径含空格/中文时 pathname 是百分号编码，
+// 直接拼接会拼出不存在的路径
+const root = fileURLToPath(new URL("..", import.meta.url));
 
 /* ---------- 版本号一致性与读取 ---------- */
 
@@ -47,8 +50,6 @@ execSync("npm run build", {
   env: { ...process.env, GF_UNMINIFIED: "1" },
 });
 const jsRaw = readFileSync(`${root}dist/mcmodder-lite.user.js`);
-
-const js = readFileSync(`${root}dist/mcmodder-lite.user.js`);
 
 /* ---------- 命名与落盘 ---------- */
 
