@@ -6,6 +6,8 @@
   "scripts": {
     "dev": "vite",
     "build": "vue-tsc && vite build",
+    "build:types": "vue-tsc",
+    "build:only": "vite build",
     "preview": "vite preview",
     "lint": "eslint src",
     "lint:config": "eslint eslint.config.ts eslint-local-rules vite.config.ts prettier.config.ts lint-staged.config.ts",

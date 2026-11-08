@@ -17,7 +17,7 @@
 import { execSync } from "node:child_process";
 import { mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import { fileURLToPath } from "node:url";
-import { deflateRawSync } from "node:zlib";
+import zlib from "node:zlib";
 
 // fileURLToPath 而非手拼 URL.pathname：路径含空格/中文时 pathname 是百分号编码，
 // 直接拼接会拼出不存在的路径
@@ -42,19 +42,27 @@ if (!readFileSync(`${root}CHANGELOG.md`, "utf8").includes(`## [${version}]`)) {
   process.exit(1);
 }
 
-/* ---------- 构建（两遍，产物各自落盘互不覆盖） ---------- */
+/* ---------- 构建（两遍，产物各自落盘互不覆盖） ----------
 
-console.log("构建压缩产物（TM / 帖内 zip）…");
-execSync("npm run build", { cwd: root, stdio: "inherit" });
-const jsMin = readFileSync(`${root}dist/mcmodder-lite.user.js`);
+   顺序有讲究：未压缩变体先构建、压缩产物最后构建。
+   这样 `dist/mcmodder-lite.user.js` 结束时是**压缩产物**——打包后随手把 dist 里的
+   js 拖进篡改猴或用 smoke 脚本取用的，都是要发布的那一份，而不是 2.4 MB 的 GF 变体。
+   两遍只跑一次 `vue-tsc`：类型检查与压缩方式无关，省掉一次 20 秒左右的门禁。 */
+
+console.log("类型检查（vue-tsc，只跑一次）…");
+execSync("npm run build:types", { cwd: root, stdio: "inherit" });
 
 console.log("构建未压缩变体（GF_UNMINIFIED=1，GreasyFork 提交用）…");
-execSync("npm run build", {
+execSync("npm run build:only", {
   cwd: root,
   stdio: "inherit",
   env: { ...process.env, GF_UNMINIFIED: "1" },
 });
 const jsRaw = readFileSync(`${root}dist/mcmodder-lite.user.js`);
+
+console.log("构建压缩产物（TM / 帖内 zip）…");
+execSync("npm run build:only", { cwd: root, stdio: "inherit" });
+const jsMin = readFileSync(`${root}dist/mcmodder-lite.user.js`);
 
 /* ---------- 命名与落盘 ---------- */
 
@@ -69,23 +77,27 @@ writeFileSync(`${outDir}${rawName}`, jsRaw);
    zip 是标准格式：本地文件头 + 数据 + 中央目录 + 结束记录。Deflate 数据由
    zlib.deflateRawSync 给出（不带 zlib 头尾的裸 deflate，即 zip 的 method 8）。 */
 
-const crcTable = (() => {
-  const t = new Uint32Array(256);
-  for (let n = 0; n < 256; n++) {
-    let c = n;
-    for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
-    t[n] = c >>> 0;
-  }
-  return t;
-})();
-const crc32 = (buf) => {
-  let c = 0xffffffff;
-  for (const b of buf) c = crcTable[(c ^ b) & 0xff] ^ (c >>> 8);
-  return (c ^ 0xffffffff) >>> 0;
-};
+/* CRC-32：Node ≥22.2 自带原生实现（一次调用走完），老版本回退到手写查表。
+   手写版对 2 MB 产物是 200 万次 JS 循环，原生版直接省掉这段。 */
+const crc32 =
+  typeof zlib.crc32 === "function"
+    ? zlib.crc32
+    : (() => {
+        const table = new Uint32Array(256);
+        for (let n = 0; n < 256; n++) {
+          let c = n;
+          for (let k = 0; k < 8; k++) c = c & 1 ? 0xedb88320 ^ (c >>> 1) : c >>> 1;
+          table[n] = c >>> 0;
+        }
+        return (buf) => {
+          let c = 0xffffffff;
+          for (const b of buf) c = table[(c ^ b) & 0xff] ^ (c >>> 8);
+          return (c ^ 0xffffffff) >>> 0;
+        };
+      })();
 
 function zipOne(name, data) {
-  const deflated = deflateRawSync(data, { level: 9 });
+  const deflated = zlib.deflateRawSync(data, { level: 9 });
   const crc = crc32(data);
   const nameBytes = Buffer.from(name, "utf8");
   // DOS 时间取当前时刻（打包时间，仅供文件管理器显示）
