@@ -41,6 +41,10 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
 
 - **Reuse the existing mechanism.** Each feature area has one established entry point
   (see "Where to change what"); do not add a second convention for the same job.
+- **`ConfigRepository.getSettings` returns the live cached object** (StorageBuffer shares
+  one array/object per key). Never mutate it in place (`reverse()`, `sort()`, `push()` on
+  the returned reference pollutes every later reader in the page) — copy first
+  (`[...arr].reverse()`) (audit F-05).
 - **Userscript metadata `namespace` must never equal upstream Mcmodder's** (upstream uses
   `http://www.mcmod.cn/`; ours is `https://github.com/BlueMap1e/MCModder-Lite`). Tampermonkey
   identifies scripts by namespace+name: a shared namespace makes installs/updates drift
@@ -153,6 +157,10 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
     `pinyin-match`, `turndown`, `turndown-plugin-gfm`.
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
     ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
+  - **Shared code must stay jQuery-1.7-compatible**: host pages ship different jQuery
+    versions (measured: homepage 1.8.2, `/tools/cbcreator/` 1.7.2, list pages 2.1.0).
+    Any API newer than 1.7 blows up only on some hosts (the 18 `:first-child()` typos
+    incident was exactly this class of bug — tolerated by newer jQuery, fatal on 1.7.2).
   - Do not upgrade the intentionally old pins (jQuery, SweetAlert) or swap host libraries for
     npm packages; compatibility with the legacy site is the reason for both.
 
