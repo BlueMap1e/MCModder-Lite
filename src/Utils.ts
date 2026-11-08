@@ -384,18 +384,6 @@ export class Utils {
     return { name, englishName };
   }
 
-  /** 下载图片 URL 并转为 Base64 DataURL，失败返回 null */
-  static async imageURL2base64(url: string) {
-    try {
-      const response = await fetch(url);
-      const blob = await response.blob();
-      return Utils.blob2Base64(blob);
-    } catch (error) {
-      console.error("Error converting image to Base64: ", error);
-      return null;
-    }
-  }
-
   /** 将 Blob 读取为 Base64 DataURL 字符串 */
   static async blob2Base64(blob: Blob) {
     return new Promise<string>((resolve, reject) => {
