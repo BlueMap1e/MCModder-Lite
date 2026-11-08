@@ -3727,3 +3727,11 @@ html.dark .ta_btn_primary {
 html.dark .ta_btn_primary:hover {
   filter: brightness(1.1);
 }
+
+/* 编辑页封面占位图（none.jpg，白底浅灰「暂无封面」水印）：夜间下整块白底刺眼，
+   brightness 只能把白压成灰、始终比页面亮一截。占位图没有色彩保真需求，直接
+   整图反相：白底变黑底融入夜色，水印变暗灰隐约可见。用 src 属性选择器限定——
+   真实封面选定后 src 离开 none.jpg，本规则自动失效，不影响正常封面展示。 */
+html.dark img[src$="none.jpg"] {
+  filter: invert(1);
+}
