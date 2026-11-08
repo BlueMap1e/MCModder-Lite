@@ -107,7 +107,7 @@
  *   不展开注释）。
  *
  * - **编辑层**：`editConfigs` 声明哪些列可编辑及控件形态。双击可编辑单元格时按 `TableInputOption`
- *   装配 NUMBER/TEXT 输入控件，提交后经 `EditCommand`（或 `EditRowCommand`）写入 `edited`；
+ *   装配 NUMBER/TEXT 输入控件，提交后经 `EditCommand` 写入 `edited`；
  *   `saveAll` 才把 `edited` 合并回 `content`。所有改动走「命令 / 撤销」模式（`Command` 子类），
  *   由 `execute`/`undo`/`redo` 在历史栈上回放。
  *

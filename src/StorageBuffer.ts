@@ -34,30 +34,6 @@ export class StorageBuffer {
   }
 
   /**
-   * 禁用某个键的缓存同步（登记为不可缓存；重复禁用会告警）。
-   *
-   * @param key 存储键名
-   */
-  disableItem(key: keyof AppStorage) {
-    if (this.isDisabled[key]) {
-      console.warn(`${key} 缓存项被重复禁用。`);
-    }
-    this.isDisabled[key] = true;
-  }
-
-  /**
-   * 启用某个键的缓存同步（登记为可缓存；重复启用会告警）。
-   *
-   * @param key 存储键名
-   */
-  enableItem(key: keyof AppStorage) {
-    if (!this.isDisabled[key]) {
-      console.warn(`${key} 缓存项被重复启用。`);
-    }
-    this.isDisabled[key] = false;
-  }
-
-  /**
    * 判断某键是否已登记（`isDisabled` 中有记录即视为可缓存）。
    *
    * @param key 存储键名（可为 undefined，返回 false）
@@ -102,9 +78,7 @@ export class StorageBuffer {
 
     GM_addValueChangeListener(key, (_key, _oldValue, newValue, remote) => {
       if (this.isDisabled[key] || !remote) return;
-      // this.disableItem(key);
       this.storageRef[key]!.value = newValue !== undefined ? JSON.parse(newValue) : newValue;
-      // this.enableItem(key);
     });
 
     return this;

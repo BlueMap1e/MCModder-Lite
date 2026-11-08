@@ -104,14 +104,6 @@ export class Utils {
     });
   }
 
-  // static rawMap(mods: Record<string, { default: string }>) {
-  //   const out: Record<string, string> = {};
-  //   for (const [p, m] of Object.entries(mods)) {
-  //     out[p.match(/([^/]+)\.\w+$/)![1]] = m.default;
-  //   }
-  //   return out;
-  // }
-
   /** 转发到百科原生的 `showTaskTip`，弹出任务/成就提示 */
   static showTaskTip(
     imageUrl: string,
@@ -180,12 +172,6 @@ export class Utils {
   /** 简易深拷贝（JSON 序列化实现，不保留函数/原型等） */
   static simpleDeepCopy<T>(obj: T): T {
     return JSON.parse(JSON.stringify(obj));
-  }
-
-  /** 复杂深拷贝（当前实现同 `simpleDeepCopy`，TODO 待完善） */
-  static complexDeepCopy<T>(obj: T) {
-    // TODO ...
-    return Utils.simpleDeepCopy(obj);
   }
 
   /** 就地删除对象中值为 `undefined`/`null`/`NaN` 的属性 */
@@ -264,11 +250,6 @@ export class Utils {
     return this.hasAdminAccess(permission);
   }
 
-  /** 当前用户组是否可以进入文件管理后台 */
-  static hasModfileDLAccess(permission: Permission) {
-    return permission === "developer" || permission === "manager" || permission === "admin";
-  }
-
   /** 按 id 取出交互数据并立即清除该条目；id 为空时返回 undefined */
   getInteract(id: string | null) {
     if (id === null || id === undefined) return undefined;
@@ -282,14 +263,6 @@ export class Utils {
     const id = Utils.randStr(8);
     this.configs.set("mcmodderInteracts", id, value);
     return id;
-  }
-
-  /** 播放提示音（默认升级音效） */
-  static playsound(url = Values.assets.mcmod.level.levelup) {
-    const task_audio = document.createElement("audio");
-    task_audio.setAttribute("muted", "muted");
-    task_audio.setAttribute("src", url);
-    task_audio.play();
   }
 
   /** 将形如 `rgb(r,g,b)` 的字符串转换为 `#rrggbb` */
@@ -449,16 +422,6 @@ export class Utils {
     return new Blob([bytes], { type: mimeType });
   }
 
-  /** 将 Blob 读取为文本 */
-  static blobToText(blob: Blob) {
-    return new Promise((resolve, reject) => {
-      const reader = new FileReader();
-      reader.readAsText(blob);
-      reader.onload = () => resolve(reader.result);
-      reader.onerror = reject;
-    });
-  }
-
   /** 若字符串缺少 DataURL 前缀，则补上 `data:<mime>;base64,`（默认 image/png） */
   static appendBase64ImgPrefix(v?: string, defaultMimeType?: string) {
     const mimeType = defaultMimeType ?? "image/png";
@@ -479,17 +442,6 @@ export class Utils {
     const pos = v?.indexOf(";base64,");
     if (pos < 0) return undefined;
     return v.slice(5, pos);
-  }
-
-  /** 触发浏览器下载，保存文本内容或 Blob 为文件 */
-  static saveFile(fileName: string, content: string | Blob) {
-    const blob = content instanceof Blob ? content : new Blob([content]);
-    const link = document.createElement("a");
-    link.href = URL.createObjectURL(blob);
-    link.download = fileName;
-    link.click();
-    // 立刻 revoke 会让部分浏览器拿不到内容，等一拍再释放
-    setTimeout(() => URL.revokeObjectURL(link.href), 0);
   }
 
   /** 延迟 `ms` 毫秒的异步等待 */
@@ -605,13 +557,6 @@ export class Utils {
     anchor.innerText = raw;
     text.replaceWith(anchor);
     return anchor;
-  }
-
-  /** 将版本号数组转为字符串（`[1,1,x]` 统一显示为「远古版本」） */
-  static versionArrayToString(arr: number[]) {
-    if (arr[0] === 1 && arr[1] === 1) return "远古版本"; // 远古版本统一视为 1.1.0
-    if (!arr[2]) arr = arr.slice(0, 2);
-    return arr.join(".");
   }
 
   /** 将 `#rrggbb`/`#rrggbbaa`/`#rgb`/`#rgba` 颜色字符串解析为 RGB/RGBA 对象，格式错误抛出异常 */
@@ -1219,40 +1164,6 @@ export class Utils {
   }
 
   /**
-   * 按 `href` 或内联 `content` 加载样式表，返回加载完成/失败的 Promise，可用 `id` 去重。
-   *
-   * @param loc 挂载 `<link>` 的宿主元素。
-   * @param content 内联 CSS 内容（与 `href` 二选一）。
-   * @param href 外部样式表地址（与 `content` 二选一）。
-   * @param type 样式类型（默认 `"text/css"`）。
-   * @param id 标签 id；若目标文档中已存在该 id 则直接 resolve。
-   */
-  static loadStyle(
-    loc: HTMLElement,
-    content?: string | null,
-    href?: string | null,
-    type?: string | null,
-    id?: string,
-  ) {
-    if (id && loc.ownerDocument.getElementById(id)) {
-      return new Promise<void>((resolve) => {
-        resolve();
-      });
-    }
-    return new Promise<void>((resolve, reject) => {
-      const link = document.createElement("link");
-      link.type = type ? type : "text/css";
-      link.rel = "stylesheet";
-      if (id) link.id = id;
-      if (href) link.href = href;
-      if (content) link.innerHTML = content;
-      link.onload = () => resolve();
-      link.onerror = () => reject();
-      loc.appendChild(link);
-    });
-  }
-
-  /**
    * 向指定位置注入 `<script>`（内联 `content` 或外部 `src`），不等待加载结果。
    *
    * @param loc 挂载 `<script>` 的宿主元素。
@@ -1320,18 +1231,6 @@ export class Utils {
     });
   }
 
-  /**
-   * 并行加载多个外部脚本，全部完成后 resolve。
-   *
-   * @param loc 挂载 `<script>` 的宿主元素。
-   * @param srcList 待加载的外部脚本地址列表。
-   * @param type 脚本类型（默认 `"text/JavaScript"`）。
-   * @param id 标签 id（多个脚本共享同一 id，先到先得）。
-   */
-  static loadScripts(loc: HTMLElement, srcList: string[], type?: string | null, id?: string) {
-    return Promise.all(srcList.map((src) => this.loadScript(loc, null, src, type, id)));
-  }
-
   /** 获取 UTC-8 时区下 0 点的毫秒时间戳，`num` 为相对天数偏移（正数向后，负数向前） */
   static getStartTime(d: number | Date, num = 1) {
     const time = typeof d === "number" ? d : d.getTime();
@@ -1369,81 +1268,6 @@ export class Utils {
     else if (size < 1048576) return f(size / 1024) + " KiB";
     else if (size < 1073741824) return f(size / 1048576) + " MiB";
     else return f(size / 1073741824) + " GiB";
-  };
-
-  /** 将含 Minecraft 格式化代码（`§`）的字符串渲染为带样式的 HTML，并把 `%s` 占位符标为 `<code>` */
-  static getFormattedCodeDecoratedHTML = (str: string) => {
-    const res = $("<span>");
-    if (str.indexOf("\u00a7") >= 0) {
-      let i = 0,
-        color = -1,
-        bold = false,
-        italic = false,
-        obfuscated = false,
-        underline = false,
-        strikethrough = false;
-      const length = str.length;
-      while (i < length) {
-        const span = $("<span>");
-        while (str.charAt(i) === "\u00a7") {
-          const char2 = str.charAt(i + 1);
-          const char2Code = str.charCodeAt(i + 1);
-          let isCodeValid = false;
-          if ((char2Code >= 48 && char2Code <= 57) || (char2Code >= 97 && char2Code <= 102)) {
-            color = char2Code <= 57 ? char2Code - 48 : char2Code - 87;
-            bold = italic = obfuscated = underline = strikethrough = false;
-            isCodeValid = true;
-          } else if (char2 === "k") isCodeValid = obfuscated = true;
-          else if (char2 === "l") isCodeValid = bold = true;
-          else if (char2 === "m") isCodeValid = strikethrough = true;
-          else if (char2 === "n") isCodeValid = underline = true;
-          else if (char2 === "o") isCodeValid = italic = true;
-          else if (char2 === "r") {
-            isCodeValid = true;
-            color = -1;
-            bold = italic = obfuscated = underline = strikethrough = false;
-          }
-
-          span.removeAttr("class");
-          if (color >= 0)
-            span.addClass(`mcmodder-format-color`).addClass(`mcmodder-format-color-${color}`);
-          if (obfuscated) span.addClass(`mcmodder-format-obfuscated`);
-          if (bold) span.addClass(`mcmodder-format-bold`);
-          if (strikethrough) span.addClass(`mcmodder-format-strikethrough`);
-          if (underline) span.addClass(`mcmodder-format-underline`);
-          if (italic) span.addClass(`mcmodder-format-italic`);
-
-          if (isCodeValid) {
-            $(`<span>`)
-              .attr("class", span.attr("class"))
-              .addClass("mcmodder-format-formatter")
-              .text(str.slice(i, i + 2))
-              .appendTo(res);
-            i += 2;
-          } else {
-            break;
-          }
-        }
-
-        let substr = "";
-        do {
-          substr += str.charAt(i++);
-        } while (str.charAt(i) != "\u00a7" && i < length);
-        span.text(substr).appendTo(res);
-      }
-    } else $("<span>").text(str).appendTo(res);
-
-    res.find("span").each((_, c) => {
-      const content = c.innerHTML;
-      const matched = content.match(/%\d*\.{0,1}\d*s/g);
-      let result = content;
-      if (matched) {
-        matched.forEach((e) => (result = result.replaceAll(e, `<code>${e}</code>`)));
-        c.innerHTML = result;
-      }
-    });
-
-    return res.prop("outerHTML");
   };
 
   /**
@@ -1614,29 +1438,6 @@ export class Utils {
     });
   }
 
-  /** 将字符串中的 `\uXXXX` 转义序列还原为对应字符 */
-  static unicode2Character(s: string) {
-    let chineseStr = "";
-    const l = s.length;
-    for (let i = 0; i < l;) {
-      const unicode = s.slice(i, 6);
-      if (unicode.slice(0, 2) === "\\u") {
-        chineseStr += String.fromCharCode(parseInt(unicode.slice(2), 16));
-        i += 6;
-      } else {
-        chineseStr += unicode.charAt(0);
-        i += 1;
-      }
-    }
-    return chineseStr;
-  }
-
-  /** 将 `YYYY-MM-DD HH:MM:SS` 格式字符串解析为本地时间戳 */
-  static customDateStringToTimestamp(str: string) {
-    const [year, month, day, hour, minute, second] = str.split(/[- :]/).map(Number);
-    return new Date(year, month - 1, day, hour, minute, second).getTime();
-  }
-
   /** 清除正文中的百科格式化占位符（如 `[h1=]`） */
   static clearContextFormatter(e: string) {
     e = " " + e;
@@ -1676,19 +1477,6 @@ export class Utils {
   static isNodeHidden(node: Element | JQuery) {
     if ($(node).css("display") === "none") return true;
     return false;
-  }
-
-  /** 将按钮置为加载中状态（禁用并追加 spinner 图标） */
-  static setButtonLoadingState(node: Element | JQuery) {
-    $(node)
-      .addClass("disabled")
-      .attr("disabled", "true")
-      .append(`<i class="fa fa-pulse fa-spinner">`);
-  }
-
-  /** 取消按钮的加载中状态（恢复可用并移除 spinner 图标） */
-  static cancelButtonLoadingState(node: Element | JQuery) {
-    $(node).removeClass("disabled").removeAttr("disabled").find("i:last-child").remove();
   }
 
   /** 净化文件名：将非法字符与空格替换为下划线，并截断到 255 字符 */
@@ -1926,8 +1714,4 @@ export class Utils {
       res.generalTo = Utils.abstractIDFromURL(generalAlert.find("a").attr("href"), "item");
     return res;
   }
-
-  // static parseClassEditorDocument(_$doc: JQuery = $(document)) {
-  // TODO ...
-  // }
 }

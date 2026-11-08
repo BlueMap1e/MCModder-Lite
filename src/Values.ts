@@ -347,11 +347,6 @@ export class Values {
     ".webp,.avif,.png,.jpg,.jpeg,.gif,.bmp,.flv,.swf,.mkv,.avi,.rm,.rmvb,.mpeg,.mpg,.ogg,.ogv,.mov,.wmv,.mp4,.webm,.mp3,.wav,.mid,.rar,.zip,.tar,.gz,.7z,.bz2,.cab,.iso,.doc,.docx,.xls,.xlsx,.ppt,.pptx,.pdf,.txt,.md,.xml";
   /** 站点 UEditor 服务端的 `fileMaxSize`：超过它的文件只作提示、照常尝试上传 */
   static readonly ueditorFileMaxSize = 1024000;
-  /** 资料图标的体积限制 */
-  static readonly iconFileMaxSize = 1572864;
-  static readonly adminIDList = [
-    2, 8, 9, 208, 331, 7926, 7949, 10167, 12422, 14115, 17038, 21294, 29797, 672797,
-  ];
   static readonly ignoredContextFormatters = [
     "h1=",
     "h2=",
@@ -363,18 +358,6 @@ export class Values {
     "icon:",
   ];
   static readonly supportedImageSuffix = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"];
-  static readonly importableKeys: (keyof Item)[] = [
-    "name",
-    "englishName",
-    "registerName",
-    "metadata",
-    "OredictList",
-    "type",
-    "maxStackSize",
-    "maxDurability",
-    "smallIcon",
-    "largeIcon",
-  ];
 
   static readonly loaderID = {
     Forge: "1",
@@ -834,8 +817,6 @@ export class Values {
     other: "其他",
   };
 
-  static readonly reversedSiteMap = this.reverseMap(this.siteMap);
-
   static readonly mcVersionMap = {
     "1": "远古版本",
     "2": "1.2.5",
@@ -925,8 +906,6 @@ export class Values {
     "86": "26.4",
   } as const;
 
-  static readonly reversedMcVersionMap = this.reverseMap(this.mcVersionMap);
-
   static readonly modEnvironmentModeMap = {
     "0": "待考证",
     "1": "需装",
@@ -940,8 +919,6 @@ export class Values {
     "1": "JAVA版 (JAVA Edition)",
     "2": "基岩版 (Bedrock Edition)",
   } as const;
-
-  static readonly reversedModPlatformMap = this.reverseMap(this.modPlatformMap);
 
   static readonly modRelationTypeMap = {
     "1": "前置",
@@ -993,19 +970,6 @@ export class Values {
     { reg: /^在资料.+中添加一张合成表。/, label: "添加合成表" },
     { reg: /^编辑资料.+中的一张合成表。/, label: "编辑合成表" },
     { reg: /^删除资料.+中的一张合成表。/, label: "删除合成表" },
-  ];
-
-  static readonly userItemList = [
-    { lang: "knowledge_fragment", id: 0 },
-    { lang: "technique_crystal", id: 1, isCustom: true },
-    { lang: "memory_cube", id: 2, isCustom: true },
-    { lang: "canning_civilization", id: 3, isCustom: true },
-    { lang: "wisdom_singularity", id: 4, isCustom: true },
-    { lang: "mr_torcherino", id: 5 },
-    { lang: "red_button", id: 6, isCustom: true },
-    { lang: "medal_of_friendship", id: 7, isCustom: true },
-    { lang: "test_1", id: 8, isCustom: true },
-    { lang: "vanilla", id: 9, isCustom: true },
   ];
 
   static readonly nonItemTypeList = {
