@@ -651,6 +651,25 @@ export class Mcmodder {
         $(e.currentTarget).parent().parent().hide();
       });
 
+    // 屏蔽 AdSense 广告：marker 类驱动 base.css 的隐藏规则（ins 由 CSS 兜底，与加载时序无关）；
+    // 壳容器（只含 script/ins、无正文的 div）由这里一次性标记后随类隐藏
+    if (this.configRepository.getSettings("blockAds")) {
+      document.documentElement.classList.add("mcmodder-block-ads");
+      $("ins.adsbygoogle")
+        .parent()
+        .each((_, e) => {
+          const shell = e as HTMLElement;
+          const hasContent = [...shell.childNodes].some(
+            (n) =>
+              (n.nodeType === Node.TEXT_NODE && (n.textContent ?? "").trim() !== "") ||
+              (n instanceof Element &&
+                n.nodeType === Node.ELEMENT_NODE &&
+                !/^(SCRIPT|INS)$/.test(n.tagName)),
+          );
+          if (!hasContent) shell.classList.add("mcmodder-ad-shell");
+        });
+    }
+
     // 自定义物品类型
     this.itemTypeList = this.configRepository.getSettings("itemCustomTypeList") ?? [];
     if (typeof this.itemTypeList === "string") {

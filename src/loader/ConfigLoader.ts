@@ -88,7 +88,15 @@ export const settings = [
             id: "moveAds",
             title: "广告优化",
             description:
-              "将百科的部分广告移动到不影响浏览体验的位置。（本脚本不会主动隐藏或屏蔽广告，若欲屏蔽请自行安装广告屏蔽插件）",
+              "将百科的部分广告移动到不影响浏览体验的位置。（本项只挪不删；要彻底隐藏广告请启用「屏蔽 AdSense 广告」）",
+            type: "checkbox",
+            value: true,
+          },
+          {
+            id: "blockAds",
+            title: "屏蔽 AdSense 广告",
+            description:
+              "隐藏百科页面中的 Google AdSense 广告单元（物品列表页等处的 ins.adsbygoogle）及其空壳容器。站点自有广告位（主页/整合包区等）不受影响，仍用其自带的关闭按钮。",
             type: "checkbox",
             value: true,
           },

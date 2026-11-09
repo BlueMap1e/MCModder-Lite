@@ -3754,3 +3754,14 @@ html.dark .ta_btn_primary:hover {
 html.dark img[src$="none.jpg"] {
   filter: invert(1);
 }
+
+/* 「屏蔽 AdSense 广告」（mcmodder-block-ads 由 Mcmodder.main 挂载到 html）：
+   隐藏站方 Google AdSense 单元。ins 由选择器直接命中、与广告加载时序无关；
+   壳容器（只含 script/ins 的 div）由 main() 一次性标记 mcmodder-ad-shell。 */
+html.mcmodder-block-ads ins.adsbygoogle {
+  display: none !important;
+}
+
+html.mcmodder-block-ads .mcmodder-ad-shell {
+  display: none !important;
+}
