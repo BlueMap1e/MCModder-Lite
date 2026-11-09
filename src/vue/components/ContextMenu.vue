@@ -186,17 +186,21 @@ function updateMenu(e: PointerEvent) {
 }
 
 /**
- * 右键事件：阻止浏览器默认菜单，保存事件并按 `displayRule` 刷新可用项后打开菜单。
- * 菜单已打开时忽略（避免重复打开导致的定位跳动）。
+ * 右键事件：先按 `displayRule` 过滤可用项，有可用项时才阻止浏览器默认菜单并打开。
+ * 没有可用项时**不拦截**——放行原生菜单（便于右键检查元素等），也不再渲染空菜单。
+ * 菜单已打开时忽略（避免重复打开导致的定位跳动），但保持拦截以免原生菜单叠加。
  */
 function onContextmenu(e: PointerEvent) {
-  e.preventDefault();
   const absolutePos = Utils.getAbsolutePos(container!);
-  if (!activeState) {
-    contextmenuEvent = e;
-    updateMenu(e);
-    show(e.pageX - absolutePos.x, e.pageY - absolutePos.y);
+  if (activeState) {
+    e.preventDefault();
+    return;
   }
+  contextmenuEvent = e;
+  updateMenu(e);
+  if (activeIndexLength.value === 0) return;
+  e.preventDefault();
+  show(e.pageX - absolutePos.x, e.pageY - absolutePos.y);
 }
 
 /** 容器内任意点击：菜单已打开则关闭 */

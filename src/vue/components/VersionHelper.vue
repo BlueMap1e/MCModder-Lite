@@ -42,12 +42,15 @@
         </button>
       </div>
       <div v-if="statusText" class="mcmodder-vh-status">{{ statusText }}</div>
-      <GenericTable
-        ref="table"
-        :parent="parent"
-        :attr="{ id: 'mcmodder-version-menu' }"
-        :column-options="columnOptions"
-      />
+      <!-- 窄屏（页宽设置「窄屏」+ 垂直选项卡）下容器放不下整表：横向滚动替代裁切 -->
+      <div class="mcmodder-vh-table-wrap">
+        <GenericTable
+          ref="table"
+          :parent="parent"
+          :attr="{ id: 'mcmodder-version-menu' }"
+          :column-options="columnOptions"
+        />
+      </div>
     </fieldset>
   </div>
 </template>
@@ -260,11 +263,26 @@ const columnOptions = {
     },
   ],
   displayName: "文件名称",
-  gameVersions: "支持 MC 版本",
-  releaseTime: [
-    "发布日期",
-    (data: Date | undefined) => (data ? Utils.getFormattedDate(data) : "-"),
+  gameVersions: [
+    "支持 MC 版本",
+    // 只展示版本号段（Client/Server/加载器等环境标记收进悬浮提示），窄屏下大幅缩短列宽
+    (data, _row) => {
+      const all = String(data ?? "");
+      const entries = all
+        .split(",")
+        .map((s) => s.trim())
+        .filter(Boolean);
+      const versions = entries.filter((s) => /^\d/.test(s));
+      const shown = (versions.length ? versions : entries)
+        .map((s) => Utils.escapeHTML(s))
+        .join(", ");
+      return `<span title="${Utils.escapeHTML(all)}">${shown}</span>`;
+    },
   ],
+  // 注意：displayRule 有「函数声明参数 >= 2 才生效」的隐性契约（见 GenericTable.renderUnit
+  // 的 hasDisplayRule 判断），单参数规则会被静默忽略、单元格回落为原始值直出——
+  // 旧版发布日期的英文长串正是上游单参数规则从未生效所致
+  releaseTime: ["发布日期", (data, _row) => (data ? Utils.getFormattedDate(data as Date) : "-")],
   mcmodVer: [
     "对应百科日志",
     (data, row) => {
@@ -279,7 +297,8 @@ const columnOptions = {
       const base = Utils.getFormattedDate(data);
       const diff = row.dateDiffDays;
       if (diff !== undefined && diff > DATE_DIFF_WARN_DAYS)
-        return `<span class="mcmodder-slim-danger" data-toggle="tooltip" data-original-title="与平台发布日期相差 ${diff} 天，请核对是否为同一次发布">${base} <i class="fa fa-warning"></i></span>`;
+        // 原生 title 而非 Bootstrap tooltip：动态渲染的单元格不会经过站点的 tooltip 初始化
+        return `<span class="mcmodder-slim-danger" title="与平台发布日期相差 ${diff} 天，请核对是否为同一次发布">${base} <i class="fa fa-warning"></i></span>`;
       return base;
     },
   ],
@@ -545,6 +564,27 @@ function switchPlatform(p: PlatformId) {
 </script>
 
 <style lang="css">
+/* 窄屏兼容：容器放不下时横向滚动而不是截断列 */
+.mcmodder-vh-table-wrap {
+  overflow-x: auto;
+}
+.mcmodder-vh-table-wrap table {
+  min-width: 860px;
+}
+/* 可读性：GenericTable 默认斑马纹（primary-background 与 background 交替）对比过强、
+   行密度偏高——收敛为单色底 + 行分隔线 + 悬停高亮。
+   仅作用于此表的实例 id，不影响其它 GenericTable（编辑表格等）的既有观感 */
+#mcmodder-version-menu tr:not(.mcmodder-table-empty) {
+  background-color: var(--mcmodder-color-primary-background);
+}
+#mcmodder-version-menu tbody td {
+  padding: 6px 8px;
+  line-height: 1.55;
+  border-bottom: 1px solid var(--mcmodder-color-background-transparent);
+}
+#mcmodder-version-menu tbody tr:hover > td {
+  background-color: var(--mcmodder-color-background-transparent);
+}
 .mcmodder-vh-bar {
   display: flex;
   align-items: center;
