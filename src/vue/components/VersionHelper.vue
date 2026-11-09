@@ -101,11 +101,12 @@ interface PlatformModule {
 type VersionHelperRow = GameVersionCompareEntry;
 
 const table = useTemplateRef("table");
-/** 首选来源设置（dropdownMenu 数值键）→ 平台 id；缺省 GitHub（编辑者主要搬运源）。
+/** 首选来源设置（dropdownMenu 数值键）→ 平台 id；缺省 CurseForge（匿名额度稳定，与
+ *  ConfigLoader 的默认值保持一致）。
  *  设置只决定初始平台，面板内切换仅本会话有效，不回写设置 */
 const PLATFORM_BY_SETTING: Record<number, PlatformId> = { 0: "cf", 1: "mr", 2: "gh" };
 const active = ref<PlatformId>(
-  PLATFORM_BY_SETTING[Number(parent.utils.configs.getSettings("versionHelperPlatform"))] ?? "gh",
+  PLATFORM_BY_SETTING[Number(parent.utils.configs.getSettings("versionHelperPlatform"))] ?? "cf",
 );
 const queryText = ref("");
 const statusText = ref("");

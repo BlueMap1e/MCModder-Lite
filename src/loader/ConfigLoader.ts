@@ -434,9 +434,9 @@ export const settings = [
             id: "versionHelperPlatform",
             title: "首选日志来源",
             description:
-              "打开日志智能管理时默认对齐的平台，面板内仍可随时临时切换。GitHub 使用公开仓库的 Releases（匿名请求限额 60 次/小时）。",
+              "打开日志智能管理时默认对齐的平台，面板内仍可随时临时切换。GitHub 使用公开仓库的 Releases（匿名请求限额 60 次/小时，不适合作为默认来源）。",
             type: "dropdownMenu",
-            value: 2,
+            value: 0,
             range: {
               0: "CurseForge",
               1: "Modrinth",
