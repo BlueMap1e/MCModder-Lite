@@ -1458,6 +1458,10 @@ interface GameVersion {
   name: string;
   mcver: string[];
   logid: number;
+  /** 时间栏是否为有效日期（「未知时间」为 false） */
+  dateKnown?: boolean;
+  /** 该条日志的编辑页地址（列表 DOM 的编辑按钮，如 /class/version/edit/753/） */
+  editLink?: string;
 }
 interface CFGameVersion {
   id: number;
@@ -1485,6 +1489,10 @@ interface GameVersionCompareEntry {
   mcmodVer?: string;
   mcmodMcver?: string;
   mcmodDate?: Date;
+  /** 匹配到的百科日志编辑链接；有值即视为「已匹配」，操作列给出编辑入口 */
+  editLink?: string;
+  /** 平台发布日期与百科收录日期的差（天，绝对值；仅两侧日期都有效时计算） */
+  dateDiffDays?: number;
   options: string;
 }
 
