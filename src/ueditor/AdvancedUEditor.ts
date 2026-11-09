@@ -983,7 +983,7 @@ export class AdvancedUEditor extends UEditor {
                 if (
                   next &&
                   next.nodeType === Node.TEXT_NODE &&
-                  !temp.hasAttribute("data-space-prev") &&
+                  !temp.hasAttribute("data-space-next") &&
                   /\s/.test(next.data.slice(0)) &&
                   !/\s/.test(temp.text.slice(-1))
                 ) {
