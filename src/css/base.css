@@ -3576,6 +3576,25 @@ html.dark.mcmodder-tools-page .ui-dialog .ui-dialog-titlebar-close {
   filter: invert(1);
 }
 
+/* 搜索框自动补全（jQuery UI autocomplete，search.mcmod.cn 结果页与主站页头搜索共用）：
+   菜单为动态创建的 .ui-autocomplete，jquery-ui 的 .ui-widget-content 写死白底 #fff，
+   夜间下菜单项字色继承全局浅色 → 白底白字。悬停态兼容新旧两代 jQuery UI 的
+   ui-state-focus / ui-state-hover / ui-state-active 三种类名 */
+html.dark .ui-autocomplete {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+html.dark .ui-autocomplete .ui-menu-item {
+  color: var(--mcmodder-color-text);
+}
+html.dark .ui-autocomplete .ui-menu-item.ui-state-focus,
+html.dark .ui-autocomplete .ui-menu-item.ui-state-hover,
+html.dark .ui-autocomplete .ui-menu-item .ui-state-active {
+  background-color: var(--mcmodder-color-primary-transparent1);
+  color: var(--mcmodder-color-text);
+}
+
 /* 成就生成器的 spectrum 取色器：.sp-replacer #eee、.sp-container #ececec。
    色板梯度（.sp-sat/.sp-val/.sp-hue）与预览色块（.sp-preview-inner）是功能
    本体，不动 */
