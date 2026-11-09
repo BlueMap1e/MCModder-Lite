@@ -77,7 +77,13 @@ const userscriptMeta = {
     "GM_addValueChangeListener",
     "GM_xmlhttpRequest",
   ],
-  connect: ["mcmod.cn", "www.curseforge.com", "api.modrinth.com"],
+  connect: [
+    "mcmod.cn",
+    "www.curseforge.com",
+    "api.modrinth.com",
+    "api.cfwidget.com",
+    "api.github.com",
+  ],
 } as const;
 
 /** 32 位 FNV-1a 哈希，用于给 dev 期模块 URL 打缓存戳 */

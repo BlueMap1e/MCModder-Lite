@@ -580,33 +580,90 @@ async function onQuery() {
   }
 }
 
-/** 从资料编辑页带出登记的 CF/MR 项目 ID（显式按钮，不再聚焦即取） */
+/** 获取 ID（显式按钮）：CF/MR 从资料编辑页带出登记的项目 ID；
+ *  GitHub 从资料页页头的外链图标取——wiki 把外链编码成
+ *  link.mcmod.cn/target/<base64>，GitHub 图标的锚点 title 为「GitHub」。
+ *  任何一步取不到都**不覆盖**用户已输入的内容（非破坏性）。 */
 async function onFetchID() {
-  setStatus("正在从资料编辑页获取项目 ID…");
+  const label = modules[active.value].label;
+  setStatus("正在从资料页获取项目信息…");
   try {
+    if (active.value === "gh") {
+      const ghRepo = await fetchGhRepoFromWiki();
+      if (!ghRepo) {
+        setStatus(`资料页没有 GitHub 仓库链接，已保留当前输入；可手动输入 owner/repo 或粘贴链接`);
+        return;
+      }
+      platformText.gh = ghRepo;
+      queryText.value = ghRepo;
+      setStatus(`已从资料页获得 ${ghRepo}，点击「查询」拉取 Releases`);
+      return;
+    }
     const resp = await parent.utils.createRequest(
       {
-        url: `${parent.hostname}/class/edit/${document.location.href.split("/version/")[1].split(".html")[0]}/`,
+        url: `${parent.hostname}/class/edit/${document.location.href.split("/class/version/")[1]?.split(".html")[0]}/`,
         method: "GET",
       },
       "从编辑页获取 CFID/MRID",
     );
     if (!resp.responseXML) throw new Error("编辑页不可达");
     const w = $(resp.responseXML);
-    const ids: Record<PlatformId, string> = {
+    const ids = {
       cf: String(w.find("#class-cfprojectid").val() ?? "").trim(),
       mr: String(w.find("#class-mrprojectid").val() ?? "").trim(),
-      gh: "",
     };
-    platformText.cf = ids.cf;
-    platformText.mr = ids.mr;
-    queryText.value = ids[active.value];
-    if (!ids.cf && !ids.mr) setStatus("资料编辑页没有登记 CF / MR 项目 ID，请手动输入或粘贴链接");
-    else if (!ids[active.value])
-      setStatus(`${modules[active.value].label}侧未登记项目 ID，可切换平台后重新获取`);
-    else setStatus("已获取项目 ID，点击「查询」拉取列表");
+    if (ids.cf) platformText.cf = ids.cf;
+    if (ids.mr) platformText.mr = ids.mr;
+    const got = ids[active.value as "cf" | "mr"];
+    if (!got) {
+      const other =
+        active.value === "cf"
+          ? ids.mr
+            ? "（MR 侧有记录，可切换平台）"
+            : ""
+          : ids.cf
+            ? "（CF 侧有记录，可切换平台）"
+            : "";
+      setStatus(`${label}侧未登记项目 ID${other}，已保留当前输入；可手动输入或粘贴链接`);
+      return;
+    }
+    queryText.value = got;
+    setStatus("已获取项目 ID，点击「查询」拉取列表");
   } catch (e) {
-    setStatus(`获取 ID 失败：${e instanceof Error ? e.message : "编辑页不可达或未登录"}`);
+    setStatus(
+      `获取失败：${e instanceof Error ? e.message : "编辑页不可达或未登录"}（已保留当前输入）`,
+    );
+  }
+}
+
+/** 从资料页页头外链解析 GitHub 仓库（owner/repo）：
+ *  锚点形如 <a title="GitHub" href="//link.mcmod.cn/target/<base64>">，
+ *  base64 解码后为 GitHub 仓库地址，取其 pathname 前两段 */
+async function fetchGhRepoFromWiki(): Promise<string | null> {
+  const classId = document.location.href.split("/class/version/")[1] ?? "";
+  if (!classId) return null;
+  const resp = await parent.utils.createRequest(
+    { url: `${parent.hostname}/class/${classId}`, method: "GET" },
+    "从资料页获取 GitHub 链接",
+  );
+  if (!resp.responseXML) return null;
+  const anchors = $(resp.responseXML).find(
+    "a[data-original-title='GitHub'][href*='link.mcmod.cn/target/'], a[title='GitHub'][href*='link.mcmod.cn/target/']",
+  );
+  const href = anchors.first().attr("href");
+  if (!href) return null;
+  let b64 = href.split("/target/")[1] ?? "";
+  try {
+    // 兼容 URL-safe 变体与缺失的末尾填充
+    b64 = b64.replace(/-/g, "+").replace(/_/g, "/");
+    b64 += "===".slice((b64.length + 3) % 4);
+    const decoded = atob(b64);
+    const url = new URL(decoded);
+    if (!/(^|\.)github\.com$/.test(url.hostname)) return null;
+    const segs = url.pathname.split("/").filter(Boolean);
+    return segs.length >= 2 ? `${segs[0]}/${segs[1]}` : null;
+  } catch {
+    return null;
   }
 }
 
