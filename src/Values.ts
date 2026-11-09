@@ -120,7 +120,7 @@ export class Values {
     js: {
       // 统一走 npmmirror（与 turndown 的 @require 一致），避免 cdnjs / jsdelivr 在大陆网络下不可达
       markdownit: "https://registry.npmmirror.com/markdown-it/11.0.1/files/dist/markdown-it.min.js",
-      pangu: "https://registry.npmmirror.com/pangu/7.2.0/files/dist/browser/pangu.umd.js",
+      pangu: "https://registry.npmmirror.com/pangu/4.0.7/files/dist/browser/pangu.min.js",
       turndown: "https://cdnjs.cloudflare.com/ajax/libs/turndown/7.2.1/turndown.min.js",
     },
     nightMode: {
