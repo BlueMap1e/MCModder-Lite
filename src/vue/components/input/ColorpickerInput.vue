@@ -42,6 +42,7 @@
 <script setup lang="ts">
 import { computed, ref, useTemplateRef } from "vue";
 import { useInputBase } from "../../composables/useInputBase";
+import { THEME_PRESETS } from "../../../config/themePresets";
 import type { InputProps } from "../../../types/props";
 
 const props = defineProps<InputProps<string>>();
@@ -60,20 +61,14 @@ const { onChange, getValue, setCurrentValue, setDisplayValue } = useInputBase({
 const activeColor = ref(props.value);
 
 /**
- * 预设色板。选色原则：中性、低冲击、亮/夜两底皆可用。
- * 每组两色是**配套设计**（同色系深浅档），主/副配色各取一组即可得到平和的渐变；
- * 也允许跨组自由组合，但双色相混搭会重新引入视觉冲突，组间距即为提示。
- * - 石墨蓝：默认方案（黑白灰蓝，内容站气质）
- * - 百科经典：MC 百科 Logo 的两色，保留社区特征
- * - 暖橙 / 松绿 / 中性：备选强调色
+ * 预设色板：与「主题样式包」（themePresets.ts）共用同一张表。
+ * 选色原则：中性、低冲击、亮/夜两底皆可用。每组两色是**配套设计**
+ * （同色系深浅档），也允许跨组自由组合，但双色相混搭会重新引入视觉冲突。
  */
-const PRESET_GROUPS: { name: string; colors: string[] }[] = [
-  { name: "石墨蓝", colors: ["#3b82f6", "#1e40af"] },
-  { name: "百科经典", colors: ["#86c155", "#58b6d8"] },
-  { name: "暖橙", colors: ["#c15f3c", "#a14a2f"] },
-  { name: "中性", colors: ["#64748b", "#334155"] },
-  { name: "松绿", colors: ["#0d9488", "#0f766e"] },
-];
+const PRESET_GROUPS: { name: string; colors: string[] }[] = THEME_PRESETS.map((p) => ({
+  name: p.name,
+  colors: [...p.colors],
+}));
 
 const PRESET_COLORS = new Set(PRESET_GROUPS.flatMap((g) => g.colors));
 

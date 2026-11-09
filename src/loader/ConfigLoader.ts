@@ -10,20 +10,30 @@ export const settings = [
         label: "主题样式",
         settings: [
           {
+            id: "themePreset",
+            title: "主题样式包",
+            description:
+              "一键选择整套主题配色（主配色 + 副配色配套设计，卡片上的渐变条即实际效果预览）。想细调时选「自定义」，会展开下方的主/副配色取色器。",
+            type: "themepack",
+            value: "graphite",
+          },
+          {
             id: "themeColor1",
             title: "主题样式主配色",
             description:
-              "主题样式主配色。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
+              "自定义细调：主题样式主配色。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
             value: "#3b82f6",
+            visible: (ctx) => !!ctx.configs.getSettings("themeCustomColors"),
           },
           {
             id: "themeColor2",
             title: "主题样式副配色",
             description:
-              "主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
+              "自定义细调：主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
             type: "colorpicker",
             value: "#1e40af",
+            visible: (ctx) => !!ctx.configs.getSettings("themeCustomColors"),
           },
         ],
       },

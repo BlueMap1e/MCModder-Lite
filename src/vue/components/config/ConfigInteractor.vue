@@ -25,6 +25,13 @@
         :value="value as string"
         :on-successful-change="onConfigSuccessfulChange"
       />
+      <ThemePackInput
+        v-else-if="type === 'themepack'"
+        :title="title"
+        :value="value as string"
+        :configs="configs"
+        :on-successful-change="onConfigSuccessfulChange"
+      />
       <NumberInput
         v-else-if="type === 'number'"
         :title="title"
@@ -78,6 +85,7 @@ import { Utils } from "../../../Utils";
 import CheckboxInput from "../input/CheckboxInput.vue";
 import TextInput from "../input/TextInput.vue";
 import ColorpickerInput from "../input/ColorpickerInput.vue";
+import ThemePackInput from "../input/ThemePackInput.vue";
 import NumberInput from "../input/NumberInput.vue";
 import SliderInput from "../input/SliderInput.vue";
 import DropdownMenuInput from "../input/DropdownMenuInput.vue";

@@ -222,6 +222,10 @@ interface Settings {
   autolinkStyleSpace: boolean;
   preferredAutolinkStyle: 1 | 2;
   preferredDragPos: Record<string, number>;
+  /** 主题样式包：预设 id 或 custom（自定义细调模式） */
+  themePreset: import("../config/themePresets").ThemePresetId;
+  /** 自定义细调模式开启中（开放主/副配色取色器）；由样式包控件读写，无面板行 */
+  themeCustomColors?: boolean;
   /** 日志智能管理的首选来源：0 CurseForge / 1 Modrinth / 2 GitHub */
   versionHelperPlatform: 0 | 1 | 2;
 
@@ -252,7 +256,8 @@ type InputType =
   | "colorpicker"
   | "keybind"
   | "dropdownMenu"
-  | "dropdownTextMenu";
+  | "dropdownTextMenu"
+  | "themepack";
 
 type Permission = "banned" | "none" | "editor" | "developer" | "manager" | "admin";
 
@@ -373,6 +378,15 @@ interface DropdownTextConfigParams extends ConfigParamsBase<
   suggestion?: InputSimplifiedSuggestion[];
 }
 
+/** 主题样式包类配置项（一套 = 主配色 + 副配色，写入两个 themeColor 键） */
+interface ThemePackConfigParams extends ConfigParamsBase<
+  KeysOfType<Required<Settings>, string>,
+  string,
+  never
+> {
+  type: "themepack";
+}
+
 /** `ConfigUtils.add` 接受的注册参数：以 `type` 区分的各种输入类型 */
 type ConfigParams =
   | CheckboxConfigParams
@@ -382,7 +396,8 @@ type ConfigParams =
   | SliderConfigParams
   | KeybindConfigParams
   | DropdownConfigParams
-  | DropdownTextConfigParams;
+  | DropdownTextConfigParams
+  | ThemePackConfigParams;
 
 /** 用于决定配置项是否显示的上下文 */
 interface ConfigVisibilityContext {

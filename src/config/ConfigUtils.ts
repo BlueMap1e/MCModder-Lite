@@ -13,6 +13,7 @@ export class ConfigUtils {
     keybind: {},
     dropdownMenu: 0,
     dropdownTextMenu: "",
+    themepack: "graphite",
   } as const satisfies Record<InputType, unknown>;
 
   private readonly configs: ConfigRepository;
