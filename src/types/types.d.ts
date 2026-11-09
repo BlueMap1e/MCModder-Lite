@@ -222,6 +222,8 @@ interface Settings {
   autolinkStyleSpace: boolean;
   preferredAutolinkStyle: 1 | 2;
   preferredDragPos: Record<string, number>;
+  /** 日志智能管理的首选来源：0 CurseForge / 1 Modrinth / 2 GitHub */
+  versionHelperPlatform: 0 | 1 | 2;
 
   // 以下为旧版遗留
   templateList?: Template[];
@@ -1477,10 +1479,22 @@ interface MRGameVersion {
   game_versions: string[];
   date_published: number;
 }
+interface GHRelease {
+  id: number;
+  tag_name: string;
+  name?: string | null;
+  draft: boolean;
+  prerelease: boolean;
+  published_at: string | null;
+  created_at: string;
+  body?: string | null;
+}
 interface GameVersionCompareEntry {
-  platform: 1 | 2;
+  platform: 1 | 2 | 3;
   cfid?: string;
   mrid?: string;
+  /** GitHub 仓库（owner/repo），platform 3 时随补全日志链接回传 */
+  ghrepo?: string;
   fileID: number;
   releaseType: string;
   displayName: string;

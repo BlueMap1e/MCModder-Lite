@@ -417,8 +417,22 @@ export const settings = [
             id: "versionHelper",
             title: "日志智能管理",
             description:
-              "允许从其他网站获取模组版本列表，并支持一键补充缺失的日志。支持 CurseForge 和 Modrinth 双平台。开启后在资料版本列表页出现查询入口，输入框可直接粘贴项目或文件链接。",
+              "允许从其他网站获取模组版本列表，并支持一键补充缺失的日志。支持 CurseForge / Modrinth / GitHub（Releases）。开启后在资料版本列表页出现查询入口，输入框可直接粘贴项目或文件链接。",
             type: "checkbox",
+          },
+          {
+            id: "versionHelperPlatform",
+            title: "首选日志来源",
+            description:
+              "打开日志智能管理时默认对齐的平台，面板内仍可随时临时切换。GitHub 使用公开仓库的 Releases（匿名请求限额 60 次/小时）。",
+            type: "dropdownMenu",
+            value: 2,
+            range: {
+              0: "CurseForge",
+              1: "Modrinth",
+              2: "GitHub",
+            },
+            visible: (ctx) => ctx.configs.getSettings("versionHelper"),
           },
         ],
       },

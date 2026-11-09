@@ -42,7 +42,7 @@ export class VersionEditInit extends Init {
       });
     // setTimeout(editorInit, 1e3);
 
-    // 自动从 CurseForge/Modrinth 源获取日志
+    // 自动从 CurseForge/Modrinth/GitHub 源获取日志
     const param = new URLSearchParams(window.location.search);
     let source = 0,
       id;
@@ -52,6 +52,8 @@ export class VersionEditInit extends Init {
     } else if (param.get("mrid")) {
       source = 2;
       id = param.get("mrid");
+    } else if (param.get("ghrepo") && param.get("ghtag")) {
+      source = 3;
     }
     if (source) {
       const fileid = param.get("fileid");
@@ -76,6 +78,18 @@ export class VersionEditInit extends Init {
           "从 MR 获取日志内容",
         );
         data = JSON.parse(resp.responseText).changelog;
+      } else if (source === 3) {
+        // GitHub Releases：正文是 Markdown，与 MR 同走 MD 编辑器
+        const [owner, repo] = String(param.get("ghrepo")).split("/");
+        resp = await this.parent.utils.createRequest(
+          {
+            url: `https://api.github.com/repos/${owner}/${repo}/releases/tags/${param.get("ghtag")}`,
+            method: "GET",
+          },
+          "从 GitHub 获取日志内容",
+        );
+        const release = JSON.parse(resp.responseText) as GHRelease;
+        data = release.body;
       }
       if (data) {
         // 编辑器懒加载，轮询等就绪；旧的固定 1.1s 延迟在编辑器加载慢时会静默失败

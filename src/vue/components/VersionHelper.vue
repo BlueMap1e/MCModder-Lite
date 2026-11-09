@@ -21,8 +21,8 @@
           >
             {{ modules[p].label }}
           </button>
-          <button disabled type="button" title="GitHub Releases 导入规划中">GitHub</button>
         </div>
+
         <input
           v-model="queryText"
           class="form-control"
@@ -74,12 +74,12 @@ const DATE_DIFF_WARN_DAYS = 7;
 const captchaAttemptMaxLimit = 2;
 const captchaAttemptInterval = 5000;
 
-type PlatformId = "cf" | "mr";
+type PlatformId = "cf" | "mr" | "gh";
 
 /** 平台无关的文件行（拉取层产出，匹配层再加工成 GameVersionCompareEntry） */
 interface NormalizedRow {
   platform: PlatformId;
-  /** 该平台的查询键（CF 数字项目 ID / MR slug），补全日志链接需要 */
+  /** 该平台的查询键（CF 数字项目 ID / MR slug / GitHub owner-repo），补全日志链接需要 */
   projectKey: string;
   fileID: number;
   releaseType: string;
@@ -101,17 +101,23 @@ interface PlatformModule {
 type VersionHelperRow = GameVersionCompareEntry;
 
 const table = useTemplateRef("table");
-const active = ref<PlatformId>("cf");
+/** 首选来源设置（dropdownMenu 数值键）→ 平台 id；缺省 GitHub（编辑者主要搬运源）。
+ *  设置只决定初始平台，面板内切换仅本会话有效，不回写设置 */
+const PLATFORM_BY_SETTING: Record<number, PlatformId> = { 0: "cf", 1: "mr", 2: "gh" };
+const active = ref<PlatformId>(
+  PLATFORM_BY_SETTING[Number(parent.utils.configs.getSettings("versionHelperPlatform"))] ?? "gh",
+);
 const queryText = ref("");
 const statusText = ref("");
 const querying = ref(false);
 /** 各平台输入框文案与查询结果缓存（会话内有效，切换平台回显；查询按钮始终强制刷新） */
-const platformText: Record<PlatformId, string> = { cf: "", mr: "" };
+const platformText: Record<PlatformId, string> = { cf: "", mr: "", gh: "" };
 const resultCache: Record<PlatformId, { rows: VersionHelperRow[]; fetchedAt: number } | null> = {
   cf: null,
   mr: null,
+  gh: null,
 };
-const platformIds: PlatformId[] = ["cf", "mr"];
+const platformIds: PlatformId[] = ["cf", "mr", "gh"];
 
 function setStatus(text: string) {
   statusText.value = text;
@@ -207,10 +213,12 @@ function matchWikiLogs(rows: NormalizedRow[]): VersionHelperRow[] {
       for (const w of wiki) {
         const wikiMod = modVersionOf(w.name, w.mcver);
         if (!wikiMod || !versionEq(fileMod, wikiMod)) continue;
-        // MC 版本维度校验：两侧都有有效 MC 版本时必须相交，防止跨 MC 版本错配
+        // MC 版本维度校验：两侧都有有效 MC 版本时必须相交，防止跨 MC 版本错配；
+        // GitHub Releases 没有 MC 版本维度（fileMc 为空），仅按模组版本匹配
         const wikiMc = w.mcver.filter((m) => /^\d/.test(m));
         if (
           wikiMc.length &&
+          r.gameVersions.length &&
           !wikiMc.some((m) =>
             r.gameVersions.some((g) => g.trim().toLowerCase() === m.toLowerCase()),
           )
@@ -227,9 +235,10 @@ function matchWikiLogs(rows: NormalizedRow[]): VersionHelperRow[] {
       }
     }
     const out: VersionHelperRow = {
-      platform: r.platform === "cf" ? 1 : 2,
+      platform: r.platform === "cf" ? 1 : r.platform === "mr" ? 2 : 3,
       cfid: r.platform === "cf" ? r.projectKey : undefined,
       mrid: r.platform === "mr" ? r.projectKey : undefined,
+      ghrepo: r.platform === "gh" ? r.projectKey : undefined,
       fileID: r.fileID,
       releaseType: r.releaseType,
       displayName: r.displayName,
@@ -258,7 +267,8 @@ const columnOptions = {
   fileID: "文件ID",
   releaseType: [
     "发布状态",
-    (data) => {
+    // 同 releaseTime：displayRule 必须 ≥2 参数，否则规则被静默忽略
+    (data, _row) => {
       const state = String(data).toLowerCase();
       return `<span class="badge versiontag versiontag-${Utils.escapeHTML(state)}">${Utils.escapeHTML(String(data))}</span>`;
     },
@@ -319,6 +329,9 @@ const columnOptions = {
         return `<a href="${base}?cfid=${row.cfid}&fileid=${row.fileID}&ver=${ver}&mcver=${mcver}&date=${row.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
       if (row.platform === 2)
         return `<a href="${base}?mrid=${row.mrid}&fileid=${row.fileID}&ver=${ver}&mcver=${mcver}&date=${row.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
+      // GitHub：ghtag 即 tag_name（displayName），编辑页经 Releases API 取 Markdown 正文
+      if (row.platform === 3)
+        return `<a href="${base}?ghrepo=${encodeURIComponent(String(row.ghrepo ?? ""))}&ghtag=${encodeURIComponent(row.displayName)}&ver=${ver}&date=${row.releaseTime.valueOf()}" target="_blank">补全日志</a>`;
       return "";
     },
   ],
@@ -386,7 +399,32 @@ const mrModule: PlatformModule = {
   fetchList: (mrid) => fetchMRList(mrid),
 };
 
-const modules: Record<PlatformId, PlatformModule> = { cf: cfModule, mr: mrModule };
+const ghModule: PlatformModule = {
+  label: "GitHub",
+  placeholder: "输入 owner/repo 或粘贴 GitHub 仓库链接",
+  parseInput: async (raw) => {
+    if (!/github\.com\//i.test(raw)) {
+      // owner/repo 简写
+      if (/^[A-Za-z0-9_.-]+\/[A-Za-z0-9_.-]+$/.test(raw)) return raw;
+      Utils.commonMsg("输入既不是 owner/repo 也不是 GitHub 仓库链接", false);
+      return null;
+    }
+    let segs: string[];
+    try {
+      segs = new URL(raw).pathname.split("/").filter(Boolean);
+    } catch {
+      Utils.commonMsg("链接无法解析，请检查后重试，或直接输入 owner/repo", false);
+      return null;
+    }
+    // /<owner>/<repo>[/tree|releases|tags/...] 一律取前两段
+    if (segs.length >= 2) return `${segs[0]}/${segs[1]}`;
+    Utils.commonMsg("无法从链接识别 owner/repo，请检查链接", false);
+    return null;
+  },
+  fetchList: (repo) => fetchGHReleases(repo),
+};
+
+const modules: Record<PlatformId, PlatformModule> = { cf: cfModule, mr: mrModule, gh: ghModule };
 
 /** CF 文件列表：分页拉取（1s 间隔），保留站点人机验证的重试与引导 */
 function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
@@ -480,6 +518,32 @@ async function fetchMRList(mrid: string): Promise<NormalizedRow[]> {
   }));
 }
 
+/** GitHub Releases：公开仓库匿名可用（限额 60 次/小时），单页 100 条覆盖绝大多数仓库。
+ *  Releases 没有 MC 版本维度，匹配时仅按模组版本（tag）比对 */
+async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
+  const resp = await parent.utils.createRequest(
+    {
+      url: `https://api.github.com/repos/${repo}/releases?per_page=100`,
+      method: "GET",
+      anonymous: true,
+    },
+    "从 GitHub 获取 Releases",
+  );
+  if (resp.status === 404) throw new Error("仓库不存在或为私有");
+  if (resp.status === 403 || resp.status === 429)
+    throw new Error("GitHub 匿名额度已用尽（60 次/小时），请稍后再试");
+  const data = JSON.parse(resp.responseText) as GHRelease[];
+  return data.map((i) => ({
+    platform: "gh" as const,
+    projectKey: repo,
+    fileID: i.id,
+    releaseType: i.draft ? "Draft" : i.prerelease ? "Prerelease" : "Release",
+    displayName: i.tag_name,
+    gameVersions: [],
+    releaseTime: new Date(i.published_at || i.created_at),
+  }));
+}
+
 /* ---------- 交互编排：显式的「获取 ID / 查询」，不再由聚焦事件隐式触发 ---------- */
 
 function renderRows(rows: VersionHelperRow[]) {
@@ -532,6 +596,7 @@ async function onFetchID() {
     const ids: Record<PlatformId, string> = {
       cf: String(w.find("#class-cfprojectid").val() ?? "").trim(),
       mr: String(w.find("#class-mrprojectid").val() ?? "").trim(),
+      gh: "",
     };
     platformText.cf = ids.cf;
     platformText.mr = ids.mr;
