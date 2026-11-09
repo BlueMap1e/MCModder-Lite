@@ -80,13 +80,15 @@ function pick(p: ThemePreset) {
   onChange();
 }
 
-/** 点击自定义：不改颜色，只展开主/副配色取色器（持久化，下次进入保持展开） */
+/** 点击自定义：切换细调模式（展开 ⇄ 收起），不改颜色。
+ *  切换依据是存储位本身（themeCustomColors），而非高亮态——收起后卡片仍高亮
+ *  （表示当前处于自定义配色），此时再点应重新展开。
+ *  展开时主/副配色取色器可见（持久化，下次进入保持）；收起时颜色保持不变 */
 function pickCustom() {
-  if (activeId.value !== "custom") {
-    props.configs.setSettings("themeCustomColors", true);
-    setDOMValue("custom");
-    onChange();
-  }
+  const expand = !props.configs.getSettings("themeCustomColors");
+  props.configs.setSettings("themeCustomColors", expand);
+  setDOMValue("custom");
+  onChange();
 }
 
 function getDOMValue() {
