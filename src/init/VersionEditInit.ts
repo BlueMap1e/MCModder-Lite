@@ -77,35 +77,57 @@ export class VersionEditInit extends Init {
         );
         data = JSON.parse(resp.responseText).changelog;
       }
-      if (data)
-        setTimeout(() => {
+      if (data) {
+        // 编辑器懒加载，轮询等就绪；旧的固定 1.1s 延迟在编辑器加载慢时会静默失败
+        let tries = 20; // 300ms × 20，共 6s 窗口
+        const fill = () => {
+          const ueditor = this.parent.ueditorFrame?.[0] as AdvancedUEditor | undefined;
+          const frameBody = ($("#ueditor_0").get(0) as HTMLIFrameElement | undefined)
+            ?.contentDocument?.body;
+          const ready =
+            source === 1
+              ? !!(typeof editor !== "undefined" && editor.body && frameBody)
+              : !!ueditor?.mdEditor;
+          if (!ready) {
+            if (--tries > 0) {
+              setTimeout(fill, 300);
+            } else {
+              Utils.commonMsg("编辑器加载超时，日志自动填充未完成，可刷新页面重试", false);
+            }
+            return;
+          }
           if (source === 1) {
             editor.setContent(data);
-          } else if (source === 2) {
-            const ueditor = this.parent.ueditorFrame[0] as AdvancedUEditor;
-            ueditor.mdEditor?.setValue(data);
+          } else if (ueditor?.mdEditor) {
+            ueditor.mdEditor.setValue(data);
           }
-          const w = ($("#ueditor_0").get(0) as HTMLIFrameElement).contentDocument?.body;
           let f = false;
-          if (!w) return;
-          for (let i = 1; i < 6; i++)
-            $(w)
-              .find("h" + i)
-              .each((_, e) => {
-                // 标题文本可能是作者可控内容，重组成百科标记前先转义
-                const headingText = Utils.escapeHTML(e.textContent ?? "");
-                $(e).replaceWith(`<p>[h${i}=${headingText}]</p>`);
-                f = true;
-              });
-          if (f) $(w).append("<p>[ban:title_menu]</p>");
-          $(w).trigger("keyup");
-        }, 1100);
+          if (frameBody) {
+            for (let i = 1; i < 6; i++)
+              $(frameBody)
+                .find("h" + i)
+                .each((_, e) => {
+                  // 标题文本可能是作者可控内容，重组成百科标记前先转义
+                  const headingText = Utils.escapeHTML(e.textContent ?? "");
+                  $(e).replaceWith(`<p>[h${i}=${headingText}]</p>`);
+                  f = true;
+                });
+            if (f) $(frameBody).append("<p>[ban:title_menu]</p>");
+            $(frameBody).trigger("keyup");
+          }
+        };
+        fill();
+      }
       $("[data-multi-id=name]").val(param.get("ver") || "");
       $("[data-multi-id=mcversion]").val(param.get("mcver") || "");
-      const d = new Date(parseInt(param.get("date") || ""));
-      $("#mcmodder-date-editor")
-        .val((d.getFullYear() % 1e2) * 1e4 + (d.getMonth() + 1) * 1e2 + d.getDate())
-        .trigger("change");
+      // date 参数为毫秒时间戳；缺失或非法时跳过日期预填（旧代码会把 NaN 写进输入框）
+      const dateTs = Number(param.get("date"));
+      if (Number.isFinite(dateTs) && dateTs > 0) {
+        const d = new Date(dateTs);
+        $("#mcmodder-date-editor")
+          .val((d.getFullYear() % 1e2) * 1e4 + (d.getMonth() + 1) * 1e2 + d.getDate())
+          .trigger("change");
+      }
     }
   }
 }

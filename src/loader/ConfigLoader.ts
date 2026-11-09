@@ -417,7 +417,7 @@ export const settings = [
             id: "versionHelper",
             title: "日志智能管理",
             description:
-              "允许从其他网站获取模组版本列表，并支持一键补充缺失的日志。支持 CurseForge 和 Modrinth 双平台。",
+              "允许从其他网站获取模组版本列表，并支持一键补充缺失的日志。支持 CurseForge 和 Modrinth 双平台。开启后在资料版本列表页出现查询入口，输入框可直接粘贴项目或文件链接。",
             type: "checkbox",
           },
         ],

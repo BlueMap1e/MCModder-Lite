@@ -14,7 +14,7 @@
         id="mcmodder-fetch-version-cf"
         ref="fetchCF"
         class="form-control"
-        placeholder="输入 CFID 以查询..."
+        placeholder="输入 CFID 或粘贴 CurseForge 项目 / 文件链接以查询..."
         @focus="onFetchCFFocus"
         @focusout="onFetchCFFocusout"
       />
@@ -22,7 +22,7 @@
         id="mcmodder-fetch-version-mr"
         ref="fetchMR"
         class="form-control"
-        placeholder="输入 MRID 以查询..."
+        placeholder="输入 MRID 或粘贴 Modrinth 项目链接以查询..."
         @focus="onFetchMRFocus"
         @focusout="onFetchMRFocusout"
       />
@@ -133,9 +133,47 @@ function onFetchCFFocus() {
 }
 
 function onFetchCFFocusout() {
-  const cfid = fetchCF.value!.value.trim();
-  if (!Number.isFinite(Number(cfid))) return;
-  getCurseForgeFileList(cfid);
+  const raw = fetchCF.value!.value.trim();
+  if (!raw) return;
+  if (/curseforge\.com\//i.test(raw)) {
+    void fetchCFByLink(raw);
+    return;
+  }
+  if (!Number.isFinite(Number(raw))) return;
+  getCurseForgeFileList(raw);
+}
+
+/** CurseForge 链接解析：链接形如 /<游戏>/<分类>/<slug>[/files/<文件ID>]。
+ *  CF 的搜索接口不对外开放，slug → 数字项目 ID 走 cfwidget 公共只读镜像；
+ *  失败时保留原有手动填数字 ID 的路径。 */
+async function fetchCFByLink(link: string) {
+  let path: string;
+  try {
+    path = new URL(link).pathname.split("/files/")[0];
+  } catch {
+    Utils.commonMsg("链接无法解析，请检查后重试，或直接填数字项目 ID", false);
+    return;
+  }
+  Utils.commonMsg("正在解析 CF 数字项目 ID…");
+  try {
+    const resp = await parent.utils.createRequest(
+      { url: `https://api.cfwidget.com${path}`, method: "GET" },
+      "解析 CF 数字项目 ID",
+    );
+    const data = JSON.parse(resp.responseText) as { id?: number; message?: string };
+    if (data.id) {
+      fetchCF.value!.value = String(data.id);
+      getCurseForgeFileList(String(data.id));
+      return;
+    }
+    // cfwidget 首次遇到冷门项目会排队缓存，稍后重试即可
+    Utils.commonMsg(
+      `CF 解析暂未就绪（${Utils.escapeHTML(String(data.message ?? "未知原因"))}），稍后重试或手动填数字 ID`,
+      false,
+    );
+  } catch {
+    Utils.commonMsg("CF 数字项目 ID 解析失败，可手动填入数字 ID 重试", false);
+  }
 }
 
 function onFetchMRFocus() {
@@ -146,9 +184,34 @@ function onFetchMRFocus() {
 }
 
 function onFetchMRFocusout() {
-  const mrid = fetchMR.value!.value.trim();
-  if (!mrid) return;
-  getModrinthFileList(mrid);
+  const raw = fetchMR.value!.value.trim();
+  if (!raw) return;
+  const slug = parseMRLink(raw);
+  if (slug) {
+    fetchMR.value!.value = slug;
+    getModrinthFileList(slug);
+    return;
+  }
+  if (/modrinth\.com\//i.test(raw)) {
+    Utils.commonMsg("无法从链接识别 Modrinth 项目 slug，请检查链接", false);
+    return;
+  }
+  getModrinthFileList(raw);
+}
+
+/** Modrinth 链接解析：/mod|plugin|modpack|.../<slug>[...]/version/<版本号>，
+ *  类型段后即项目 slug；Modrinth API 直接接受 slug 查询，无需再解析数字 ID */
+function parseMRLink(link: string): string | null {
+  if (!/modrinth\.com\//i.test(link)) return null;
+  let segs: string[];
+  try {
+    segs = new URL(link).pathname.split("/").filter(Boolean);
+  } catch {
+    return null;
+  }
+  const types = new Set(["mod", "plugin", "resourcepack", "modpack", "shader", "project"]);
+  const i = segs.findIndex((s) => types.has(s.toLowerCase()));
+  return i >= 0 && segs[i + 1] ? segs[i + 1] : null;
 }
 
 async function autoFillFetchID() {
