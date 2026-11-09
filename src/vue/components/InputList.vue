@@ -183,7 +183,12 @@ const onInitSuggestion = shallowRef<InputListOnInitSuggestion>();
 /** 实际生效的候选保存回调；为 `undefined` 时不提供「新增 / 删除候选」的操作 */
 const onModifySuggestion = shallowRef<InputListOnModifySuggestion>();
 
-let closeLock = false;
+/**
+ * 收起抑制旗标：控制器关闭弹出框（`close`）后置 true，此后任何 effect 重算都不得把
+ * `selectable` 抬回 true（否则 alwaysShowAll 类输入会立即「重新展开」，表现为关不上）。
+ * `setOption`（控制器重新 serve / 展示）时清除。
+ */
+let closeSuppress = false;
 
 /**
  * 由 `InputListPopoverController` 在输入元素获得焦点时调用：切换「当前服务对象」并重建候选读写回调。
@@ -193,6 +198,8 @@ let closeLock = false;
  *               （交互元素与输入元素是同一个时，控制器会把两者一并传进来）。
  */
 function setOption(option: InputListProps) {
+  // 控制器重新 serve = 显式展示意图，解除收起抑制
+  closeSuppress = false;
   inputRef.value = option.inputNode;
   alwaysShowAllSuggestions.value = option.alwaysShowAllSuggestions ?? false;
   defaultSelectionProvider.value = option.defaultSelectionProvider ?? (() => 0);
@@ -245,11 +252,23 @@ const listRef = useTemplateRef("listRef");
  *
  * 候选列表的「是否显示」就是 `selectable`（由匹配结果决定），故把它作为弹出框的显示状态传进去。
  */
-const { popoverRef, popoverProps, applyOption, updatePos, close, getPopoverElement } =
-  usePopoverHost({
-    visible: selectable,
-    maxHeight: 300,
-  });
+const {
+  popoverRef,
+  popoverProps,
+  applyOption,
+  updatePos,
+  close: closeHost,
+  getPopoverElement,
+} = usePopoverHost({
+  visible: selectable,
+  maxHeight: 300,
+});
+
+/** 收起弹出框：先置收起抑制旗标（effect 重算不得重新展开），再经宿主收起 */
+function close() {
+  closeSuppress = true;
+  closeHost();
+}
 
 // 候选数量变化后重新量一次列表高度（向上弹出时需要它来定位）
 watch(
@@ -262,18 +281,6 @@ watch(
       popoverRef.value?.onPopoverHeightChange();
       triggerRef(popoverRef);
     });
-  },
-);
-
-// 显隐动画：显示时先取消隐藏、下一帧再取消淡出；隐藏时先淡出、200ms 后才真正隐藏
-// （显隐本身由 `usePopoverHost` 同步给 `Popover`，这里只管「隐藏后短暂别再弹回来」的锁）
-watch(
-  () => selectable.value,
-  () => {
-    closeLock = true;
-    setTimeout(() => {
-      closeLock = false;
-    }, 100);
   },
 );
 
@@ -306,7 +313,8 @@ watchEffect(() => {
 
   selected.value = 0;
 
-  if (closeLock && !selectable.value) {
+  // 被控制器显式收起后保持隐藏：此时任何依赖重算（如配置项面板的筛选）都不得重新展开
+  if (closeSuppress && !selectable.value) {
     return;
   }
 

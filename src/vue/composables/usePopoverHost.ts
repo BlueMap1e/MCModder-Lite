@@ -68,6 +68,7 @@ export function usePopoverHost(options: UsePopoverHostOptions = {}) {
 
   // 显隐同步：显示状态一变就通知 `Popover`（它据此播放淡入淡出），打开时再量一次高度
   watch(visible, (value) => {
+    console.debug("[dbg] host watch(visible):", value);
     popoverRef.value?.onPopoverVisibilityChange(value);
     if (value) {
       popoverRef.value?.onPopoverHeightChange();

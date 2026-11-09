@@ -74,6 +74,9 @@ export interface PopoverBaseOption {
   anchorElement?: HTMLElement;
   /** 若在弹出框已打开时再次触发，则关闭弹出框 */
   closeWhenClickAgain?: boolean;
+  /** 弹出框开合回调：展开 true / 收起 false。收起涵盖全部路径（外部点击、再次点击、
+   *  控制器切换服务目标），供宿主同步「展开态」外观（如下拉按钮的箭头方向） */
+  onOpenChange?: (open: boolean) => void;
   /**
    * 决定弹出框样式中的 z-index 值，在诸如需要区分是否会被 swal 弹出框（z-index=1000）
    * 覆盖的场景下很有用 @default 500

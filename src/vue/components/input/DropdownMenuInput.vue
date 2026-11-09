@@ -9,10 +9,7 @@
       :aria-haspopup="'listbox'"
       :aria-expanded="selected"
       :value="content"
-      @click="onClick"
       @mousedown="onMouseDown"
-      @focus="onFocus"
-      @blur="onBlur"
     />
   </span>
 </template>
@@ -54,10 +51,10 @@ const valueInputRef = useTemplateRef("valueInput");
 
 /** 手动向候选列表派发事件的函数（`add` 的返回值），用于补发该元素收不到的事件 */
 let eventSender: ReturnType<typeof InputListPopoverController.instance.add>;
-/** 是否处于展开态（决定按钮的 `.expanded` 样式） */
+/** 是否处于展开态（决定按钮的 `.expanded` 样式与 aria-expanded）。
+ *  由弹层控制器的 `onOpenChange` 回调驱动——真实开合状态的镜像，
+ *  而非旧实现的 focus/blur 猜测（列表被控制器收起时输入框并不失焦，猜测必然失步） */
 const selected = ref(false);
-/** 刚被程序化聚焦的 100ms 内的标记：用于区分「点按钮展开」与「点按钮收起」 */
-let focusLock = false;
 
 /** 按钮上显示的文案：按当前值从 `range` 里取（`range` 的值即展示用 HTML） */
 const content = computed(() => {
@@ -90,27 +87,6 @@ function onMouseDown(e: MouseEvent) {
   if (e.detail > 1) e.preventDefault();
 }
 
-/** 点击按钮：已展开且不是「刚聚焦」时才收起（点自己弹出的那次不算） */
-function onClick() {
-  if (selected.value && !focusLock) {
-    inputRef.value!.click();
-  }
-}
-
-/** 按钮获得焦点（通常是点击后候选列表打开时补的焦点）：标记展开，并上锁 100ms */
-function onFocus() {
-  selected.value = true;
-  focusLock = true;
-  setTimeout(() => {
-    focusLock = false;
-  }, 100);
-}
-
-/** 按钮失焦：收起 */
-function onBlur() {
-  selected.value = false;
-}
-
 onMounted(() => {
   // 登记交互元素（按钮），但把输入逻辑指向隐藏的 `valueInput`，定位锚点也用按钮
   eventSender = InputListPopoverController.instance.add(inputRef.value!, {
@@ -118,6 +94,11 @@ onMounted(() => {
     inputListBindElement: valueInputRef.value!,
     anchorElement: inputRef.value!,
     closeWhenClickAgain: true,
+    // 展开态镜像：箭头方向与 aria-expanded 跟随弹层的真实开合（含「再次点击收起」
+    // 与「点击外部收起」两条路径；旧实现靠 focus/blur 猜测，收起不失焦时必然失步）
+    onOpenChange: (open) => {
+      selected.value = open;
+    },
     // 枚举选择是「列出全部」而非「按输入过滤」，不做拼音匹配
     alwaysShowAllSuggestions: true,
     // 将下拉列表的默认选项设置为当前内存态的对应数值

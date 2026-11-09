@@ -298,16 +298,31 @@ export abstract class PopoverController<
     if (option.closeWhenClickAgain && this.activeTarget === target) {
       return false;
     }
+    // 切换服务目标时，旧目标的弹出框被本目标顶掉（单弹层实例），对旧目标而言等同收起
+    if (this.activeTarget !== null && this.activeTarget !== target) {
+      this.notifyOpenChange(this.activeTarget, false);
+    }
     this.activeTarget = target;
     this.applyOption(option, target);
+    this.notifyOpenChange(target, true);
     return true;
+  }
+
+  /** 通知某交互元素的宿主弹出框开合（宿主未登记 `onOpenChange` 时无副作用） */
+  private notifyOpenChange(target: HTMLElement, open: boolean) {
+    const option = this.hasOption(target);
+    if (option !== undefined && !(option instanceof Function)) {
+      option.onOpenChange?.(open);
+    }
   }
 
   /** 关闭当前正在服务的弹出框 */
   private closeActive() {
     if (this.activeTarget === null) return;
+    const target = this.activeTarget;
     this.app.close();
     this.activeTarget = null;
+    this.notifyOpenChange(target, false);
   }
 
   /**
