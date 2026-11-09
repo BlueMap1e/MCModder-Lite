@@ -49,6 +49,7 @@
           :parent="parent"
           :attr="{ id: 'mcmodder-version-menu' }"
           :column-options="columnOptions"
+          :disable-virtual="true"
         />
       </div>
     </fieldset>
@@ -482,9 +483,8 @@ async function fetchMRList(mrid: string): Promise<NormalizedRow[]> {
 /* ---------- 交互编排：显式的「获取 ID / 查询」，不再由聚焦事件隐式触发 ---------- */
 
 function renderRows(rows: VersionHelperRow[]) {
-  table.value!.empty();
-  rows.forEach((r) => table.value!.appendData(r));
-  table.value!.refreshAll();
+  // setAllData 一次性替换并刷新：全量渲染下逐行 appendData 会每行触发一次全表刷新
+  table.value!.setAllData(rows);
 }
 
 async function onQuery() {
@@ -571,19 +571,19 @@ function switchPlatform(p: PlatformId) {
 .mcmodder-vh-table-wrap table {
   min-width: 860px;
 }
-/* 可读性：GenericTable 默认斑马纹（primary-background 与 background 交替）对比过强、
-   行密度偏高——收敛为单色底 + 行分隔线 + 悬停高亮。
+/* 可读性：行底用中性面板色统一抬升（不用主题色染色，避免随主题变暖/变蓝整体发色），
+   主题色只出现在悬停焦点上；行间用细分隔线保持可扫读性。
    仅作用于此表的实例 id，不影响其它 GenericTable（编辑表格等）的既有观感 */
 #mcmodder-version-menu tr:not(.mcmodder-table-empty) {
-  background-color: var(--mcmodder-color-primary-background);
+  background-color: var(--mcmodder-color-background-dark2);
 }
 #mcmodder-version-menu tbody td {
   padding: 6px 8px;
   line-height: 1.55;
-  border-bottom: 1px solid var(--mcmodder-color-background-transparent);
+  border-bottom: 1px solid var(--mcmodder-color-background-dark3);
 }
 #mcmodder-version-menu tbody tr:hover > td {
-  background-color: var(--mcmodder-color-background-transparent);
+  background-color: var(--mcmodder-color-primary-transparent1);
 }
 .mcmodder-vh-bar {
   display: flex;

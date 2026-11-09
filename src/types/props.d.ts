@@ -16,6 +16,14 @@ export interface TableProps<T extends TableAcceptable> {
   attr?: object;
   columnOptions: ColumnOptionsInitializer<T>;
   editConfigs?: EditOptionsInitializer<T>;
+  /**
+   * 关闭虚拟滚动、全量渲染所有行（缺省保持虚拟滚动）。
+   *
+   * 虚拟层假设所有行等高（用单行实测高度估算占位边距，渲染后再量测修正），行高不一致
+   * 或宿主为页面级滚动时，占位边距与实测高度互相反馈会产生滚动抖动 / 尾部空白。
+   * 行数在几百量级的轻量表格可开启本项直接全量渲染，规避整类问题。
+   */
+  disableVirtual?: boolean;
 }
 
 export interface ConfigResourceFileListInteractorProps<K extends keyof AppStorage> {

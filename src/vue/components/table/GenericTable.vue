@@ -392,6 +392,18 @@ function scrollTo(index: number) {
 }
 
 function onScroll() {
+  // 全量渲染模式：绕过虚拟滚动窗口。虚拟层的等高假设在行高不一致 / 页面级滚动场景下，
+  // 占位边距与实测行高互相反馈会产生滚动抖动与尾部空白；几百行的轻量表格直接全量渲染
+  if (props.disableVirtual) {
+    const end = currentData.value.length;
+    const target = end === 0 ? { l: -1, r: -1 } : { l: 0, r: end };
+    if (renderingRows.value.l !== target.l || renderingRows.value.r !== target.r) {
+      renderingRows.value = target;
+    }
+    cssMarginTopHeight.value = 0;
+    cssMarginBottomHeight.value = 0;
+    return;
+  }
   const newRows = calculateRenderableRows();
   if (renderingRows.value.l === newRows.l && renderingRows.value.r === newRows.r) {
     if (newRows.l === -1 && newRows.r === -1) {
