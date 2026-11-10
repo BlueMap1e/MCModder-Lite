@@ -681,6 +681,7 @@ body > .container > * {
 .common-icon-text.edit-history,
 .bd-callout,
 .tab-ul > .text-danger,
+.center-task-block,
 .center-content.lv-info,
 .center-card-block.badges,
 .common-center .maintext .item-give,
@@ -977,10 +978,17 @@ body .header-container {
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: calc(2 * var(--mcmodder-width-padding-3));
 }
-#center-task-frame .center-content hr {
+#center-task-frame .center-content hr,
+.center-block-subhead {
   grid-column: 1 / -1;
   width: 100%;
 }
+#center-task-frame .center-task-block {
+  width: 100%;
+  height: 100%;
+  margin: 0;
+}
+.center-task-border,
 .center-card-border {
   border: unset;
   margin: unset;
