@@ -124,6 +124,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   (missing-global guard + attach gate + readiness bail), re-read the whole path — each is
   correct alone, together they multiply silent-failure modes; a bail that can be permanent
   must either retry or log loudly.
+- **Site-JS-rendered DOM (verify.html lists, center pages, editor surfaces) may not exist
+  when the script starts** — the site renders lists/tables after its own data fetches, which
+  can land after our init. Before any structural DOM change (column surgery, row splitting),
+  poll for the target's readiness (300ms × 20 pattern, see `callEditor` / `pollCompacted`);
+  and inject any style **only after** the structural change succeeded — a style landing on
+  an unrestructured table is the disaster shape (2026-11-11 verify.html incident: injected
+  nowrap + original 4-column table = vertically wrapped headers, silent, zero console
+  errors). On failure, fall back to the native table and log loudly.
 
 ## Maintenance notes (2026-11)
 
