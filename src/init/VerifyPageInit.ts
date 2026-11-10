@@ -32,7 +32,7 @@ export class VerifyPageInit extends Init {
       // 重置表格）会留下「注入的 nowrap + 原始 4 列表」的挤压灾难——表头竖排、
       // 列宽失衡。这里在 try 内完成全部重构，成功才注入样式；失败则放弃并
       // 回退站点原生表格（可能永久的失败必须大声记录，见 HANDOFF 教训）。
-      // 状态图标映射：重构与后续计数逻辑都要用，声明在 try 外（计数在 try 后）
+      // 状态图标映射：重构与后续计数逻辑都要用，声明在闭包外（计数在重构后）
       const stateIcon = [
         "",
         "fa fa-pulse fa-spinner",
@@ -40,206 +40,226 @@ export class VerifyPageInit extends Init {
         "fa fa-close",
         "fa fa-mail-reply",
       ];
-      try {
-        const verifyTable = $(".table");
-        const stateLang = Object.entries(PublicLangData.verify_list.state.list);
+      // 待审列表由站点 JS 异步渲染：数据 AJAX 晚于脚本启动时表格尚不存在，
+      // 重构会全部空转而样式照常落盘——原始 4 列表格被 nowrap 挤压的灾难形态
+      // （用户实机回归实例，且控制台零报错极具迷惑性）。因此轮询等 tbody 行
+      // 出现再重构（callEditor 同款模式）；用户无待审项时站点渲染 p.empty 而
+      // 非表格，静默跳过；超时大声记录并放弃。
+      const compactedRun = () => {
+        try {
+          const verifyTable = $(".table");
+          const stateLang = Object.entries(PublicLangData.verify_list.state.list);
 
-        verifyTable
-          .find("thead th")
-          .last()
-          .html("状态")
-          .after("<th>审核人</th><th>最后审核</th><th>操作</th><th>附言</span></th>");
-
-        verifyTable.find("thead > tr:nth-child(1) > th:nth-child(3)").append("&nbsp;");
-        const verifyStateTd = verifyTable.find("tbody > tr > td:nth-child(4)");
-        verifyStateTd.each((_, _entry) => {
-          const entry = $(_entry);
-          const verifyState = ["", "", "", "", ""];
-          const s = entry.find("p:first-child");
-          const t = s.text();
-          stateLang.forEach((e) => {
-            if (t === e[1])
-              s.html(
-                `<i data-toggle="tooltip" data-original-title="${t}" class="${stateIcon[Number(e[0])]}"></i>`,
-              );
-          });
-          verifyState[0] = s.get(0).outerHTML;
-          entry.find("p:not(p:first-child)").each((_, e) => {
-            const c = e.textContent.split(": "),
-              h = e.outerHTML.replaceAll(c[0] + ": ", "");
-            if (c[0] === PublicLangData.verify_list.verifynum)
-              verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${c[0]}: ${c[1]}">(${parseInt(c[1])})</p>`;
-            else if (c[0] === PublicLangData.verify_list.verifyuser) verifyState[1] = h;
-            else if (c[0] === PublicLangData.verify_list.time.verifytime) verifyState[2] = h;
-            else if (c[0] === PublicLangData.verify_list.reason) verifyState[4] = h;
-          });
-          verifyState[3] = entry
-            .contents()
-            .filter("*:not(p)")
-            .toArray()
-            .reduce((a, b) => a + b.outerHTML, "");
-          entry.after(verifyState.reduce((a, b) => `${a}<td>${b ? b : ""}</td>`, "")).remove();
-        });
-
-        if (verifyTable.find("thead th").eq(2).text().includes("最后审核时间")) {
-          verifyTable.find("thead th:nth-child(6), tbody td:nth-child(6)").remove();
-          verifyTable.find("thead th").eq(2).text("最后审核");
-        }
-
-        // 重构完成才注入紧凑样式。td 一律限定在待审列表容器内——无作用域的
-        // 全局 td nowrap 是旧版挤压灾难的根源。横线化 + 行悬浮替代 bootstrap
-        // 全网格硬边（用户裁定走现代表格风格，2026-11-11）。
-        Utils.addStyle(
-          ".table-bordered thead td, .table-bordered thead th {text-align: center; min-width: 3em;} " +
-            ".btn-group-sm > .btn, .btn-sm {padding: .0rem .5rem} " +
-            ".verify-list-list .table > tbody > tr > td:nth-child(4) > p {display: inline;} " +
-            ".verify-list-list td {text-overflow: ellipsis; overflow: hidden; white-space: nowrap; vertical-align: top;} " +
-            ".verify-list-list th {white-space: nowrap;} " +
-            ".verify-list-list td:nth-child(4) i {width: unset; margin: unset;} " +
-            ".verify-list-list .table-bordered {border: none;} " +
-            ".verify-list-list .table-bordered th, .verify-list-list .table-bordered td {border: none; border-bottom: 1px solid var(--mcmodder-color-background-dark3);} " +
-            ".verify-list-list .table-bordered thead th {border-bottom-width: 2px;} " +
-            ".verify-list-list tbody tr:hover td {background-color: var(--mcmodder-color-background-transparent1);}",
-        );
-      } catch (error) {
-        console.error("[MCModder-Lite] 紧凑式待审列表重构失败，已回退站点原生表格：", error);
-        return;
-      }
-
-      $(".table i.fa-lightbulb-o")
-        .parent()
-        .each((_, c) => {
-          // 附言由提交者撰写：只在文本节点上原地生成 <a>，不重新解析 HTML
-          Utils.linkifyTextNodes(c);
-        });
-
-      // 筛选索引
-      const counter = new Array(Values.searchOption.length).fill(null).map(() => [0, 0, 0, 0, 0]);
-      $(".verify-list-list-table tbody tr").each((_, e) => {
-        const tr = $(e);
-        const d = tr.find("td:nth-child(2)").text();
-        Values.searchOption.forEach((item, index) => {
-          if (
-            item.reg.test(d) &&
-            (!item.exclude || !d.includes(item.exclude)) &&
-            (!item.exclude2 || !d.includes(item.exclude2))
-          ) {
-            tr.attr("edit-type", index.toString());
-            counter[index][0]++;
-            const t = tr.find("td:nth-child(4) p:first-child i").attr("class");
-            stateIcon.forEach((e, i) => {
-              if (t.includes(e)) counter[index][i]++;
-            });
-          }
-        });
-      });
-      $("[edit-type=3],[edit-type=9]").each((_, _e) => {
-        // 查看详细
-        const e = $(_e);
-        const d = e.find("td:nth-child(4)");
-        let t = "item";
-        const icon = d.find("i").get(0);
-        if (!icon || !icon.classList.contains("fa-spinner")) return;
-        switch (Number(e.attr("edit-type"))) {
-          case 3:
-            t = "class";
-            break;
-          case 9:
-            t = "item";
-        }
-        const l = e
-          .find("td:nth-child(2) a")
-          .filter((_, c) => (c as HTMLAnchorElement).href.includes("/" + t + "/"));
-        if (l.length && !e.find(".verify-withdraw-btn").length) {
-          e.find("td")
+          verifyTable
+            .find("thead th")
             .last()
-            .prev()
-            .append(
-              `<a class="btn btn-outline-dark btn-sm mcmodder-content-block" href="/${t}/edit/${Utils.abstractLastFromURL(l.attr("href"), t)}/" target="_blank">查看改动</a>`,
-            );
-        }
-      });
+            .html("状态")
+            .after("<th>审核人</th><th>最后审核</th><th>操作</th><th>附言</span></th>");
 
-      // 快捷切换时间段
-      const t0 = Number(Date.now() / 1e3);
-      const param = window.location.href.split("verify.html?")[1]?.split("&page=")[0];
-      const daytime = 24 * 60 * 60;
-      $(".verify-list-search-area").append(
-        `<a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 30 * daytime}&endtime=${t0}" style="margin-left: 8px;">近30天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 7 * daytime}&endtime=${t0}" style="margin-left: 8px;">近7天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 3 * daytime}&endtime=${t0}" style="margin-left: 8px;">近3天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 1 * daytime}&endtime=${t0}" style="margin-left: 8px;">近24小时</a>`,
-      );
-
-      // 筛选待审项
-      let searchFrame = $('<div class="verify-list-search-area">');
-      Values.searchOption.forEach((item, index) => {
-        const data = counter[index];
-        const text = data.map((e) => e.toLocaleString());
-        if (!data[0]) return;
-        const c = $('<div class="checkbox" style="display: inline-block;">');
-        let h = `<input type="checkbox" id="mcmodder-type-${index}"><label for="mcmodder-type-${index}">${item.label} <span class="badge-row">`;
-        if (data[1])
-          h += `<span class="text-muted" data-toggle="tooltip" data-original-title="${text[1]} 条待审核">${text[1]}</span>`;
-        if (data[2])
-          h += `<span class="text-success" data-toggle="tooltip" data-original-title="${text[2]} 条已通过">${text[2]}</span>`;
-        if (data[3])
-          h += `<span class="text-danger" data-toggle="tooltip" data-original-title="${text[3]} 条已退回">${text[3]}</span>`;
-        if (data[4])
-          h += `<span style="text-muted-muted" data-toggle="tooltip" data-original-title="${text[4]} 条已撤回">${text[4]}</span>`;
-        h += `</span></label>`;
-        c.html(h);
-        c.find("input").bind("change", (e) => {
-          const input = e.currentTarget as HTMLInputElement;
-          const opt: string[] = [],
-            v = $("#mcmodder-verify-search").val().trim().toLowerCase();
-          $("div.checkbox input", $(input).parent().parent().parent())
-            .filter((_, c) => (c as HTMLInputElement).checked)
-            .each((_, c) => {
-              opt.push((c as HTMLInputElement).id.split("-")[2]);
+          verifyTable.find("thead > tr:nth-child(1) > th:nth-child(3)").append("&nbsp;");
+          const verifyStateTd = verifyTable.find("tbody > tr > td:nth-child(4)");
+          verifyStateTd.each((_, _entry) => {
+            const entry = $(_entry);
+            const verifyState = ["", "", "", "", ""];
+            const s = entry.find("p:first-child");
+            const t = s.text();
+            stateLang.forEach((e) => {
+              if (t === e[1])
+                s.html(
+                  `<i data-toggle="tooltip" data-original-title="${t}" class="${stateIcon[Number(e[0])]}"></i>`,
+                );
             });
-          $(".verify-list-list-table tbody tr").each((_, _tr) => {
-            const tr = $(_tr);
-            if (
-              (!opt.length || opt.includes(tr.attr("edit-type"))) &&
-              tr
-                .find("td:nth-child(2)")
-                .text()
-                .toLowerCase()
-                .includes(v || "")
-            ) {
-              tr.show();
-            } else tr.hide();
+            verifyState[0] = s.get(0).outerHTML;
+            entry.find("p:not(p:first-child)").each((_, e) => {
+              const c = e.textContent.split(": "),
+                h = e.outerHTML.replaceAll(c[0] + ": ", "");
+              if (c[0] === PublicLangData.verify_list.verifynum)
+                verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${c[0]}: ${c[1]}">(${parseInt(c[1])})</p>`;
+              else if (c[0] === PublicLangData.verify_list.verifyuser) verifyState[1] = h;
+              else if (c[0] === PublicLangData.verify_list.time.verifytime) verifyState[2] = h;
+              else if (c[0] === PublicLangData.verify_list.reason) verifyState[4] = h;
+            });
+            verifyState[3] = entry
+              .contents()
+              .filter("*:not(p)")
+              .toArray()
+              .reduce((a, b) => a + b.outerHTML, "");
+            entry.after(verifyState.reduce((a, b) => `${a}<td>${b ? b : ""}</td>`, "")).remove();
           });
-        });
-        c.appendTo(searchFrame);
-      });
-      searchFrame.appendTo(".verify-list-list-head fieldset");
 
-      searchFrame = $('<div class="verify-list-search-area">');
-      $('<input id="mcmodder-verify-search" class="form-control" placeholder="搜索...">')
-        .bind("change", (e) => {
-          const input = e.currentTarget as HTMLInputElement;
-          const opt: string[] = [],
-            v = $("#mcmodder-verify-search").val().trim().toLowerCase();
-          $("div.checkbox input", $(input).parent().parent().parent()).each((_, c) => {
-            if ((c as HTMLInputElement).checked) {
-              opt.push((c as HTMLInputElement).id.split("-")[2]);
+          if (verifyTable.find("thead th").eq(2).text().includes("最后审核时间")) {
+            verifyTable.find("thead th:nth-child(6), tbody td:nth-child(6)").remove();
+            verifyTable.find("thead th").eq(2).text("最后审核");
+          }
+
+          // 重构完成才注入紧凑样式。td 一律限定在待审列表容器内——无作用域的
+          // 全局 td nowrap 是旧版挤压灾难的根源。横线化 + 行悬浮替代 bootstrap
+          // 全网格硬边（用户裁定走现代表格风格，2026-11-11）。
+          Utils.addStyle(
+            ".table-bordered thead td, .table-bordered thead th {text-align: center; min-width: 3em;} " +
+              ".btn-group-sm > .btn, .btn-sm {padding: .0rem .5rem} " +
+              ".verify-list-list .table > tbody > tr > td:nth-child(4) > p {display: inline;} " +
+              ".verify-list-list td {text-overflow: ellipsis; overflow: hidden; white-space: nowrap; vertical-align: top;} " +
+              ".verify-list-list th {white-space: nowrap;} " +
+              ".verify-list-list td:nth-child(4) i {width: unset; margin: unset;} " +
+              ".verify-list-list .table-bordered {border: none;} " +
+              ".verify-list-list .table-bordered th, .verify-list-list .table-bordered td {border: none; border-bottom: 1px solid var(--mcmodder-color-background-dark3);} " +
+              ".verify-list-list .table-bordered thead th {border-bottom-width: 2px;} " +
+              ".verify-list-list tbody tr:hover td {background-color: var(--mcmodder-color-background-transparent1);}",
+          );
+        } catch (error) {
+          console.error("[MCModder-Lite] 紧凑式待审列表重构失败，已回退站点原生表格：", error);
+          return;
+        }
+
+        $(".table i.fa-lightbulb-o")
+          .parent()
+          .each((_, c) => {
+            // 附言由提交者撰写：只在文本节点上原地生成 <a>，不重新解析 HTML
+            Utils.linkifyTextNodes(c);
+          });
+
+        // 筛选索引
+        const counter = new Array(Values.searchOption.length).fill(null).map(() => [0, 0, 0, 0, 0]);
+        $(".verify-list-list-table tbody tr").each((_, e) => {
+          const tr = $(e);
+          const d = tr.find("td:nth-child(2)").text();
+          Values.searchOption.forEach((item, index) => {
+            if (
+              item.reg.test(d) &&
+              (!item.exclude || !d.includes(item.exclude)) &&
+              (!item.exclude2 || !d.includes(item.exclude2))
+            ) {
+              tr.attr("edit-type", index.toString());
+              counter[index][0]++;
+              const t = tr.find("td:nth-child(4) p:first-child i").attr("class");
+              stateIcon.forEach((e, i) => {
+                if (t.includes(e)) counter[index][i]++;
+              });
             }
           });
-          $(".verify-list-list-table tbody tr").each((_, _tr) => {
-            const tr = $(_tr);
-            if (
-              (!opt.length || opt.includes(tr.attr("edit-type"))) &&
-              tr
-                .find("td:nth-child(2)")
-                .text()
-                .toLowerCase()
-                .includes(v || "")
-            ) {
-              tr.show();
-            } else tr.hide();
+        });
+        $("[edit-type=3],[edit-type=9]").each((_, _e) => {
+          // 查看详细
+          const e = $(_e);
+          const d = e.find("td:nth-child(4)");
+          let t = "item";
+          const icon = d.find("i").get(0);
+          if (!icon || !icon.classList.contains("fa-spinner")) return;
+          switch (Number(e.attr("edit-type"))) {
+            case 3:
+              t = "class";
+              break;
+            case 9:
+              t = "item";
+          }
+          const l = e
+            .find("td:nth-child(2) a")
+            .filter((_, c) => (c as HTMLAnchorElement).href.includes("/" + t + "/"));
+          if (l.length && !e.find(".verify-withdraw-btn").length) {
+            e.find("td")
+              .last()
+              .prev()
+              .append(
+                `<a class="btn btn-outline-dark btn-sm mcmodder-content-block" href="/${t}/edit/${Utils.abstractLastFromURL(l.attr("href"), t)}/" target="_blank">查看改动</a>`,
+              );
+          }
+        });
+
+        // 快捷切换时间段
+        const t0 = Number(Date.now() / 1e3);
+        const param = window.location.href.split("verify.html?")[1]?.split("&page=")[0];
+        const daytime = 24 * 60 * 60;
+        $(".verify-list-search-area").append(
+          `<a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 30 * daytime}&endtime=${t0}" style="margin-left: 8px;">近30天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 7 * daytime}&endtime=${t0}" style="margin-left: 8px;">近7天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 3 * daytime}&endtime=${t0}" style="margin-left: 8px;">近3天</a><a class="btn btn-light border-dark btn-sm" target="_blank" href="/verify.html?${param}&starttime=${t0 - 1 * daytime}&endtime=${t0}" style="margin-left: 8px;">近24小时</a>`,
+        );
+
+        // 筛选待审项
+        let searchFrame = $('<div class="verify-list-search-area">');
+        Values.searchOption.forEach((item, index) => {
+          const data = counter[index];
+          const text = data.map((e) => e.toLocaleString());
+          if (!data[0]) return;
+          const c = $('<div class="checkbox" style="display: inline-block;">');
+          let h = `<input type="checkbox" id="mcmodder-type-${index}"><label for="mcmodder-type-${index}">${item.label} <span class="badge-row">`;
+          if (data[1])
+            h += `<span class="text-muted" data-toggle="tooltip" data-original-title="${text[1]} 条待审核">${text[1]}</span>`;
+          if (data[2])
+            h += `<span class="text-success" data-toggle="tooltip" data-original-title="${text[2]} 条已通过">${text[2]}</span>`;
+          if (data[3])
+            h += `<span class="text-danger" data-toggle="tooltip" data-original-title="${text[3]} 条已退回">${text[3]}</span>`;
+          if (data[4])
+            h += `<span style="text-muted-muted" data-toggle="tooltip" data-original-title="${text[4]} 条已撤回">${text[4]}</span>`;
+          h += `</span></label>`;
+          c.html(h);
+          c.find("input").bind("change", (e) => {
+            const input = e.currentTarget as HTMLInputElement;
+            const opt: string[] = [],
+              v = $("#mcmodder-verify-search").val().trim().toLowerCase();
+            $("div.checkbox input", $(input).parent().parent().parent())
+              .filter((_, c) => (c as HTMLInputElement).checked)
+              .each((_, c) => {
+                opt.push((c as HTMLInputElement).id.split("-")[2]);
+              });
+            $(".verify-list-list-table tbody tr").each((_, _tr) => {
+              const tr = $(_tr);
+              if (
+                (!opt.length || opt.includes(tr.attr("edit-type"))) &&
+                tr
+                  .find("td:nth-child(2)")
+                  .text()
+                  .toLowerCase()
+                  .includes(v || "")
+              ) {
+                tr.show();
+              } else tr.hide();
+            });
           });
-        })
-        .appendTo(searchFrame);
-      searchFrame.appendTo(".verify-list-list-head fieldset");
+          c.appendTo(searchFrame);
+        });
+        searchFrame.appendTo(".verify-list-list-head fieldset");
+
+        searchFrame = $('<div class="verify-list-search-area">');
+        $('<input id="mcmodder-verify-search" class="form-control" placeholder="搜索...">')
+          .bind("change", (e) => {
+            const input = e.currentTarget as HTMLInputElement;
+            const opt: string[] = [],
+              v = $("#mcmodder-verify-search").val().trim().toLowerCase();
+            $("div.checkbox input", $(input).parent().parent().parent()).each((_, c) => {
+              if ((c as HTMLInputElement).checked) {
+                opt.push((c as HTMLInputElement).id.split("-")[2]);
+              }
+            });
+            $(".verify-list-list-table tbody tr").each((_, _tr) => {
+              const tr = $(_tr);
+              if (
+                (!opt.length || opt.includes(tr.attr("edit-type"))) &&
+                tr
+                  .find("td:nth-child(2)")
+                  .text()
+                  .toLowerCase()
+                  .includes(v || "")
+              ) {
+                tr.show();
+              } else tr.hide();
+            });
+          })
+          .appendTo(searchFrame);
+        searchFrame.appendTo(".verify-list-list-head fieldset");
+      };
+      const pollCompacted = (left = 20) => {
+        const verifyTable = $(".table");
+        if (verifyTable.find("tbody tr").length) return compactedRun();
+        if ($("p.empty").length) return; // 无待审项：站点渲染空态而非表格
+        if (left <= 0) {
+          console.error(
+            "[MCModder-Lite] 待审列表迟迟未渲染，紧凑模式已放弃（站点原生表格不受影响）",
+          );
+          return;
+        }
+        setTimeout(() => pollCompacted(left - 1), 300);
+      };
+      pollCompacted();
     }
 
     // 一键催审
