@@ -28,11 +28,11 @@ export class VerifyPageInit extends Init {
 
     // 紧凑式待审列表
     if (this.configs.getSettings("compactedVerifylist")) {
-      Utils.addStyle(
-        ".table-bordered thead td, .table-bordered thead th {text-align: center; min-width: 3em;} .btn-group-sm > .btn, .btn-sm {padding: .0rem .5rem} .table > tbody > tr > td:nth-child(4) > p {display: inline;} td {text-overflow: ellipsis; overflow: hidden; white-space: nowrap;} .verify-list-list td:nth-child(4) i {width: unset; margin: unset;}",
-      );
-      const verifyTable = $(".table");
-      const stateLang = Object.entries(PublicLangData.verify_list.state.list);
+      // 列结构重构必须先于样式注入：历史上样式先行 + 重构失败（或站点 swiper
+      // 重置表格）会留下「注入的 nowrap + 原始 4 列表」的挤压灾难——表头竖排、
+      // 列宽失衡。这里在 try 内完成全部重构，成功才注入样式；失败则放弃并
+      // 回退站点原生表格（可能永久的失败必须大声记录，见 HANDOFF 教训）。
+      // 状态图标映射：重构与后续计数逻辑都要用，声明在 try 外（计数在 try 后）
       const stateIcon = [
         "",
         "fa fa-pulse fa-spinner",
@@ -40,47 +40,70 @@ export class VerifyPageInit extends Init {
         "fa fa-close",
         "fa fa-mail-reply",
       ];
+      try {
+        const verifyTable = $(".table");
+        const stateLang = Object.entries(PublicLangData.verify_list.state.list);
 
-      verifyTable
-        .find("thead th")
-        .last()
-        .html("状态")
-        .after("<th>审核人</th><th>最后审核</th><th>操作</th><th>附言</span></th>");
+        verifyTable
+          .find("thead th")
+          .last()
+          .html("状态")
+          .after("<th>审核人</th><th>最后审核</th><th>操作</th><th>附言</span></th>");
 
-      verifyTable.find("thead > tr:nth-child(1) > th:nth-child(3)").append("&nbsp;");
-      const verifyStateTd = verifyTable.find("tbody > tr > td:nth-child(4)");
-      verifyStateTd.each((_, _entry) => {
-        const entry = $(_entry);
-        const verifyState = ["", "", "", "", ""];
-        const s = entry.find("p:first-child");
-        const t = s.text();
-        stateLang.forEach((e) => {
-          if (t === e[1])
-            s.html(
-              `<i data-toggle="tooltip" data-original-title="${t}" class="${stateIcon[Number(e[0])]}"></i>`,
-            );
+        verifyTable.find("thead > tr:nth-child(1) > th:nth-child(3)").append("&nbsp;");
+        const verifyStateTd = verifyTable.find("tbody > tr > td:nth-child(4)");
+        verifyStateTd.each((_, _entry) => {
+          const entry = $(_entry);
+          const verifyState = ["", "", "", "", ""];
+          const s = entry.find("p:first-child");
+          const t = s.text();
+          stateLang.forEach((e) => {
+            if (t === e[1])
+              s.html(
+                `<i data-toggle="tooltip" data-original-title="${t}" class="${stateIcon[Number(e[0])]}"></i>`,
+              );
+          });
+          verifyState[0] = s.get(0).outerHTML;
+          entry.find("p:not(p:first-child)").each((_, e) => {
+            const c = e.textContent.split(": "),
+              h = e.outerHTML.replaceAll(c[0] + ": ", "");
+            if (c[0] === PublicLangData.verify_list.verifynum)
+              verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${c[0]}: ${c[1]}">(${parseInt(c[1])})</p>`;
+            else if (c[0] === PublicLangData.verify_list.verifyuser) verifyState[1] = h;
+            else if (c[0] === PublicLangData.verify_list.time.verifytime) verifyState[2] = h;
+            else if (c[0] === PublicLangData.verify_list.reason) verifyState[4] = h;
+          });
+          verifyState[3] = entry
+            .contents()
+            .filter("*:not(p)")
+            .toArray()
+            .reduce((a, b) => a + b.outerHTML, "");
+          entry.after(verifyState.reduce((a, b) => `${a}<td>${b ? b : ""}</td>`, "")).remove();
         });
-        verifyState[0] = s.get(0).outerHTML;
-        entry.find("p:not(p:first-child)").each((_, e) => {
-          const c = e.textContent.split(": "),
-            h = e.outerHTML.replaceAll(c[0] + ": ", "");
-          if (c[0] === PublicLangData.verify_list.verifynum)
-            verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${c[0]}: ${c[1]}">(${parseInt(c[1])})</p>`;
-          else if (c[0] === PublicLangData.verify_list.verifyuser) verifyState[1] = h;
-          else if (c[0] === PublicLangData.verify_list.time.verifytime) verifyState[2] = h;
-          else if (c[0] === PublicLangData.verify_list.reason) verifyState[4] = h;
-        });
-        verifyState[3] = entry
-          .contents()
-          .filter("*:not(p)")
-          .toArray()
-          .reduce((a, b) => a + b.outerHTML, "");
-        entry.after(verifyState.reduce((a, b) => `${a}<td>${b ? b : ""}</td>`, "")).remove();
-      });
 
-      if (verifyTable.find("thead th").eq(2).text().includes("最后审核时间")) {
-        verifyTable.find("thead th:nth-child(6), tbody td:nth-child(6)").remove();
-        verifyTable.find("thead th").eq(2).text("最后审核");
+        if (verifyTable.find("thead th").eq(2).text().includes("最后审核时间")) {
+          verifyTable.find("thead th:nth-child(6), tbody td:nth-child(6)").remove();
+          verifyTable.find("thead th").eq(2).text("最后审核");
+        }
+
+        // 重构完成才注入紧凑样式。td 一律限定在待审列表容器内——无作用域的
+        // 全局 td nowrap 是旧版挤压灾难的根源。横线化 + 行悬浮替代 bootstrap
+        // 全网格硬边（用户裁定走现代表格风格，2026-11-11）。
+        Utils.addStyle(
+          ".table-bordered thead td, .table-bordered thead th {text-align: center; min-width: 3em;} " +
+            ".btn-group-sm > .btn, .btn-sm {padding: .0rem .5rem} " +
+            ".verify-list-list .table > tbody > tr > td:nth-child(4) > p {display: inline;} " +
+            ".verify-list-list td {text-overflow: ellipsis; overflow: hidden; white-space: nowrap; vertical-align: top;} " +
+            ".verify-list-list th {white-space: nowrap;} " +
+            ".verify-list-list td:nth-child(4) i {width: unset; margin: unset;} " +
+            ".verify-list-list .table-bordered {border: none;} " +
+            ".verify-list-list .table-bordered th, .verify-list-list .table-bordered td {border: none; border-bottom: 1px solid var(--mcmodder-color-background-dark3);} " +
+            ".verify-list-list .table-bordered thead th {border-bottom-width: 2px;} " +
+            ".verify-list-list tbody tr:hover td {background-color: var(--mcmodder-color-background-transparent1);}",
+        );
+      } catch (error) {
+        console.error("[MCModder-Lite] 紧凑式待审列表重构失败，已回退站点原生表格：", error);
+        return;
       }
 
       $(".table i.fa-lightbulb-o")
