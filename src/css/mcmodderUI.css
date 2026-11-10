@@ -126,7 +126,6 @@ body > .content,
 .fold-list-object-ul .count,
 .item-table-gui-slot .view,
 .table-striped > tbody > tr:nth-of-type(2n + 1),
-.common-select .find-close,
 .tools-list li,
 .syntaxhighlighter .line.alt1,
 .syntaxhighlighter .line.alt2 {
@@ -303,7 +302,6 @@ body .common-nav {
 .center-content.edit-list li,
 .common-rowlist.borderbottom li,
 .header-layer .header-layer-block li,
-.item-search-frame,
 .item-used-frame {
   border-bottom: 2px dashed var(--mcmodder-color-primary-transparent1);
 }
@@ -330,8 +328,6 @@ body .header-layer {
 }
 .class-menu-page li i,
 .common-fuc-group i,
-#server-tool i,
-.server-listtype-switch li i,
 .header-layer-block i,
 .common-center .class-edit-block li a i,
 .common-menu-page li i,
@@ -359,8 +355,7 @@ body .header-layer {
   border-top: 0;
   border-bottom: 0;
 }
-.center-content.lv-info .lv-bar .progress-bar,
-#mcmodder-progress {
+.center-content.lv-info .lv-bar .progress-bar {
   background: linear-gradient(90deg, var(--mcmodder-color-primary), var(--mcmodder-color-accent));
 }
 .common-center .right .class-info .class-info-left .author li {
@@ -395,14 +390,9 @@ body .header-layer {
 .common-center .right .class-info .class-info-lest .tag li {
   margin: 2px 5px 2px 0;
 }
-.common-select,
 .header-search form {
   border-width: 1px;
   animation: var(--mcmodder-animation-shinyborder);
-}
-.structure-block-label .item-table-hover-t1,
-.structure-block-label .item-table-hover-t2 {
-  color: #ddd !important;
 }
 .common-fuc-group .action {
   padding: 2px;
@@ -634,7 +624,6 @@ body .header-user .header-user-info .header-panel.mcmodder-header-panel-fixed {
 .class-text,
 .center-block,
 .center-total,
-.item-list-filter,
 .item-list-table,
 .item-row,
 .common-menu-area,
@@ -642,11 +631,9 @@ body .header-user .header-user-info .header-panel.mcmodder-header-panel-fixed {
 .rank-list-frame,
 .common-center .center > div:not(.right, .logreg-frame),
 .author-row > div:not(.dropdown),
-.donate-frame > *:not(hr),
 .center > fieldset,
 .center > ul:not(.common-item-mold-list),
 .center .main > div:not(.nav, .mbx),
-.oredict-list-table,
 .modal-content,
 *:not(.center-block) > .common-comment-block.lazy,
 .common-center .left,
@@ -656,12 +643,7 @@ body .header-user .header-user-info .header-panel.mcmodder-header-panel-fixed {
 .panel,
 .panel-default,
 .edit-unlogining,
-.common-select,
-.item-table-main,
-.log-frame > p,
-.about-frame > *,
-body > .container > *,
-.modfile-main-frame > * {
+body > .container > * {
   border-radius: var(--mcmodder-width-radius);
   padding: var(--mcmodder-width-padding-1);
   box-shadow: rgba(50, 50, 100, 0.5) 0px 2px 4px 0px;
@@ -699,18 +681,14 @@ body > .container > *,
 .common-icon-text.edit-history,
 .bd-callout,
 .tab-ul > .text-danger,
-.center-task-block,
 .center-content.lv-info,
 .center-card-block.badges,
 .common-center .maintext .item-give,
 .modlist-block,
 .verify-info-table,
-.common-world-gen-block,
-.common-world-gen-data,
 .header-search form .class-info-right > ul,
 .item-text > .item-info-table,
 .common-text-menu,
-#mcmodder-text-result,
 .mcmodder-golden-alert,
 .mcmodder-gui-alert,
 .form-control,
@@ -742,10 +720,8 @@ body .edui-default .edui-editor-iframeholder {
 .tag li,
 .mcver li a,
 .common-center .maintext .itemname .tool,
-.author-user-frame .author-tool,
 .common-center .right .class-relation-list .relation li,
 .common-fuc-group li,
-#server-tool li,
 .edit-tools > span,
 .mcmodder-text-stats .stats-num > span,
 .mcmodder-text-stats .stats-opt,
@@ -755,7 +731,6 @@ body .edui-default .edui-editor-iframeholder {
 .common-center .post-row .postname .tool li a,
 .edit-tools a,
 .center-main.attitude li,
-.list_item,
 .ta_date,
 .ta_calendar,
 .logreg-suggest,
@@ -918,8 +893,7 @@ body .edui-default .edui-editor-toolbarboxinner {
   right: 0.5em;
   width: 270px;
 }
-.common-class-category li .normal,
-.c_0 {
+.common-class-category li .normal {
   border-radius: var(--mcmodder-width-radius);
 }
 .badge {
@@ -1003,23 +977,13 @@ body .header-container {
   grid-template-columns: repeat(auto-fill, minmax(400px, 1fr));
   gap: calc(2 * var(--mcmodder-width-padding-3));
 }
-#center-task-frame .center-content hr,
-.center-block-subhead {
+#center-task-frame .center-content hr {
   grid-column: 1 / -1;
   width: 100%;
 }
-#center-task-frame .center-task-block {
-  width: 100%;
-  height: 100%;
-  margin: 0;
-}
-.center-task-border,
 .center-card-border {
   border: unset;
   margin: unset;
-}
-.center-card-view {
-  margin: 4em 1em;
 }
 .center-content.post-list .post-block {
   padding: 0.2em var(--mcmodder-width-padding-3);
@@ -1067,11 +1031,6 @@ body .header-container {
 .common-text .item-info-table table {
   width: 100%;
 }
-@media (min-width: 581px) {
-  .message-main {
-    padding-left: 200px !important;
-  }
-}
 .class-excount .star .block-left {
   text-shadow: 2px 2px 2px #333;
   border-radius: var(--mcmodder-width-radius) 0;
@@ -1079,20 +1038,11 @@ body .header-container {
 .center-block-head .more {
   right: 2em;
 }
-#item-table-item-input {
-  width: 100%;
-  border-top-right-radius: var(--mcmodder-width-radius);
-  border-bottom-right-radius: var(--mcmodder-width-radius);
-}
 .header-right .header-user .header-user-avatar img {
   border-color: var(--mcmodder-color-badges);
 }
 .common-center .class-edit-block {
   width: unset;
-}
-.common-link-frame-style-2 ul li {
-  width: 100%;
-  overflow: initial;
 }
 .mcmodder-class-info-fold {
   width: 100%;
@@ -1135,10 +1085,6 @@ body .header-container {
 }
 .common-text .table-scroll {
   width: auto;
-}
-.author-user-frame.hascontent {
-  width: 220px;
-  margin: 0 20px;
 }
 .common-center .author-row .author-content {
   border-radius: var(--mcmodder-width-radius);
@@ -1305,7 +1251,6 @@ html.mcmodder-oredict-advanced .oredict-item-list {
 .edui-default .edui-dialog-shadow,
 .modal-content,
 .header-search form,
-.searchbox,
 .popover-header {
   background: var(--mcmodder-color-background) !important;
   border-color: var(--mcmodder-color-background-dark3);
