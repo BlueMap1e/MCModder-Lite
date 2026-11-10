@@ -519,7 +519,7 @@ async function fetchMRList(mrid: string): Promise<NormalizedRow[]> {
   }));
 }
 
-/** GitHub Releases：公开仓库匿名可用（限额 60 次/小时），单页 100 条覆盖绝大多数仓库。
+/** GitHub Releases：公开仓库匿名可用（限额 60 次/小时，按 IP 计），单页 100 条覆盖绝大多数仓库。
  *  Releases 没有 MC 版本维度，匹配时仅按模组版本（tag）比对 */
 async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
   const resp = await parent.utils.createRequest(
@@ -531,8 +531,34 @@ async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
     "从 GitHub 获取 Releases",
   );
   if (resp.status === 404) throw new Error("仓库不存在或为私有");
-  if (resp.status === 403 || resp.status === 429)
-    throw new Error("GitHub 匿名额度已用尽（60 次/小时），请稍后再试");
+  if (resp.status === 403 || resp.status === 429) {
+    // GitHub 的 403/429 不全是额度：代理/共享出口的按 IP 计额度被同出口他人占用、
+    // abuse 检测、无 User-Agent 的管理规则拒绝等都返回 403。按响应头区分，
+    // 并把 GitHub 的 message 带给用户——「十几个小时没用仍报额度用尽」的
+    // 谜团即源于此（共享出口 IP 的额度与他人共享，与用户自身使用频率无关）。
+    const getHeader = (name: string) => {
+      const m = new RegExp(`^${name}:\\s*(.*)$`, "im").exec(resp.responseHeaders ?? "");
+      return m ? m[1].trim() : undefined;
+    };
+    console.warn("[MCModder-Lite] GitHub 响应头：", resp.responseHeaders);
+    let detail = "";
+    try {
+      detail = JSON.parse(resp.responseText)?.message ?? "";
+    } catch {
+      /* body 非 JSON（如代理/网关拦截页） */
+    }
+    // 双保险：限额头缺失（个别管理器/代理剥头）时以 GitHub message 兜底判定
+    if (getHeader("x-ratelimit-remaining") === "0" || /rate limit exceeded/i.test(detail)) {
+      const reset = Number(getHeader("x-ratelimit-reset"));
+      const resetAt = reset ? new Date(reset * 1000).toLocaleTimeString() : "";
+      throw new Error(
+        `GitHub 匿名额度已用尽（按 IP 计 60 次/小时${resetAt ? `，约 ${resetAt} 重置` : ""}）。额度与你是否使用无关：若经由代理/共享出口访问，同出口他人的用量也会占用`,
+      );
+    }
+    throw new Error(
+      `GitHub 拒绝了请求（HTTP ${resp.status}）${detail ? `：${detail}` : "，详情见控制台"}`,
+    );
+  }
   const data = JSON.parse(resp.responseText) as GHRelease[];
   return data.map((i) => ({
     platform: "gh" as const,
