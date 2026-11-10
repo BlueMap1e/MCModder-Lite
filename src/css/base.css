@@ -3702,12 +3702,16 @@ html.dark .ta_calendar .i_pre,
 html.dark .ta_calendar .i_next {
   filter: invert(1);
 }
-/* 今天/选中日的蓝色圆贴图在深底上偏亮，略压一档；形状与站点一致不动 */
+/* 今天/选中日：弃圆形贴图（深底上偏亮且与范围端点风格分裂），改用与
+   td.first/td.last 同款芯片式——单选/范围统一为方块状（用户裁定，2026-11-11） */
 html.dark .ta_calendar td.today {
-  filter: brightness(0.8);
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-primary);
+  border-radius: 2px;
 }
 /* 范围选择端点（td.first/td.last）的 sprite 是白底蓝圈，滤镜压不净白底，
-   直接弃贴图改芯片式：深底 + 主色字（置于 today 规则之后，两类叠加时以芯片为准） */
+   直接弃贴图改芯片式：深底 + 主色字（置于 today 规则之后，两类叠加时以此为准） */
 html.dark .ta_calendar td.first,
 html.dark .ta_calendar td.last {
   background-image: none;
