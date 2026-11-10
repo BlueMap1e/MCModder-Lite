@@ -1,4 +1,6 @@
-**This file MUST be written and edited in English.**
+**Language: English by default** — it is what agents read, and it keeps the mixed
+code/identifier/path text unambiguous. Chinese is fine where the text quotes site/UI copy;
+keep code identifiers and paths verbatim.
 
 # MCModder-Lite agent notes
 
@@ -86,6 +88,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   anywhere in `src`).
 - `eslint.config.ts` exemptions are closed lists (legacy `src/main.ts`, host integrations
   that cannot avoid `any`). Never add new files to silence your own code.
+- This codebase is legacy by nature: refactoring it is allowed when the task calls for it —
+  no blanket ban, just keep the diff explainable by the task.
 - `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
   locals/parameters; the build fails on them.
 
@@ -176,8 +180,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
     versions (measured: homepage 1.8.2, `/tools/cbcreator/` 1.7.2, list pages 2.1.0).
     Any API newer than 1.7 blows up only on some hosts (the 18 `:first-child()` typos
     incident was exactly this class of bug — tolerated by newer jQuery, fatal on 1.7.2).
-  - Do not upgrade the intentionally old pins (jQuery, SweetAlert) or swap host libraries for
-    npm packages; compatibility with the legacy site is the reason for both.
+  - Do not replace mcmod.cn's own libraries (jQuery, SweetAlert, Bootstrap, UEditor) with npm
+    packages: the host page's globals are the API, and their versions differ per page.
 
 ## Where to change what
 
@@ -220,7 +224,6 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   live next to it is gone.
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
-  Read the vendored skills under `.agents/skills/` before Vue work.
 - **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
   `Swiper`, `TimerUtils`). **Editable tables** -> `src/table/*`, command/undo pattern
   (`Command` + `src/table/command/`). **Field indexes** -> `src/fieldindex/`.
