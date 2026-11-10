@@ -8,6 +8,9 @@ export class VerifyHistoryInit extends Init {
     return this.parent.href.includes("/verify.html");
   }
   run() {
+    // 页面标记：base.css 的待审列表表格软化规则以此限定作用域
+    //（该表是站点原生 DOM，样式常驻生效，故必须走标记类门控而非裸选择器）
+    document.documentElement.classList.add("mcmodder-verify-page");
     if (this.configs.getSettings("autoExpandPage")) {
       this.stopExpand = false;
       const maxPage = parseInt($(".pagination span").text().split(" / ")[1]?.split(" 页")[0]);

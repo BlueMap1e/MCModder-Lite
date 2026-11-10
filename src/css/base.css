@@ -518,6 +518,26 @@ th,
   background-color: var(--mcmodder-color-background-transparent);
   border-color: var(--mcmodder-color-background-dark1);
 }
+/* 待审列表表格软化（verify.html 原生表格，mcmodder-verify-page 标记类由
+   VerifyHistoryInit 挂载）：全局 td/th 边框 tint（本文件上方）在这张宽表上
+   表现为僵硬的全网格彩边，用户裁定改为横线分隔的现代风格。紧凑模式
+   （compactedVerifylist）注入自己的同名规则，两态观感一致。 */
+.mcmodder-verify-page .verify-list-list .table-bordered {
+  border: none;
+}
+.mcmodder-verify-page .verify-list-list .table-bordered th,
+.mcmodder-verify-page .verify-list-list .table-bordered td {
+  border: none;
+  border-bottom: 1px solid var(--mcmodder-color-background-dark3);
+  vertical-align: top;
+}
+.mcmodder-verify-page .verify-list-list .table-bordered thead th {
+  border-bottom-width: 2px;
+  white-space: nowrap;
+}
+.mcmodder-verify-page .verify-list-list tbody tr:hover td {
+  background-color: var(--mcmodder-color-background-transparent1);
+}
 .verify-list-list-head fieldset,
 .history-list-frame li,
 .history-list-head fieldset,
