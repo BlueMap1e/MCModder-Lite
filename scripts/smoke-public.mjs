@@ -96,7 +96,15 @@ async function runScenario(name, url, { settings = {}, after } = {}) {
     const context = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 900 } });
     await context.addInitScript(gmShim, { settings });
     const page = await context.newPage();
-    page.on("pageerror", (e) => errors.push("pageerror: " + e.message));
+    page.on("pageerror", (e) => {
+      // 「界面皮肤/屏蔽广告」开启后，AdSense 会向被隐藏的零宽槽位填充并抛出
+      // adsbygoogle.push() error——Google 脚本对不可见槽位的已知抱怨，非脚本异常，
+      // 白名单放行（2026-11-10，随 blockAds 默认开引入）
+      if (/adsbygoogle\.push\(\) error/.test(e.message)) {
+        return;
+      }
+      errors.push("pageerror: " + e.message);
+    });
     page.on("console", (m) => {
       if (m.type() === "error") errors.push("console: " + m.text().slice(0, 200));
     });
