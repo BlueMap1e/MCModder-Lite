@@ -90,11 +90,11 @@ export class GeneralEditInit extends Init {
           });
       });
 
-    // 下拉菜单（「输入候选列表」开关）：候选完全由个人历史构建，不再预置出厂模板
+    // 下拉菜单（「输入候选列表」开关）：候选完全由编辑手动维护（「+ 保存为快捷输入项」），
+    // 不预置任何出厂模板，也不做自动记录——改动说明的重复度是编辑风格属性，收录主动权在编辑手里
     if (this.configs.getSettings("inputSuggestions")) {
       $("#mcmodder-textarea-remark, #mcmodder-textarea-reason").each((_, e) => {
-        const textarea = e as HTMLTextAreaElement;
-        InputListPopoverController.instance.add(textarea, {
+        InputListPopoverController.instance.add(e as HTMLTextAreaElement, {
           type: "inputList",
           delimiter: "；",
           hideBeforeInput: true,
@@ -102,18 +102,6 @@ export class GeneralEditInit extends Init {
             configs: this.configs,
             configKey: "editReasons",
           },
-        });
-        // 历史积累：提交过的词句自动进入候选（「；」分段、去重、最近在前、上限 50）
-        $(textarea).on("change", () => {
-          const stored: InputSimplifiedSuggestion[] =
-            this.configs.get("inputList", "editReasons") ?? [];
-          const values = stored.map((s) => (typeof s === "string" ? s : s.value));
-          const incoming = String($(textarea).val())
-            .split("；")
-            .map((s) => s.trim())
-            .filter((s) => s !== "" && !values.includes(s));
-          if (incoming.length === 0) return;
-          this.configs.set("inputList", "editReasons", [...incoming, ...stored].slice(0, 50));
         });
       });
     }

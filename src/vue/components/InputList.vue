@@ -362,7 +362,12 @@ watchEffect(() => {
     rawSuggestedList.push({ ...entry, ...rate });
   });
 
-  canCreateNew.value = !!(onModifySuggestion.value && selectionValue.value);
+  // 输入内容已存在于候选时不给「保存」入口——点了只会得到「已存在」的报错，不如不显示
+  canCreateNew.value = !!(
+    onModifySuggestion.value &&
+    selectionValue.value &&
+    !suggestionList.value.some((e) => e.value === selectionValue.value)
+  );
   selected.value = 0;
   if (rawSuggestedList.length) {
     selectable.value = true;
