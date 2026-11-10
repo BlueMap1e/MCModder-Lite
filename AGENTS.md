@@ -56,7 +56,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   the text as HTML — a literal tag inside a comment splits the whole stylesheet in two and
   silently kills every rule after it (2026-11-07 incident). Refer to tags in prose as
   "style 元素".
-- **`CHANGELOG.md` is user-owned.** Never edit it unless explicitly instructed.
+- **`CHANGELOG.md` is the public release history.** Edit it when the work calls for it —
+  correcting a wrong entry, adding the `## [x.y.z] - YYYY-MM-DD` section for the version being
+  prepared — but keep the format, leave unrelated history alone, and never invent entries.
+  Version bumps, release timing and the announcement post stay the user's call.
 - Comments, config titles/descriptions, and UI copy are Chinese, matching the existing style.
 - **Every setting must be read by code.** Before adding a setting, add the reader; before
   removing a feature, delete its setting from `ConfigLoader.ts` and `Settings`. Dead toggles
@@ -255,9 +258,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
 ## Versioning and release
 
 - Bump `version` in both `package.json` and `vite.config.ts` (userscript metadata) together.
-- Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` (user-owned; only with explicit
-  instruction); the release job extracts that section into the GitHub release notes — the
-  version in the section title must match `package.json`, or the extraction finds nothing.
+- Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` for the version being released
+  (write it as part of the release work; the section title must match `package.json` exactly);
+  the release job extracts that section into the GitHub release notes — a mismatched title
+  means empty notes.
 - CI (`.github/workflows/build.yaml`) builds every push. A commit message containing
   `[release]` uploads `dist/mcmodder-lite.user.js` and creates tag `v<version>` (suffixed
   `_N` if the tag already exists).
