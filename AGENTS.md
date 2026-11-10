@@ -74,10 +74,13 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
   feature's own namespaced DOM (`.mcmodder-*`) over overriding host class names. This leak was
   inherited from upstream's 2.0.1 monolith → repo refactor, which moved feature CSS into the
   static stylesheet while gating only the JS. Note that `mcmodderUI.css` is a legacy
-  appearance layer injected **unconditionally** (its `mcmodderUI` setting is dead), so the
-  same rule applies inside it: any block restyling site-native DOM must carry a feature
-  marker class — an unscoped oredict block there broke the vanilla list layout until it was
-  scoped (fixed 2026-11-04).
+  appearance layer, now gated by the `mcmodderUISkin` setting (default **on**; the old dead
+  `mcmodderUI` key was revived as this gate on 2026-11-10), so the same rule applies inside
+  it: any block restyling site-native DOM must carry a feature marker class — an unscoped
+  oredict block there broke the vanilla list layout until it was scoped (fixed 2026-11-04).
+  The file contains **no night rules** (verified 2026-11-10); toggling it off is safe for
+  night mode. Its dead `.mcmodder-logger` rules were removed the same day (no creator
+  anywhere in `src`).
 - `eslint.config.ts` exemptions are closed lists (legacy `src/main.ts`, host integrations
   that cannot avoid `any`). Never add new files to silence your own code.
 - `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
@@ -120,9 +123,10 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
 - **Do not bulk-delete CSS.** `base.css` (~87 KB), `mcmodderUI.css` (~34 KB) and `bbs.css`
   (~37 KB) contain legacy overrides whose deletion has broken night mode before. Remove a rule
   only with CSS-coverage evidence and a before/after screenshot of every affected page.
-- `mcmodderUI.css` is injected unconditionally because the old `mcmodderUI` setting was
-  removed. Treat it as the skin; scope structural rules with a marker class instead of
-  reintroducing a global toggle.
+- `mcmodderUI.css` is gated by the `mcmodderUISkin` setting (default on; revived
+  2026-11-10 from the previously dead `mcmodderUI` key). It is the skin layer: scope
+  structural rules with a marker class, and keep night rules OUT of it (night styling
+  belongs in `base.css`; the skin file contains none).
 - `ItemTabInit` is not dead: `canRun()` returns false, but `ItemPageInit` and
   `OredictPageInit` instantiate it directly. Never delete a file based on `canRun()` alone.
 - Global keyboard shortcuts must return early when the event target is an `input`,
