@@ -133,6 +133,8 @@ interface Settings {
   moveAds: boolean;
   blockAds: boolean;
   inputSuggestions: boolean;
+  diffComparator: boolean;
+  sandboxSidebarRemoval: boolean;
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;
   /** 夜间模式偏好：0 跟随系统 / 1 固定日间 / 2 固定夜间 */

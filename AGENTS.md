@@ -61,6 +61,11 @@ GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (i
 - **Every setting must be read by code.** Before adding a setting, add the reader; before
   removing a feature, delete its setting from `ConfigLoader.ts` and `Settings`. Dead toggles
   that do nothing were a known regression in this fork.
+- **New user-visible features default to ON but must be killable.** Anything that changes
+  what the user sees or how a page behaves gets a settings toggle (default on is fine —
+  paternalism is the missing off switch, not the default). Bug fixes, startup plumbing and
+  security pipelines are the only exceptions; if a tweak is too small to deserve a key,
+  say so in a comment next to the code ("deliberately unswitched").
 - **A setting must gate its entire behavior surface — CSS included.** Rules that restyle
   site-native DOM for a gated feature (e.g. compact layouts in `base.css` targeting
   `.oredict-item-list` / `.rank-list-block`) must be scoped under a marker class that the

@@ -10,6 +10,8 @@ export class DiffPageInit extends Init {
     return this.parent.href.includes("/diff/") && !this.parent.href.includes("/list/");
   }
   run() {
+    // 「差异页文本对比器」开关（默认开）：组件主要服务深度审阅差异的场景
+    if (!this.configs.getSettings("diffComparator")) return;
     const textA = $(".difference-content-right");
     const textB = $(".difference-content-left");
     const comparatorFrame = $("<div>").insertBefore($(".difference-info").first());

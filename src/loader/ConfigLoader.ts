@@ -205,6 +205,21 @@ export const settings = [
             type: "checkbox",
             value: false,
           },
+          {
+            id: "diffComparator",
+            title: "差异页文本对比器",
+            description:
+              "在版本差异页顶部提供修改前后正文的并排对比组件，并为模组关系、支持MC版本、矿物词典等表格行提供可视化对比。主要服务于深度审阅差异的场景，不做即时比对时可关闭。",
+            type: "checkbox",
+            value: true,
+          },
+          {
+            id: "sandboxSidebarRemoval",
+            title: "沙盒页移除侧栏",
+            description: "移除沙盒页左侧的提示栏并加宽右侧编辑区。默认关闭，保持站点原生布局。",
+            type: "checkbox",
+            value: false,
+          },
         ],
       },
     ],
