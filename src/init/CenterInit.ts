@@ -34,6 +34,67 @@ export class CenterInit extends Init {
   /** 夜间改写前捕获的原始 option 片段（日间还原用） */
   private chartOriginalOption?: string;
 
+  /** 复检队列当前挂着的定时器句柄（同一时刻至多一条队列） */
+  private chartRecheckTimer?: number;
+
+  /**
+   * 把夜间 option 应用到活跃度热力图；图表不存在或已是夜主题时不动。
+   *
+   * @returns 是否实际执行了夜间应用（`true` 表示刚刚覆盖了现值）。
+   */
+  private applyNightChartTheme(): boolean {
+    const el = document.getElementById("center-editchart-obj");
+    if (!el || typeof echarts === "undefined") return false;
+    const chart = echarts.getInstanceByDom(el);
+    if (!chart) return false;
+    const current = chart.getOption();
+    if (current?.calendar?.[0]?.itemStyle?.color === "#3330") return false;
+    if (current?.calendar?.length && !this.chartOriginalOption) {
+      this.chartOriginalOption = JSON.stringify({
+        tooltip: current.tooltip,
+        calendar: current.calendar,
+      });
+    }
+    // 强调色取自用户当前主题（夜档）
+    const accent =
+      getComputedStyle(document.documentElement)
+        .getPropertyValue("--mcmodder-color-accent")
+        .trim() || "#35c1fd";
+    chart.setOption({
+      tooltip: { backgroundColor: "#222", textStyle: { color: "#aaa" } },
+      calendar: {
+        itemStyle: { color: "#3330", borderColor: "#444" },
+        dayLabel: { color: "#fff" },
+        monthLabel: { color: "#fff" },
+        yearLabel: { color: accent },
+      },
+    });
+    return true;
+  }
+
+  /**
+   * 夜间应用后的线性复检队列：站点自己的日间 `setOption` 晚于我们异步到达时会把
+   * 夜主题覆盖回白底，且该写入不改变任何可观察属性——只能按时间补打。
+   *
+   * 旧实现是 4 路嵌套 `setTimeout`（每个补打的 apply 又各自再排 4 个），触发密集时
+   * 指数发散（审计 F-09）；现为单队列封顶 8 轮 × 250ms，与旧调度的 ~2 秒竞态窗口
+   * 等价，轮内无需重打时开销仅一次 `getOption` 比较。
+   */
+  private armChartRechecks() {
+    if (this.chartRecheckTimer !== undefined) clearTimeout(this.chartRecheckTimer);
+    let left = 8;
+    const tick = () => {
+      left--;
+      this.applyNightChartTheme();
+      if (left > 0) {
+        this.chartRecheckTimer = window.setTimeout(tick, 250);
+      } else {
+        this.chartRecheckTimer = undefined;
+      }
+    };
+    this.chartRecheckTimer = window.setTimeout(tick, 250);
+  }
+
   /**
    * 夜间模式下的活跃度热力图（个人中心首页 `#center-editchart-obj`，ECharts 日历图）重主题化：
    * 站点建图代码把空白格子的 `itemStyle.color` 硬编码为 "#fff"、日/月标签为 "#000"，
@@ -41,50 +102,24 @@ export class CenterInit extends Init {
    *
    * 时序要点：`_echarts_instance_` 属性在 `echarts.init()` 时就会出现，而站点自己的
    * `setOption`（携带 "#fff"）在其后异步到达——若只应用一次会被覆盖。因此夜间应用后
-   * 还要在若干延时点复检，被覆盖就重新应用；日间按首次捕获的原始 option 片段
-   * （`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
+   * 还要按 {@link armChartRechecks} 的线性队列复检补打；日间按首次捕获的原始 option
+   * 片段（`getOption()` 已有内容时）原样还原，尚无内容时什么都不做
    * （站点随后到达的 setOption 本身就是日间样式）。`html` 的 `dark` 类切换同样触发。
-   * 实现模式与 `ClassPageInit.setupNightChartFix`（评分雷达图）一致。
    */
   private setupNightChartFix() {
     const apply = () => {
-      const el = document.getElementById("center-editchart-obj");
-      if (!el) return;
-      if (typeof echarts === "undefined") return;
-      const chart = echarts.getInstanceByDom(el);
-      if (!chart) return;
       const night = document.documentElement.classList.contains("dark");
-      const current = chart.getOption();
       if (night) {
-        if (current?.calendar?.[0]?.itemStyle?.color !== "#3330") {
-          if (current?.calendar?.length && !this.chartOriginalOption) {
-            this.chartOriginalOption = JSON.stringify({
-              tooltip: current.tooltip,
-              calendar: current.calendar,
-            });
-          }
-          // 强调色取自用户当前主题（夜档）
-          const accent =
-            getComputedStyle(document.documentElement)
-              .getPropertyValue("--mcmodder-color-accent")
-              .trim() || "#35c1fd";
-          chart.setOption({
-            tooltip: { backgroundColor: "#222", textStyle: { color: "#aaa" } },
-            calendar: {
-              itemStyle: { color: "#3330", borderColor: "#444" },
-              dayLabel: { color: "#fff" },
-              monthLabel: { color: "#fff" },
-              yearLabel: { color: accent },
-            },
-          });
-          // 站点的日间 option 可能晚于我们到达（见时序说明），安排复检补打
-          for (const delay of [100, 300, 800, 2000]) {
-            setTimeout(apply, delay);
-          }
-        }
+        // 实际执行了夜间应用才安排复检——与站点晚到的 setOption 竞态
+        if (this.applyNightChartTheme()) this.armChartRechecks();
       } else if (this.chartOriginalOption) {
-        chart.setOption(JSON.parse(this.chartOriginalOption));
-        this.chartOriginalOption = undefined;
+        const el = document.getElementById("center-editchart-obj");
+        const chart =
+          el && typeof echarts !== "undefined" ? echarts.getInstanceByDom(el) : undefined;
+        if (chart) {
+          chart.setOption(JSON.parse(this.chartOriginalOption));
+          this.chartOriginalOption = undefined;
+        }
       }
     };
     // 图表创建：站点给容器打上 _echarts_instance_ 属性（attributeFilter 过滤后触发极廉价）

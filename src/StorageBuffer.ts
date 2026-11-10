@@ -78,7 +78,18 @@ export class StorageBuffer {
 
     GM_addValueChangeListener(key, (_key, _oldValue, newValue, remote) => {
       if (this.isDisabled[key] || !remote) return;
-      this.storageRef[key]!.value = newValue !== undefined ? JSON.parse(newValue) : newValue;
+      let value: AppStorage[T] | undefined;
+      if (newValue !== undefined) {
+        try {
+          value = JSON.parse(newValue) as AppStorage[T];
+        } catch (e) {
+          // 跨标签页写入了非 JSON 文本（损坏值）：保留本地现值并记录，不抛未捕获异常
+          // （审计 F-16）。本地后续写入会用完整对象把坏值覆盖回去。
+          console.error("[MCModder-Lite] 跨标签页缓存值解析失败，保留本地现值: " + e);
+          return;
+        }
+      }
+      this.storageRef[key]!.value = value as AppStorage[T];
     });
 
     return this;

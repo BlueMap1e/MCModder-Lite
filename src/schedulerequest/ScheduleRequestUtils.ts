@@ -34,7 +34,7 @@ type ScheduleRequestTriggerParam =
  * 由外部每秒调用一次 {@link check} 来轮询「有没有到点的任务」。
  * 轮询由 {@link ScheduleRequestLoader} 用 `setInterval` 挂在页面里。
  *
- * 之所以用「持久化列表 + 轮询」而非 `setTimeout`：用户脚本随时可能被油猴停用、页面随时可能关闭，
+ * 之所以用「持久化列表 + 按到期时刻排定时器」：用户脚本随时可能被油猴停用、页面随时可能关闭，
  * 任务必须**记住**上次排到什么时候、跨会话续跑，否则「每天自动签到」会随着页面关闭而失效。
  *
  * # 任务如何自我续期
@@ -54,6 +54,8 @@ export class ScheduleRequestUtils {
   private readonly configs: ConfigRepository;
   /** 任务 id → 任务实例的映射，由 {@link addRequestType} 填充 */
   private readonly requestData: ScheduleRequestOption;
+  /** 当前挂着的「下一轮 check」定时器句柄 */
+  private nextTimer: number | undefined;
 
   /**
    * @param parent 全局上下文。
@@ -133,10 +135,36 @@ export class ScheduleRequestUtils {
   /**
    * 覆盖写入待办列表。
    *
+   * 全部列表变更（排期 / 移除 / 清空 / check 后清理）都经由本方法落盘，因此这里是
+   * 重排「下一次 check」定时器的唯一钩子。
+   *
    * @param e 新的待办列表。
    */
   set(e: ScheduleRequestList) {
     this.configs.setAll("scheduleRequestList", e);
+    this.scheduleNext();
+  }
+
+  /**
+   * 按待办列表里**最近的到期时间**安排下一次 {@link check}；列表为空时不挂任何定时器。
+   *
+   * 取代旧的每秒 `setInterval` 轮询（审计 F-11）：空闲页面不再每秒唤醒一次。
+   * 定时器只在「有到期时刻」时存在，到点消费后由 {@link check} 末尾无条件重排
+   * （到点但无到期任务的空转同样会重排，保证不丢后续任务）。
+   * 远期时间戳被夹到 `setTimeout` 上限（约 24.8 天），到点后重新排期即可续上。
+   */
+  scheduleNext() {
+    if (this.nextTimer !== undefined) {
+      clearTimeout(this.nextTimer);
+      this.nextTimer = undefined;
+    }
+    const times = this.get().map((e) => e.time);
+    if (!times.length) return;
+    const delay = Math.min(Math.max(Math.min(...times) - Date.now(), 0), 2_147_483_647);
+    this.nextTimer = window.setTimeout(() => {
+      this.nextTimer = undefined;
+      this.check();
+    }, delay);
   }
 
   /** 清空全部待办 */
@@ -217,6 +245,9 @@ export class ScheduleRequestUtils {
       scheduleRequestList = this.get().filter((e) => !idList.includes(e.id));
       this.set(scheduleRequestList);
     }
+    // 定时器已被消费：无论刚才是否执行了任务都要重排下一次（set() 路径已覆盖
+    // 有执行的情形，这里兜底「到点但无到期任务」的空转）
+    this.scheduleNext();
   }
 
   /**

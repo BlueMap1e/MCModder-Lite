@@ -759,16 +759,18 @@ export class Mcmodder {
     }
 
     const textArea = $(".text-area.common-text, .item-content.common-text, .post-row");
-    // 去除正文异常背景
+    // 去除正文异常背景：单遍同时读两个属性，取代旧的两遍各自 .css() 读取
+    // （每遍都会触发计算样式解析；审计 F-12）
     if (!this.configRepository.getSettings("disableAutoStyleFix")) {
-      textArea
-        .find("[style]")
-        .filter((_i, c) => $(c).css("background-color") === "rgb(255, 255, 255)")
-        .css("background-color", "");
-      textArea
-        .find("span[style]")
-        .filter((_i, c) => $(c).css("color") === "rgb(0, 0, 0)")
-        .css("color", "");
+      textArea.find("[style]").each((_i, c) => {
+        const $c = $(c);
+        if ($c.css("background-color") === "rgb(255, 255, 255)") {
+          $c.css("background-color", "");
+        }
+        if (/^span$/i.test(c.tagName) && $c.css("color") === "rgb(0, 0, 0)") {
+          $c.css("color", "");
+        }
+      });
     }
 
     // Swiper 调整
