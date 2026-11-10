@@ -425,11 +425,9 @@ export class EditorInit extends Init {
           this.configs.getSettings("noSubmitWarningDelay") &&
           $(".edit-dataverify-frame .warning li").length
         ) {
-          Utils.commonMsg(
-            "您已启用“取消提交警告延时”，请检查编辑内容无误后再提交！",
-            false,
-            "警告",
-          );
+          // 不弹「请检查编辑内容无误后再提交」告警：警告级提醒本就不阻止提交，
+          // 且对话框内已逐条列出；启用本项本身即「我知道自己在跳过什么」的声明，
+          // 逐次弹红色大告警是纯粹的认知负载（用户裁定，2026-11-10）
           $(".swal2-confirm").removeAttr("disabled");
         }
       }
