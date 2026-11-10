@@ -86,7 +86,9 @@ npm run check
 3. 提交信息里带 `[release]`，推送。
 4. CI 会自动建好**正式** release（发布脚本直接 `gh release create`，没有草稿或预发布标记），
    不需要你在发布页填任何东西。
-5. 想先小范围验证就手动降级：打开该 release → 右上角编辑（铅笔图标）→ 勾选
+5. 帖子里换 zip 附件：跑 `npm run pack`，产物在 `dist/release/`，把里面的 zip 传到宣发帖。
+   （GreasyFork 渠道已于 2026-11-10 废止——未压缩包超出其 2,097,152 字符上限，详见 HANDOFF。）
+6. 想先小范围验证就手动降级：打开该 release → 右上角编辑（铅笔图标）→ 勾选
    「Set as a pre-release」→ 保存；装 1–2 台机器确认没问题后，再取消勾选改回正式版。
 
 ---

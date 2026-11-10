@@ -18,7 +18,7 @@ npm run verify   # lint + lint:config + format:check (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
-GF_UNMINIFIED=1 npm run build   # unminified bundle for GreasyFork submission (its rules ban minified code)
+GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel abandoned 2026-11-10: the file exceeds GF's 2,097,152-char limit by ~350K; see HANDOFF for the archived revival path)
 ```
 
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
