@@ -993,6 +993,9 @@ body .header-container {
   border: unset;
   margin: unset;
 }
+.center-card-view {
+  margin: 4em 1em;
+}
 .center-content.post-list .post-block {
   padding: 0.2em var(--mcmodder-width-padding-3);
   width: 100%;
