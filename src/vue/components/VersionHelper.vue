@@ -337,8 +337,11 @@ const columnOptions = {
       if (!row.displayName || !row.releaseTime) return "";
       // 文件名 / 版本号来自 CurseForge / Modrinth，进 URL 查询串前必须编码
       const mcver = encodeURIComponent(String(row.gameVersions ?? ""));
-      const modVer = modVersionOf(row.displayName, String(row.gameVersions ?? "").split(","));
-      const ver = encodeURIComponent(modVer ?? row.displayName);
+      // ver 直接携带完整版本串（CF 文件名去 .jar / MR version_number / GH tag），
+      // 不做「提取模组版本」的硬解析：跨平台模组的版本串因平台与 MC 版本而异
+      // （1.21.1-neoforge-1.0.0 与 1.21.1-fabric-1.0.0 内容不同），截取首段数字
+      // 既草率也可能错误（用户裁定，2026-11-11）
+      const ver = encodeURIComponent(String(row.displayName ?? "").replace(/\.jar$/i, ""));
       const base = `/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/`;
       if (row.platform === 1)
         return `<a href="${base}?cfid=${row.cfid}&fileid=${row.fileID}&ver=${ver}&mcver=${mcver}&date=${row.releaseTime.valueOf()}" target="_blank">补全日志</a>`;

@@ -23,21 +23,44 @@ export class VersionEditInit extends Init {
     const currentTime = new Date();
     const year = currentTime.getFullYear();
     $(
-      '<input id="mcmodder-date-editor" class="form-control" placeholder="输入 yymmdd 格式数字以快捷设置日期~">',
+      '<input id="mcmodder-date-editor" class="form-control" placeholder="快捷设置日期：260118 / 20261108 / 2026-11-08 / 26-11-08 / 2026.11.8 均可~">',
     )
       .appendTo($("li.tab-li:nth-child(1)").first())
       .bind("change", (e) => {
         const target = e.currentTarget as HTMLInputElement;
-        const date = [target.value.slice(0, 2), target.value.slice(2, 4), target.value.slice(4, 6)];
+        const raw = target.value.trim();
+        if (!raw) return;
+        // 兼容多种格式（用户建议，2026-11-11）：yymmdd / yyyymmdd 数字串，及
+        // -、/、. 分隔的 yy-mm-dd / yyyy-mm-dd 变体；年份在前，与旧约定一致。
+        // 原先只认 6 位数字，可读性差且手输易错
+        // 纯数字串与分隔格式两条互斥分支：若先剥分隔符再判位数，「2026-1-1」
+        // 这类去隔后恰好 6/8 位的输入会被劫持到错误的分段
+        let date: string[];
+        if (/^\d+$/.test(raw)) {
+          if (raw.length === 6) {
+            date = [raw.slice(0, 2), raw.slice(2, 4), raw.slice(4, 6)];
+          } else if (raw.length === 8) {
+            date = [raw.slice(0, 4), raw.slice(4, 6), raw.slice(6, 8)];
+          } else {
+            return;
+          }
+        } else {
+          const parts = raw.split(/[-/.]/).map((s) => s.trim());
+          if (parts.length !== 3 || !parts.every((p) => /^\d{1,4}$/.test(p))) return;
+          date = parts;
+          // 分隔格式的年份只认 2 / 4 位：1 位年份与「日-月-年」类习惯有歧义，不支持
+          if (date[0].length !== 2 && date[0].length !== 4) return;
+        }
+        const yy = date[0].length === 2;
         if (!(
-          this.checkIfValid(date[0], 9, year - 2e3) &&
+          this.checkIfValid(date[0], yy ? 9 : 2009, yy ? year - 2e3 : year) &&
           this.checkIfValid(date[1], 1, 12) &&
           this.checkIfValid(date[2], 1, 31)
         ))
           return;
         if (date[1].charAt(0) === "0") date[1] = date[1].slice(1);
         if (date[2].charAt(0) === "0") date[2] = date[2].slice(1);
-        $("#class-version-updatetime-year").selectpicker("val", "20" + date[0]);
+        $("#class-version-updatetime-year").selectpicker("val", yy ? "20" + date[0] : date[0]);
         $("#class-version-updatetime-month").selectpicker("val", date[1]);
         $("#class-version-updatetime-day").selectpicker("val", date[2]);
         $("li.tab-li:nth-child(3) > div:nth-child(2) > input:nth-child(1)").first().focus();
@@ -125,6 +148,10 @@ export class VersionEditInit extends Init {
               editor.setContent(data);
             } else if (ueditor?.mdEditor) {
               ueditor.mdEditor.setValue(data);
+              // 灌入后立即执行一次 MD→HTML：onLoad 只在组件 mount 时触发一次，
+              // 自动灌入发生在其后、等不到那次触发——旧流程要等用户「随便动一下」
+              // 才转换，UX 割裂（用户报告）。经按钮触发，与手动路径完全一致，无轮询
+              $("#mcmodder-tool-md").trigger("click");
             }
             let f = false;
             if (frameBody) {
@@ -156,8 +183,11 @@ export class VersionEditInit extends Init {
       const dateTs = Number(param.get("date"));
       if (Number.isFinite(dateTs) && dateTs > 0) {
         const d = new Date(dateTs);
+        // prefill 用 yyyy-mm-dd（可读性强，用户建议）；change 处理器兼容该格式
         $("#mcmodder-date-editor")
-          .val((d.getFullYear() % 1e2) * 1e4 + (d.getMonth() + 1) * 1e2 + d.getDate())
+          .val(
+            `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,
+          )
           .trigger("change");
       }
     }
