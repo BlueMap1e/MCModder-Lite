@@ -491,7 +491,12 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
               fileID: i.id,
               releaseType: releaseMap[i.releaseType] ?? "-",
               displayName: i.fileName,
-              gameVersions: i.gameVersions ?? [],
+              // CF 的 gameVersions 混入加载器与端类型（Client/Server/NeoForge…），
+              // 只保留 MC 版本号（用户裁定）；快照号（24w14a 等非点分格式）会一并
+              // 过滤——此类文件退化为仅按模组版本匹配，与 GitHub 渠道行为一致
+              gameVersions: (i.gameVersions ?? []).filter((g) =>
+                /^\d+\.\d+(\.\d+)?$/.test(g.trim()),
+              ),
               releaseTime: new Date(i.dateCreated),
             })),
           );
@@ -597,6 +602,9 @@ async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
     fileID: i.id,
     releaseType: i.draft ? "Draft" : i.prerelease ? "Prerelease" : "Release",
     displayName: i.tag_name,
+    // Releases 无 MC 版本维度，留空 = 匹配器跳过 MC 校验、仅按模组版本（tag）比对。
+    // 曾评估从 asset 文件名解析 MC 版本：mod 版本与 MC 版本同为数字点分串、歧义高，
+    // 解析错误的值会让原本可匹配的行校验失败——裁定放弃（2026-11-11）
     gameVersions: [],
     releaseTime: new Date(i.published_at || i.created_at),
   }));
