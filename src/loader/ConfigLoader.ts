@@ -297,6 +297,14 @@ export const settings = [
         label: "编辑器",
         settings: [
           {
+            id: "inputSuggestions",
+            title: "输入候选列表",
+            description:
+              "在改动附言与改动说明输入框提供候选列表。候选完全由你自己的历史构建：提交过的词句自动进入候选（「；」分段、最近在前、上限 50 条），不再预置任何出厂模板；关闭后输入框回归原生形态。审核页的理由候选同样受此开关控制。",
+            type: "checkbox",
+            value: true,
+          },
+          {
             id: "editorStats",
             title: "编辑量实时统计",
             description:

@@ -1,5 +1,4 @@
 import { GM_getValue, GM_info, GM_openInTab } from "$";
-import defaultEditReasons from "./assets/json/input/EditReason.json";
 import defaultVerifyReasons from "./assets/json/input/VerifyReason.json";
 
 export class Values {
@@ -1196,7 +1195,56 @@ export class Values {
   ];
 
   static readonly defaultInputSuggestion: Record<string, InputSimplifiedSuggestion[]> = {
-    editReasons: defaultEditReasons,
     verifyReasons: defaultVerifyReasons,
   };
+
+  /**
+   * 上游 `EditReason.json` 预置的「改动说明」候选（2026-11-10 起废除预置）。
+   * 仅迁移用：从既有存储里滤除这些出厂模板项，用户自攒的候选保留。
+   */
+  static readonly legacyEditReasonSeeds: string[] = [
+    "添加简介",
+    "添加更新状态",
+    "添加开源状态",
+    "添加贡献者",
+    "添加作者",
+    "添加链接",
+    "添加支持版本",
+    "添加 MODID",
+    "添加搜索辅助关键词",
+    "添加 Modrinth 项目 ID",
+    "添加 Curseforge 项目 ID",
+    "添加图片",
+    "添加打包方式",
+    "添加模组列表",
+    "添加元素",
+    "添加关联模组",
+    "添加关联整合包",
+    "添加新章节",
+    "添加数值信息",
+    "修改简介",
+    "修改正文",
+    "修改更新状态",
+    "修改开源状态",
+    "修改 MODID",
+    "修改搜索辅助关键词",
+    "修改封面",
+    "修改 Modrinth 项目 ID",
+    "修改 Curseforge 项目 ID",
+    "修改名称",
+    "修改打包方式",
+    "修改元素",
+    "修改链接",
+    "修改模组列表",
+    "修改关联模组",
+    "修改关联整合包",
+    "修改教程著作权",
+    "修改资料类型",
+    "修改数值信息",
+    "修改资料分类",
+    "删除冗余",
+    "删除过时链接",
+    "删除模组列表中模组",
+    "本人为开发者",
+  ];
 }

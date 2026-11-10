@@ -426,16 +426,19 @@ export class AdminVerifyInit extends AdminBaseInit {
       );
     }
 
-    InputListPopoverController.instance.add(this.reasonInput.get(0) as HTMLInputElement, {
-      type: "inputList",
-      delimiter: "；",
-      hideBeforeInput: true,
-      suggestionManager: {
-        configs: this.configs,
-        configKey: "verifyReasons",
-      },
-      zIndex: 999, // swal2 = 1000, sidebar = 500, .model = 999（但是已经被脚本的 #verify-window 覆写成 998）
-    });
+    // 「输入候选列表」开关同样管住审核页的理由候选（预置的审核用语手册保留）
+    if (this.configs.getSettings("inputSuggestions")) {
+      InputListPopoverController.instance.add(this.reasonInput.get(0) as HTMLInputElement, {
+        type: "inputList",
+        delimiter: "；",
+        hideBeforeInput: true,
+        suggestionManager: {
+          configs: this.configs,
+          configKey: "verifyReasons",
+        },
+        zIndex: 999, // swal2 = 1000, sidebar = 500, .model = 999（但是已经被脚本的 #verify-window 覆写成 998）
+      });
+    }
   }
 
   /** 将展示待审项详细信息的表格解析为行标题与内容的键值对，便于后续处理。 */

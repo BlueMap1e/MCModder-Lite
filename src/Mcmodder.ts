@@ -637,6 +637,18 @@ export class Mcmodder {
     // 多账号切换已整体移除（2026-11-04）：清掉旧版本留下的账号列表与快捷切换游标
     this.configRepository.pruneLegacySettings(["myProfiles", "lastUid"]);
 
+    // 迁移（2026-11-10）：「改动说明」候选不再预置出厂模板——从既有存储里滤除
+    // 上游 EditReason.json 的种子项，用户自攒的候选保留
+    const storedReasons = this.configRepository.get("inputList", "editReasons");
+    if (storedReasons) {
+      const filtered = storedReasons.filter(
+        (s) => !Values.legacyEditReasonSeeds.includes(typeof s === "string" ? s : s.value),
+      );
+      if (filtered.length !== storedReasons.length) {
+        this.configRepository.set("inputList", "editReasons", filtered);
+      }
+    }
+
     const customFont = this.configRepository.getSettings("customFont");
     if (customFont) {
       this.applyCustomFont(customFont);

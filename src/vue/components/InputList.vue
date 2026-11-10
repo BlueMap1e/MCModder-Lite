@@ -382,8 +382,13 @@ function updateValueRef(e: Event) {
   if (e instanceof KeyboardEvent && e.isComposing) {
     return;
   }
-  valueRef.value = inputRef.value!.value;
-  selectionStart.value = inputRef.value!.selectionStart;
+  if (inputRef.value === null) {
+    // 键盘焦点（Tab 切入 / 程序化 focus）不经过控制器 serve，此时没有服务对象：
+    // window 转发的键盘事件仍会打到这里，静默忽略即可（与非点击路径无候选的语义一致）。
+    return;
+  }
+  valueRef.value = inputRef.value.value;
+  selectionStart.value = inputRef.value.selectionStart;
 }
 
 /** 输入元素获得焦点：拉取候选全集（字符串形式的简写在此规范化为对象） */

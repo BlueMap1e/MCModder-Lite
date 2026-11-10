@@ -90,19 +90,33 @@ export class GeneralEditInit extends Init {
           });
       });
 
-    // 下拉菜单
-    $("#mcmodder-textarea-remark, #mcmodder-textarea-reason").each((_, e) => {
-      const textarea = e as HTMLTextAreaElement;
-      InputListPopoverController.instance.add(textarea, {
-        type: "inputList",
-        delimiter: "；",
-        hideBeforeInput: true,
-        suggestionManager: {
-          configs: this.configs,
-          configKey: "editReasons",
-        },
+    // 下拉菜单（「输入候选列表」开关）：候选完全由个人历史构建，不再预置出厂模板
+    if (this.configs.getSettings("inputSuggestions")) {
+      $("#mcmodder-textarea-remark, #mcmodder-textarea-reason").each((_, e) => {
+        const textarea = e as HTMLTextAreaElement;
+        InputListPopoverController.instance.add(textarea, {
+          type: "inputList",
+          delimiter: "；",
+          hideBeforeInput: true,
+          suggestionManager: {
+            configs: this.configs,
+            configKey: "editReasons",
+          },
+        });
+        // 历史积累：提交过的词句自动进入候选（「；」分段、去重、最近在前、上限 50）
+        $(textarea).on("change", () => {
+          const stored: InputSimplifiedSuggestion[] =
+            this.configs.get("inputList", "editReasons") ?? [];
+          const values = stored.map((s) => (typeof s === "string" ? s : s.value));
+          const incoming = String($(textarea).val())
+            .split("；")
+            .map((s) => s.trim())
+            .filter((s) => s !== "" && !values.includes(s));
+          if (incoming.length === 0) return;
+          this.configs.set("inputList", "editReasons", [...incoming, ...stored].slice(0, 50));
+        });
       });
-    });
+    }
 
     // 针对应用 InputList 后原生输入框无法被检测到的修复
     const parent = $(".common-rowlist-block .text");
