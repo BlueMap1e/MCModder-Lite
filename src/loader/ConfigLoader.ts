@@ -85,6 +85,14 @@ export const settings = [
             type: "checkbox",
           },
           {
+            id: "mcmodderUISkin",
+            title: "界面皮肤",
+            description:
+              "应用脚本的全站界面皮肤：按钮渐变、面板与悬浮层配色、表单控件圆角等。关闭后这些控件回归站点原生样式，脚本功能不受影响。",
+            type: "checkbox",
+            value: true,
+          },
+          {
             id: "moveAds",
             title: "广告优化",
             description:

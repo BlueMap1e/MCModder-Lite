@@ -133,6 +133,7 @@ interface Settings {
   moveAds: boolean;
   blockAds: boolean;
   inputSuggestions: boolean;
+  mcmodderUISkin: boolean;
   diffComparator: boolean;
   sandboxSidebarRemoval: boolean;
   customFont: 0 | 1 | 2 | 3;

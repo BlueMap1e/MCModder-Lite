@@ -553,10 +553,13 @@ export class StyleLoader {
     let style = "";
     style += css.themeColor;
     style += css.base;
-    // if (configs.get("mcmodderUI")) {
-    style += css.mcmodderUI;
-    // }
-    if (/* configs.get("mcmodderUI") && */ configs.getSettings("tableThemeColor")) {
+    // 「界面皮肤」开关（默认开）：mcmodderUI.css 是上游遗留的全站换肤层，关闭后
+    // 按钮渐变、面板配色等回归站点原生样式。该文件不含任何夜间规则，夜间模式
+    // 不受本开关影响（2026-11-10 复活曾死的 mcmodderUI 键，原注释条件见 git 历史）
+    if (configs.getSettings("mcmodderUISkin")) {
+      style += css.mcmodderUI;
+    }
+    if (configs.getSettings("tableThemeColor")) {
       style += css.tableThemeColor;
     }
     if (configs.getSettings("tableLeftAlign")) {
