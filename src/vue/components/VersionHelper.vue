@@ -21,6 +21,20 @@
           >
             {{ modules[p].label }}
           </button>
+          <!-- GitHub 匿名额度徽章：仅 GitHub 渠道且观测到限额头时显示（按 IP 计，
+               共享出口下他人用量也会占用，故数值可能无故下降——可视化以免误解） -->
+          <span
+            v-if="active === 'gh' && ghQuota"
+            class="mcmodder-vh-quota"
+            :class="{ exhausted: ghQuota.remaining === 0 }"
+            :title="
+              ghQuota.resetAt
+                ? `匿名额度按出口 IP 计 60 次/小时，约 ${ghQuota.resetAt} 重置`
+                : '匿名额度按出口 IP 计 60 次/小时'
+            "
+          >
+            额度 {{ ghQuota.remaining }}/{{ ghQuota.limit }}
+          </span>
         </div>
 
         <input
@@ -519,6 +533,27 @@ async function fetchMRList(mrid: string): Promise<NormalizedRow[]> {
   }));
 }
 
+/** 最近一次 GitHub 查询观测到的匿名额度状态（状态行与徽章展示用；null = 尚无数据） */
+const ghQuota = ref<{ remaining: number; limit: number; resetAt: string } | null>(null);
+
+/** 从响应头读取 GitHub 匿名额度（TM 的 responseHeaders 为 "key: value\r\n" 字符串）。
+ *  头缺失（个别管理器/代理剥头）时不更新，徽章保持上次观测值。 */
+function readGHQuota(resp: { responseHeaders?: string }) {
+  const get = (name: string) =>
+    new RegExp(`^${name}:\\s*(.*)$`, "im").exec(resp.responseHeaders ?? "")?.[1]?.trim();
+  const remaining = Number(get("x-ratelimit-remaining"));
+  const limit = Number(get("x-ratelimit-limit"));
+  const reset = Number(get("x-ratelimit-reset"));
+  if (Number.isFinite(remaining)) {
+    ghQuota.value = {
+      remaining,
+      limit: Number.isFinite(limit) ? limit : 60,
+      resetAt:
+        Number.isFinite(reset) && reset > 0 ? new Date(reset * 1000).toLocaleTimeString() : "",
+    };
+  }
+}
+
 /** GitHub Releases：公开仓库匿名可用（限额 60 次/小时，按 IP 计），单页 100 条覆盖绝大多数仓库。
  *  Releases 没有 MC 版本维度，匹配时仅按模组版本（tag）比对 */
 async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
@@ -530,16 +565,13 @@ async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
     },
     "从 GitHub 获取 Releases",
   );
+  readGHQuota(resp);
   if (resp.status === 404) throw new Error("仓库不存在或为私有");
   if (resp.status === 403 || resp.status === 429) {
     // GitHub 的 403/429 不全是额度：代理/共享出口的按 IP 计额度被同出口他人占用、
-    // abuse 检测、无 User-Agent 的管理规则拒绝等都返回 403。按响应头区分，
-    // 并把 GitHub 的 message 带给用户——「十几个小时没用仍报额度用尽」的
-    // 谜团即源于此（共享出口 IP 的额度与他人共享，与用户自身使用频率无关）。
-    const getHeader = (name: string) => {
-      const m = new RegExp(`^${name}:\\s*(.*)$`, "im").exec(resp.responseHeaders ?? "");
-      return m ? m[1].trim() : undefined;
-    };
+    // abuse 检测、无 User-Agent 的管理规则拒绝等都返回 403。按响应头区分，并把
+    // GitHub 的 message 带出来——「十几个小时没用仍报额度用尽」即源于按 IP 计额
+    // 与共享出口（与用户的自身使用频率无关）。
     console.warn("[MCModder-Lite] GitHub 响应头：", resp.responseHeaders);
     let detail = "";
     try {
@@ -548,11 +580,10 @@ async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
       /* body 非 JSON（如代理/网关拦截页） */
     }
     // 双保险：限额头缺失（个别管理器/代理剥头）时以 GitHub message 兜底判定
-    if (getHeader("x-ratelimit-remaining") === "0" || /rate limit exceeded/i.test(detail)) {
-      const reset = Number(getHeader("x-ratelimit-reset"));
-      const resetAt = reset ? new Date(reset * 1000).toLocaleTimeString() : "";
+    if (ghQuota.value?.remaining === 0 || /rate limit exceeded/i.test(detail)) {
+      const resetAt = ghQuota.value?.resetAt ?? "";
       throw new Error(
-        `GitHub 匿名额度已用尽（按 IP 计 60 次/小时${resetAt ? `，约 ${resetAt} 重置` : ""}）。额度与你是否使用无关：若经由代理/共享出口访问，同出口他人的用量也会占用`,
+        `GitHub 匿名额度已用尽（按 IP 计 60 次/小时${resetAt ? `，约 ${resetAt} 重置` : ""}）。该额度按出口 IP 统计，经由代理/共享出口访问时会被同出口的其他用户占用`,
       );
     }
     throw new Error(
@@ -750,6 +781,19 @@ function switchPlatform(p: PlatformId) {
   border: 1px solid rgba(128, 128, 128, 0.45);
   border-radius: 4px;
   overflow: hidden;
+}
+/* GitHub 匿名额度徽章：按 IP 计、共享出口下他人用量也会占用，数值可能无故
+   下降——可视化以免误解；耗尽态用警示色标出 */
+.mcmodder-vh-quota {
+  align-self: center;
+  font-size: 12px;
+  opacity: 0.75;
+  padding: 2px 8px;
+  white-space: nowrap;
+}
+.mcmodder-vh-quota.exhausted {
+  color: var(--mcmodder-color-danger, #d9534f);
+  opacity: 1;
 }
 .mcmodder-vh-platforms button {
   border: none;
