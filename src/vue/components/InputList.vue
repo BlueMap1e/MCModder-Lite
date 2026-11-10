@@ -369,7 +369,9 @@ watchEffect(() => {
     !suggestionList.value.some((e) => e.value === selectionValue.value)
   );
   selected.value = 0;
-  if (rawSuggestedList.length) {
+  // 候选池为空时可收录状态必须仍能撑起弹层，否则「保存为快捷输入项」永远没有第一次
+  // 出现的机会（种子废除后空列表是常态，上游时代被预置项掩盖了这个鸡生蛋问题）
+  if (rawSuggestedList.length || canCreateNew.value) {
     selectable.value = true;
   } else {
     selectable.value = false;
