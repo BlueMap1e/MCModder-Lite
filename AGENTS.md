@@ -120,8 +120,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
 
 ## Maintenance notes (2026-11)
 
-- **Do not bulk-delete CSS.** `base.css` (~87 KB), `mcmodderUI.css` (~34 KB) and `bbs.css`
-  (~37 KB) contain legacy overrides whose deletion has broken night mode before. Remove a rule
+- **Do not bulk-delete CSS.** `base.css` (~114 KB), `mcmodderUI.css` (~34 KB) and `bbs.css`
+  (~53 KB) contain legacy overrides whose deletion has broken night mode before. Remove a rule
   only with CSS-coverage evidence and a before/after screenshot of every affected page.
 - `mcmodderUI.css` is gated by the `mcmodderUISkin` setting (default on; revived
   2026-11-10 from the previously dead `mcmodderUI` key). It is the skin layer: scope
@@ -142,8 +142,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   `Values.ueditorFileAccept` must list every extension the setting description promises.
 - Deferred cleanup (do not start without a plan): zero-reference `Utils` helpers / `Values`
   data, splitting `ConfigLoader` / `Utils` / `Values`, per-page CSS or bundle splitting.
-  The 2.4 MB bundle costs ~16 ms eval on desktop and ~84 ms at 4x CPU throttle; splitting
-  mainly helps low-end devices and adds loading / debugging complexity.
+  The shipped bundle is ~1.5 MB (1,553,615 B at lite.10; ~2.4 MB unminified) and costs
+  ~16 ms eval on desktop and ~84 ms at 4x CPU throttle; splitting mainly helps low-end
+  devices and adds loading / debugging complexity.
 - Known verification gaps: admin pages need a separate `admin.mcmod.cn` login state; `yxd_token`
   HttpOnly is unverified. Treat these as open, not as design decisions.
 
@@ -159,9 +160,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token` retry). Never call
   `GM_xmlhttpRequest` directly.
 - External libraries:
-  - No `@require` / CDN script: every third-party library is bundled at build time, so installing
-    the userscript fetches no remote code. Add new libraries through `package.json` + `import`,
-    never through `@require`.
+  - **No `@require`**: nothing is fetched at install time. Most third-party code is bundled at
+    build time (`package.json` + `import`); the two exceptions load lazily from
+    `registry.npmmirror.com` through `Utils.loadScript` — `markdown-it` 11.0.1 (Markdown
+    editor) and `pangu` 4.0.7 (中英间添加空格). Add new libraries through `package.json` +
+    `import`, never through `@require`; a new runtime remote load needs an entry here.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
     `pinyin-match`, `turndown`, `turndown-plugin-gfm`.
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),

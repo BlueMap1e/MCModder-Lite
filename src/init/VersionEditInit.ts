@@ -18,6 +18,8 @@ export class VersionEditInit extends Init {
     new GeneralEditInit(this.parent).run();
 
     // 快速设置日期
+    // 日期直填是版本编辑页表单上的一个小挂件，作用面仅 /version/add|edit，
+    // 刻意不设开关（deliberately unswitched）。
     const currentTime = new Date();
     const year = currentTime.getFullYear();
     $(
