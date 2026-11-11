@@ -202,6 +202,7 @@ interface Settings {
   itemRepository: 0 | 1;
   minimumRequestInterval: number;
   keybindFastLink: Key;
+  takeoverNativeAutolink: boolean;
   keybindFastSubmit: Key;
   keybindVerifyPass: Key;
   keybindVerifyRefund: Key;

@@ -36,9 +36,15 @@ if (viteVersion !== version) {
   );
   process.exit(1);
 }
-// release notes 取自 CHANGELOG 的对应小节；小节缺失会导致 release notes 为空
-if (!readFileSync(`${root}CHANGELOG.md`, "utf8").includes(`## [${version}]`)) {
-  console.error(`CHANGELOG.md 缺少 "## [${version}]" 小节，发版 release notes 会为空，请先补齐再打包。`);
+// release notes 取自 CHANGELOG 的对应小节；首个小节必须是本次版本，
+// 否则说明清单没 bump（历史上会打出重复 tag 且 notes 为空）。
+const changelogText = readFileSync(`${root}CHANGELOG.md`, "utf8");
+const firstHeading = changelogText.match(/^##\s*\[([^\]]+)\]/m)?.[1];
+if (firstHeading !== version) {
+  console.error(
+    `CHANGELOG.md 首个小节是 ${firstHeading ?? "(缺失)"}，与 package.json 的 ${version} 不一致。\n` +
+      `请先 bump 版本并把 "## [${version}]" 小节放到最前面，再打包。`,
+  );
   process.exit(1);
 }
 

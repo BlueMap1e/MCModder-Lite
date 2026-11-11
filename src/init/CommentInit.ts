@@ -1,6 +1,4 @@
-import { createApp } from "vue";
 import { Utils } from "../Utils";
-import Countdown from "../vue/components/Countdown.vue";
 import { TimerUtils } from "../widget/TimerUtils.ts";
 import { CommentJumpController } from "./CommentJump";
 import { Init } from "./Init";
@@ -19,22 +17,24 @@ export class CommentInit extends Init {
   /** 短评跨页跳转：查找、翻页与 loading 都由它负责 */
   private readonly jump = new CommentJumpController(this.parent, this.configs);
 
+  /** 处理单个发布时间节点（幂等：已有容器则跳过） */
+  private applyPublishTime(node: Element) {
+    if (node.querySelector(`.${CommentInit.PUBLISH_TIME_CLASS}`)) return;
+    const published = CommentInit.parsePublishTime(node.textContent);
+    // 括号放进我们自己的容器里，整体一次插入：不能把括号插到日期节点两侧，
+    // 否则整个日期会被括起来（2026-11-11 回归）；先渲染好文本再 append，
+    // 避免「空括号 → 补字」的中间态被画出来。
+    const wrapper = document.createElement("span");
+    wrapper.className = CommentInit.PUBLISH_TIME_CLASS;
+    const timer = document.createElement("span");
+    timer.className = TimerUtils.CLASSNAME;
+    wrapper.append(document.createTextNode(" ("), timer, document.createTextNode(")"));
+    TimerUtils.mountCountdown(timer, () => published, TimerUtils.DATAFORMATTER_ZH);
+    node.append(wrapper);
+  }
+
   private displayPublishTime(target: JQuery) {
-    target.find(".comment-reply-row-time").each((_, node) => {
-      // 同一楼可能被重复处理（见 PROCESSED_ATTR），倒计时只挂一次
-      if (node.querySelector(`.${CommentInit.PUBLISH_TIME_CLASS}`)) return;
-      const published = CommentInit.parsePublishTime(node.textContent);
-      const container = $(`<span class="${CommentInit.PUBLISH_TIME_CLASS}"></span>`)
-        .appendTo(node)
-        .get(0);
-      createApp(Countdown, {
-        parent: this.parent,
-        dataGetter: published,
-        dataFormatter: TimerUtils.DATAFORMATTER_ZH,
-      }).mount(container) as InstanceType<typeof Countdown>;
-      container.insertAdjacentText("beforebegin", " (");
-      container.insertAdjacentText("afterend", ")");
-    });
+    target.find(".comment-reply-row-time").each((_, node) => this.applyPublishTime(node));
   }
 
   private replaceMobileClientIcon(target: JQuery) {
@@ -107,6 +107,13 @@ export class CommentInit extends Init {
   }
 
   private readonly commentObserver = new MutationObserver((mutationList) => {
+    // 短评块被站点整块替换：旧观察者挂着的节点已脱离文档，换挂到新的块上
+    if (this.commentRoot && !this.commentRoot.isConnected) {
+      this.commentObserver.disconnect();
+      this.commentRoot = undefined;
+      if (this.attachCommentObserver()) this.catchUpExistingFloors();
+      return;
+    }
     // 防广告误触发：站点的广告楼层始终单独插入，遇到即跳过整批
     if (mutationList.some((mutation) => CommentInit.isAdFloor(mutation))) return;
     // 只要有新增节点就可能带来未处理的楼层/回复。不做逐一的目标类名匹配——
@@ -115,6 +122,19 @@ export class CommentInit extends Init {
     // 统一走防抖补扫：各处理器以标记属性保证幂等，重复触发几乎零成本；
     // 站点重渲染把已注入的锚点冲掉时，新渲染出的节点同样会被补处理。
     if (mutationList.some((mutation) => mutation.addedNodes.length > 0)) {
+      // 时间戳同步补、不防抖：MutationObserver 回调在下一帧绘制前执行，这样
+      // 「(N天前)」与站点渲染出的楼层同帧出现，不会肉眼看出一段后补的括号。
+      // 只扫新增子树，成本与新增节点量成正比（重活仍走防抖补扫）。
+      for (const mutation of mutationList) {
+        for (const added of Array.from(mutation.addedNodes)) {
+          if (added.nodeType !== Node.ELEMENT_NODE) continue;
+          const el = added as Element;
+          if (el.matches(".comment-reply-row-time")) this.applyPublishTime(el);
+          el.querySelectorAll(".comment-reply-row-time").forEach((node) =>
+            this.applyPublishTime(node),
+          );
+        }
+      }
       this.scheduleSweep();
     }
   });
@@ -248,11 +268,18 @@ export class CommentInit extends Init {
     this.jump.notifyCommentRendered(target);
   }
 
+  /** 当前观察的短评块根节点：站点重渲染后据此换挂观察者 */
+  private commentRoot?: HTMLElement;
+
   /** 把 MutationObserver 挂到短评块上；块尚未渲染时返回 false */
   private attachCommentObserver() {
     const commentContainer = $(".common-comment-block.lazy");
     if (!commentContainer.length) return false;
-    this.commentObserver.observe(commentContainer.get(0), {
+    const root = commentContainer.get(0) as HTMLElement;
+    // 重复调用（SPA 导航 / 站点重渲染）时先解绑旧的，保证只有一个观察目标
+    this.commentObserver.disconnect();
+    this.commentRoot = root;
+    this.commentObserver.observe(root, {
       childList: true,
       subtree: true,
     });
@@ -261,10 +288,13 @@ export class CommentInit extends Init {
 
   /** 对挂载观察者之前已渲染的楼层做一次补处理（各处理器以标记属性保证幂等） */
   private catchUpExistingFloors() {
-    $(".comment-floor").each((_, f) => this.processCommentFloor($(f)));
-    $(".comment-reply-floor").each((_, f) => this.processCommentReplyFloor($(f)));
+    const root = this.commentRoot;
+    if (!root) return;
+    const scope = $(root);
+    scope.find(".comment-floor").each((_, f) => this.processCommentFloor($(f)));
+    scope.find(".comment-reply-floor").each((_, f) => this.processCommentReplyFloor($(f)));
     // 发布时间倒计时：顶层楼与楼中楼都要处理，逐节点幂等
-    this.displayPublishTime($(".common-comment-block.lazy"));
+    this.displayPublishTime(scope);
   }
 
   run() {
@@ -284,7 +314,11 @@ export class CommentInit extends Init {
         block: "center",
       });
     }
-    if (!this.attachCommentObserver() && onBoardHost) {
+    if (this.attachCommentObserver()) {
+      // 块在挂载观察者之前就已渲染出楼层（站点先渲染、脚本后注入，或 SPA 回退）：
+      // 补处理一次，避免只靠后续 DOM 变更触发
+      this.catchUpExistingFloors();
+    } else if (onBoardHost) {
       // 留言板晚于脚本启动渲染（中心 / 作者页动态内容）：先在文档级等待它出现，
       // 出现后换回窄观察者，并对渲染时已存在的楼层补处理。
       // 注意不可在等待阶段盲目调 unlockComment——开放留言板随后会原生渲染，

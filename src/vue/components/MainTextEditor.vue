@@ -23,14 +23,14 @@
       </div>
     </div>
     <div v-show="!warning" class="mcmodder-editor-container">
-      <div v-once ref="containerRef" />
+      <div v-once ref="containerRef" class="mcmodder-editor-inner" />
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import CodeMirror from "codemirror";
-import { nextTick, onMounted, ref, useTemplateRef } from "vue";
+import { markRaw, nextTick, onMounted, ref, shallowRef, useTemplateRef } from "vue";
 
 interface Props {
   /** 编辑器容器上的 `id` 属性 */
@@ -50,10 +50,12 @@ const containerRef = useTemplateRef("containerRef");
 
 const warning = ref(false);
 const requireRefresh = ref(false);
-const editor = ref<ReturnType<typeof CodeMirror>>();
+// CodeMirror 实例必须脱离 Vue 深响应：shallowRef + markRaw，避免深度代理带 DOM
+// 引用与内部状态的编辑器对象（移植自上游 ce61200）。
+const editor = shallowRef<ReturnType<typeof CodeMirror>>();
 
 onMounted(() => {
-  editor.value = CodeMirror(containerRef.value!, props.options);
+  editor.value = markRaw(CodeMirror(containerRef.value!, props.options));
   if (props.shouldWarn?.()) {
     warning.value = true;
   } else {
@@ -113,6 +115,10 @@ defineExpose({
   display: flex;
   overflow: auto;
   height: calc(100% - 32px);
+}
+
+.mcmodder-editor-inner {
+  width: 100%;
 }
 
 .mcmodder-editor-warning-content {

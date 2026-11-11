@@ -90,6 +90,22 @@ export class Mcmodder {
     ScheduleRequestLoader.run(this.scheduleRequestUtils);
 
     this.cfgutils = new ConfigUtils(this);
+
+    // 一次性迁移：Alt+C 旧默认值与百科原生「快速排版设置」（Alt+C/Alt+Q）冲突
+    //（2026-11-11 实机报告）。新默认 Alt+X = 接管站点原生的自动链接键（编辑器
+    // 捕获阶段拦截，见 AdvancedUEditor）——该键在用户实机上被证实可达，无需再赌
+    // 新键位。只精确匹配旧默认值（Alt+C 且无其他修饰键），自定义过的组合不动。
+    const fastLinkKey = this.configRepository.getSettings("keybindFastLink");
+    if (
+      fastLinkKey &&
+      fastLinkKey.altKey === true &&
+      !fastLinkKey.ctrlKey &&
+      !fastLinkKey.shiftKey &&
+      !fastLinkKey.metaKey &&
+      fastLinkKey.keyCode === 67
+    ) {
+      this.configRepository.setSettings("keybindFastLink", { altKey: true, key: "X", keyCode: 88 });
+    }
     this.styleColors = Utils.getThemeColors(this.configRepository);
 
     InitLoader.run(this, this.initList);
@@ -162,7 +178,8 @@ export class Mcmodder {
     // 鼠标悬浮预览介绍
     if (this.configRepository.getSettings("hoverDescription")) {
       $(".common-imglist li, .item-list-type-right span, .relation a").off();
-      $("a")
+      // 先按 href 子串粗筛：原实现遍历全文档所有 <a>，长页面上是纯浪费
+      $('a[href*="/item/"], a[href*="/class/"]')
         .filter((_, e) => {
           const href = (e as HTMLAnchorElement).href;
           return (
@@ -655,8 +672,9 @@ export class Mcmodder {
     }
 
     // 关闭主页&整合包区广告
-    $("span")
-      .filter((_, e) => $(e).attr("style") === Values.adTitleCss)
+    // 只扫带内联样式的 span：原实现遍历全文档所有 span，每次加载白付一次 O(全页) 扫描
+    $("span[style]")
+      .filter((_, e) => e.getAttribute("style") === Values.adTitleCss)
       .html("<a>× 广告</a>")
       .find("a")
       .click((e) => {
@@ -759,17 +777,23 @@ export class Mcmodder {
     }
 
     const textArea = $(".text-area.common-text, .item-content.common-text, .post-row");
-    // 去除正文异常背景：单遍同时读两个属性，取代旧的两遍各自 .css() 读取
-    // （每遍都会触发计算样式解析；审计 F-12）
+    // 去除正文异常背景 + 收集夜间正文颜色：只读内联样式、单次查询、单遍处理。
+    // 旧实现用 jQuery .css() 读计算样式（每节点两次 getComputedStyle），写回后又让
+    // 下一次读取失效，长正文页会逐节点触发样式重算（审计 F-12 的遗留）。
     if (!this.configRepository.getSettings("disableAutoStyleFix")) {
-      textArea.find("[style]").each((_i, c) => {
-        const $c = $(c);
-        if ($c.css("background-color") === "rgb(255, 255, 255)") {
-          $c.css("background-color", "");
-        }
-        if (/^span$/i.test(c.tagName) && $c.css("color") === "rgb(0, 0, 0)") {
-          $c.css("color", "");
-        }
+      textArea.find("[style]").each((_i, _e) => {
+        const e = _e as HTMLElement;
+        const inline = e.style;
+        if (inline.backgroundColor === "rgb(255, 255, 255)") inline.backgroundColor = "";
+        if (/^span$/i.test(e.tagName) && inline.color === "rgb(0, 0, 0)") inline.color = "";
+        const css = inline.getPropertyValue("color");
+        if (!css) return;
+        const color = Utils.parseRGB(css);
+        if (!color) return;
+        const colorStr = Utils.RGBToColor(color);
+        const nightColorStr = Utils.reverseColorBrightness(color);
+        this.elementColorDictionary.set(e, colorStr);
+        this.elementColorCache.set(colorStr, nightColorStr);
       });
     }
 
@@ -779,21 +803,7 @@ export class Mcmodder {
       new Swiper(container);
     });
 
-    // 夜间模式正文颜色自动适配：只处理带内联 color 的节点，避免遍历整棵正文
-    if (!this.configRepository.getSettings("disableAutoStyleFix")) {
-      textArea.find("[style]").each((_, _e) => {
-        const e = _e as HTMLElement;
-        const css = (e as HTMLElement).style.getPropertyValue("color");
-        if (css) {
-          const color = Utils.parseRGB(css);
-          if (!color) return;
-          const colorStr = Utils.RGBToColor(color);
-          const nightColorStr = Utils.reverseColorBrightness(color);
-          this.elementColorDictionary.set(e, colorStr);
-          this.elementColorCache.set(colorStr, nightColorStr);
-        }
-      });
-    }
+    // 夜间模式正文颜色自动适配已并入上面的单遍处理
 
     // 夜间模式偏好解析为生效值；跟随系统时监听系统配色变化（手动偏好下回调不会覆写）
     this.resolveNightMode();

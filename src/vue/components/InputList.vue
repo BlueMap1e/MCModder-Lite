@@ -658,6 +658,9 @@ function setSelectionValue(content: string, isContinuously = false) {
     }
     if (isContinuously && isLast) {
       val += delimiter.value;
+      // 光标必须落在补上的分隔符之后：紧贴分隔符前会让下一次输入先撞上「；」
+      //（2026-11-11 用户实机报告，上游同病）。
+      newPos = newPos === null ? val.length : newPos + delimiter.value.length;
     }
   } else {
     if (pos !== null) {

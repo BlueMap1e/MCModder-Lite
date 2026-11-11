@@ -104,7 +104,7 @@ export const settings = [
             id: "blockAds",
             title: "屏蔽 AdSense 广告",
             description:
-              "隐藏百科页面中的 Google AdSense 广告单元（物品列表页等处的 ins.adsbygoogle）及其空壳容器。站点自有广告位（主页/整合包区等）不受影响，仍用其自带的关闭按钮。",
+              "隐藏百科页面中的 Google AdSense 广告单元（ins.adsbygoogle）及其空壳容器；同时把主页 / 整合包区的「广告」条目替换成可关闭的占位，并移除矿词、世界生成列表页的站点广告位。其余站点原生内容不受影响。",
             type: "checkbox",
             value: true,
           },
@@ -658,15 +658,30 @@ export const settings = [
     label: "其他",
     sections: [
       {
+        id: "autolink",
+        label: "自动链接",
+        settings: [
+          {
+            id: "takeoverNativeAutolink",
+            title: "接管原生自动链接面板",
+            description:
+              "开启后，编辑页站点的全部自动链接入口——原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」——都会改开本脚本的面板（两者同名同皮，并存时无法分辨；本面板数据为本地库 + 站点同一接口的双路搜索，为原生超集）。关闭后原生入口恢复原生面板，仅下方快捷键打开本面板。若站点更改其接口返回结构导致本面板异常，可关闭此项临时回退。重新载入页面后生效。",
+            type: "checkbox",
+            value: true,
+            visible: (ctx) => !ctx.mobile,
+          },
+        ],
+      },
+      {
         id: "keybind",
         label: "快捷键",
         settings: [
           {
             id: "keybindFastLink",
             title: "自动链接",
-            description: `在此可修改打开本脚本所提供“自动链接”功能的快捷键。百科原生自带的“自动链接”（通过 ${Utils.keyToString({ altKey: true, keyCode: 88 })} 打开）已终止支持，其入口会在将来的版本中移除。`,
+            description: `在此可修改打开本脚本所提供“自动链接”功能的快捷键。默认 Alt+X，可改绑任意键；编辑页站点的全部自动链接入口（原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」）默认也改开本面板（见上方「接管原生自动链接面板」）。旧默认 Alt+C 与原生「快速排版设置」（Alt+C / Alt+Q）冲突，启动时自动迁移。`,
             type: "keybind",
-            value: { altKey: true, key: "C", keyCode: 67 },
+            value: { altKey: true, key: "X", keyCode: 88 },
             visible: (ctx) => !ctx.mobile,
           },
           {

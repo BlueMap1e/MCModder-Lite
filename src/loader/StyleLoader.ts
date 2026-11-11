@@ -568,7 +568,9 @@ export class StyleLoader {
     if (configs.getSettings("tabSelectorInfo")) {
       style += css.tabSelectorInfo;
     }
-    if (configs.getSettings("splitScreenOnVerify")) {
+    // 只在分屏真正可用时注入：移动端 JS 不会挂分屏（enableSplit=false），
+    // 这条 CSS 却会隐藏站点原生审核窗，形成「样式生效、功能没挂」的半残状态
+    if (configs.getSettings("splitScreenOnVerify") && !Utils.isMobileClient()) {
       style += css.splitScreenOnVerify;
     }
     // if (configs.get("markdownIt")) {

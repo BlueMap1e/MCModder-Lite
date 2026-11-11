@@ -471,8 +471,16 @@ export class ClassPageInit extends Init {
         src.find(".common-link-frame a").each((_, c) => {
           const srca = $(c);
           const cpta = $(".class-info-left.mcmodder-class-info").find("#" + srca.attr("id"));
-          const url = srca.next().html().split("<strong>")[1].split("</strong>")[0];
-          const jumpUrl = srca.next().html().split('href=\\"')[1].split('\\">前往链接')[0];
+          // 文本与 URL 都是从宿主 HTML 字符串里抠出来的站点内容：任何一步取不到就
+          // 跳过该条（原先 split()[1] 为 undefined 会抛 TypeError 中断整个循环）；
+          // 两者落进弹层 HTML 前一律转义，URL 再过 safeURL 只放行 http(s)。
+          const siblingHtml = srca.next().html() ?? "";
+          const url = Utils.escapeHTML(
+            siblingHtml.split("<strong>")[1]?.split("</strong>")[0] ?? "",
+          );
+          const rawJumpUrl = siblingHtml.split('href=\\"')[1]?.split('\\">前往链接')[0] ?? "";
+          const jumpUrl = Utils.escapeHTML(Utils.safeURL(rawJumpUrl));
+          if (!url || !jumpUrl) return;
           cpta.webuiPopover({
             title: "这是一个站外链接",
             content: `

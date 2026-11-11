@@ -51,11 +51,15 @@ export class ItemPageInit extends Init {
       if ($(c).contents().length) {
         const od = $(c).text().slice(6).split(",\u00a0");
         $(c).html("[矿物词典/物品标签] ");
-        od.forEach((e) =>
-          $(`<a href="${Utils.getOredictURL(e.split(" (")[0])}" target="_blank">${e}</a>`).appendTo(
-            c,
-          ),
-        );
+        od.forEach((e) => {
+          // 词条文本来自宿主页面：显示文本转义后再拼 HTML，链接过 safeURL
+          //（不合法则跳过该条，不产出链接）
+          const href = Utils.safeURL(Utils.getOredictURL(e.split(" (")[0]));
+          if (!href) return;
+          $(
+            `<a href="${Utils.escapeHTML(href)}" target="_blank">${Utils.escapeHTML(e)}</a>`,
+          ).appendTo(c);
+        });
       }
     });
 
@@ -86,6 +90,8 @@ export class ItemPageInit extends Init {
         .trigger("click");
     }
 
+    // 资料表右侧信息块搬到左侧并补标题：页面级排版修正，作用面仅资料页，
+    // 刻意不设开关（deliberately unswitched）。
     const isCompactable = $("div.item-skip-list").length && $("div.item-content").length < 2;
     if (!isCompactable)
       $(".item-data").each((_, _c) => {

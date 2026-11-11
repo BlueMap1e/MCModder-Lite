@@ -83,9 +83,11 @@ npm run check
 
 1. 把 `package.json` 和 `vite.config.ts` 里的版本号改成同一个新版本。
 2. 在 `CHANGELOG.md` 最上面加一节 `## [新版本号] - 日期`，写人话即可。
-3. 提交信息里带 `[release]`，推送。
-4. CI 会自动建好**正式** release（发布脚本直接 `gh release create`，没有草稿或预发布标记），
-   不需要你在发布页填任何东西。
+3. 提交信息里带 `[release]`，**推到 `main`**（其他分支的 `[release]` 发布任务会跳过）。
+4. CI 会先跑 build 与两项 smoke（公共页 / XSS），都过了才自动建**正式** release
+   （发布脚本直接 `gh release create`，没有草稿或预发布标记），tag 打在本次构建的
+   commit 上。发布脚本还会校验：`CHANGELOG.md` 第一个小节必须就是 `package.json` 的
+   版本号，否则拒绝发版（防止打出 `vX_N` 重复 tag 且 notes 为空）。
 5. 帖子里换 zip 附件：跑 `npm run pack`，产物在 `dist/release/`，把里面的 zip 传到宣发帖。
    （GreasyFork 渠道已于 2026-11-10 废止——未压缩包超出其 2,097,152 字符上限，详见 HANDOFF。）
 6. 想先小范围验证就手动降级：打开该 release → 右上角编辑（铅笔图标）→ 勾选

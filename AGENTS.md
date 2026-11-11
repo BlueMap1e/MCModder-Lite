@@ -31,7 +31,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   parts (static gate → build → `scripts/smoke-public.mjs` → `scripts/security-smoke.mjs`); both
   smoke scripts drive real mcmod.cn pages through Playwright with a GM shim, need no login and
   touch no site data. They report SKIPPED rather than failing when mcmod.cn's CAPTCHA blocks
-  the runner (expect this on datacenter IPs). CI runs only the public-page smoke.
+  the runner (expect this on datacenter IPs: a blocked page is skipped, and a run where every
+  scenario is blocked exits 0). CI runs both smokes, and `release` waits for them.
 - Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
   mode). The editor/center E2E with a logged-in state is **not** committed: a local Playwright
   harness may exist outside the repo; it injects `dist/mcmodder-lite.user.js` into real pages
@@ -108,8 +109,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
 - The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
   switching and per-account credential storage were removed on purpose (2026-11-04): the
   feature was half-dead and its risk outweighed the benefit. Multi-account is the browser's
-  job (profiles / containers). `GM_cookie` is used only for `yxd_token`, and that write is read
-  back and verified. Do not reintroduce account switching.
+  job (profiles / containers). `GM_cookie` is used only for `yxd_token`; the write is read
+  back with `GM_cookie.list` and a mismatch is logged (the retry proceeds regardless, so a
+  manager without `list` or with a different cookie policy cannot hang the flow). Do not
+  reintroduce account switching.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
@@ -142,11 +145,27 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   2026-11-10 from the previously dead `mcmodderUI` key). It is the skin layer: scope
   structural rules with a marker class, and keep night rules OUT of it (night styling
   belongs in `base.css`; the skin file contains none).
-- `ItemTabInit` is not dead: `canRun()` returns false, but `ItemPageInit` and
-  `OredictPageInit` instantiate it directly. Never delete a file based on `canRun()` alone.
+- `ItemTabInit` is instantiated directly by `ItemPageInit` / `OredictPageInit` even though
+  `canRun()` returns false, so `canRun()` alone never proves a file dead. Its `run()` body is
+  currently fully commented out (~140-line no-op) — that is dead work, not a live feature.
 - Global keyboard shortcuts must return early when the event target is an `input`,
   `textarea`, `select` or `isContentEditable`; otherwise they swallow native Ctrl+A/C/Z on
   every page where the owner is mounted.
+- **Picking a keyboard shortcut means a four-layer conflict check** (2026-11-11: three key
+  picks discarded in one day): ① browser menu accelerators (Windows Firefox menubar:
+  F/E/V/S/B/T/H/D); ② site-native bindings — the edit page binds keys in an **inline script**,
+  not external JS (`showAutoLinkList` family: Alt+A/X/C/Q/V/W/Z), so page-source forensics is
+  mandatory; ③ browser/app layers (Zen owns Ctrl+Alt+letter for workspaces/essentials; overlay
+  tools own various plain Alt+letter combos) — if the settings keybind recorder cannot capture
+  a key at all, something above the page swallowed it: stop re-picking blind, change layers;
+  ④ hand ergonomics (left-hand keyboard / right-hand mouse). **Prefer taking over a
+  site-native documented key with a capture-phase listener over inventing a new one** — a
+  site's own key is the only one guaranteed to reach the page on every machine (see the Alt+X
+  takeover in `AdvancedUEditor.advinit`).
+- Conventions live here, not in code comments, chat logs or PR descriptions — a rule recorded
+  anywhere else is a rule nobody can find (a past contributor's "don't touch CHANGELOG" note
+  once took a repo-wide hunt to recover). When a working decision carries a reason, its reason
+  lands in this file (rule) or HANDOFF.md (environment facts / anecdotes).
 - Editor enhancements must be defensive: editor globals / UEditor DOM may be absent on 404 or
   restricted pages. Guard `editor`, wrap `init()` in try/catch, and skip rather than throw.
 - Changing a setting's `value:` default only affects users who never toggled it — persisted
@@ -273,6 +292,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   (write it as part of the release work; the section title must match `package.json` exactly);
   the release job extracts that section into the GitHub release notes — a mismatched title
   means empty notes.
-- CI (`.github/workflows/build.yaml`) builds every push. A commit message containing
-  `[release]` uploads `dist/mcmodder-lite.user.js` and creates tag `v<version>` (suffixed
-  `_N` if the tag already exists).
+- CI (`.github/workflows/build.yaml`) builds every push and runs both smokes. Publishing is
+  restricted to `main` and waits for build + both smokes; the tag is created at the pushed
+  commit (`--target`), and `release.cjs` refuses to publish unless the first `## [...]`
+  heading in `CHANGELOG.md` equals `package.json`'s version (that mismatch is exactly what
+  produces `vX_N` tags with empty release notes). `npm run pack` enforces the same check.

@@ -90,6 +90,8 @@ declare global {
   var nAutoSave: any;
   var bindFastSubmit: any;
   var editSave: any;
+  /** 站点原生的自动链接面板（functions.js）：编辑页内联脚本把 Alt+X / Alt+A 绑到它上 */
+  var showAutoLinkList: (value?: string) => unknown;
   var nClassID: string;
   var nItemID: string;
   var strEditType: any;

@@ -1381,6 +1381,10 @@ export class Utils {
           const index = pathname.lastIndexOf("/");
           const path = index > 0 ? pathname.slice(0, index) : "/";
           const yxdToken = yxdTokenList[0].slice(11, -1);
+          const resend = () =>
+            this.createRequest(config, message, silent, log, true).then(succeed, (error: unknown) =>
+              fail(error instanceof Error ? error.message : String(error)),
+            );
           GM_cookie.set(
             {
               name: "yxd_token",
@@ -1399,9 +1403,36 @@ export class Utils {
                 succeed(resp);
                 return;
               }
-              this.createRequest(config, message, silent, log, true).then(
-                succeed,
-                (error: unknown) => fail(error instanceof Error ? error.message : String(error)),
+              // 回读校验：确认写入真的落地。部分管理器不实现 list，或策略不同导致
+              // 读不到，此时只记录、不阻断重试——避免把用户永久卡在 token 响应页。
+              const list = (
+                GM_cookie as unknown as {
+                  list?: (
+                    details: { name?: string; domain?: string },
+                    cb: (
+                      cookies: Array<{ name: string; value: string }> | null,
+                      err?: unknown,
+                    ) => void,
+                  ) => void;
+                }
+              ).list;
+              if (typeof list !== "function") {
+                resend();
+                return;
+              }
+              list.call(
+                GM_cookie,
+                { name: "yxd_token", domain: hostname },
+                (cookies, listError) => {
+                  const stored =
+                    !listError &&
+                    Array.isArray(cookies) &&
+                    cookies.some((c) => c.name === "yxd_token" && c.value === yxdToken);
+                  if (!stored) {
+                    console.warn("[MCModder-Lite] yxd_token 写入后回读不一致，继续重试");
+                  }
+                  resend();
+                },
               );
             },
           );

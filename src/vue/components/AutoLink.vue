@@ -404,10 +404,10 @@ function onSearchButtonClick(e: Event) {
  */
 function onClick(type: AutoLinkEntryType, id: string, textHalf: string, textFull: string) {
   const appendSpace = insertSpace.value!.getValue();
-  let content;
+  let content = "";
   switch (style.value) {
     case 0:
-      content = getEditorSelectedContent().textContent;
+      content = getEditorSelectedContent().textContent ?? "";
       break;
     case 1:
       content = textHalf;
@@ -422,7 +422,13 @@ function onClick(type: AutoLinkEntryType, id: string, textHalf: string, textFull
   if (type === "oredict") link = `${parent.value.hostname}/${type}/${id}-1.html`;
   else link = `${parent.value.hostname}/${type}/${id}.html`;
 
-  let res = `<a href="${link}" target="_blank" title="${content}">${content}</a>`;
+  // 条目名可能来自导入的 JSON，选区文本来自用户正文：一律转义后再拼 HTML。
+  // 链接再走一遍 safeURL，异常协议退化为纯文本（不再产出 <a>）。
+  const safeLink = Utils.safeURL(link);
+  const safeText = Utils.escapeHTML(content);
+  let res = safeLink
+    ? `<a href="${Utils.escapeHTML(safeLink)}" target="_blank" title="${safeText}">${safeText}</a>`
+    : safeText;
   if (appendSpace) res = `&nbsp;${res}&nbsp;`;
   editor.editor.execCommand("insertHtml", res);
 }

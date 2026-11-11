@@ -68,9 +68,9 @@ function gmShim({ settings }) {
 }
 
 const results = [];
-const check = (name, ok, detail) => {
-  results.push({ name, ok });
-  console.log(`${ok ? "PASS" : "FAIL"}  ${name}  ${detail ?? ""}`);
+const check = (name, ok, detail, skipped = false) => {
+  results.push({ name, ok, detail, skipped });
+  console.log(`${skipped ? "SKIP" : ok ? "PASS" : "FAIL"}  ${name}  ${detail ?? ""}`);
 };
 
 /**
@@ -92,15 +92,16 @@ function isBlocked(page) {
 async function runScenario(name, url, { settings = {}, after } = {}) {
   const browser = await chromium.launch({ headless: true });
   const errors = [];
+  // 屏蔽广告开启时，AdSense 会向被隐藏的零宽槽位填充并抛 adsbygoogle.push() error。
+  // 这是该功能的预期副作用：放行但计数，输出里明示，不静默吞掉。
+  let suppressedAdErrors = 0;
   try {
     const context = await browser.newContext({ bypassCSP: true, viewport: { width: 1280, height: 900 } });
     await context.addInitScript(gmShim, { settings });
     const page = await context.newPage();
     page.on("pageerror", (e) => {
-      // 「界面皮肤/屏蔽广告」开启后，AdSense 会向被隐藏的零宽槽位填充并抛出
-      // adsbygoogle.push() error——Google 脚本对不可见槽位的已知抱怨，非脚本异常，
-      // 白名单放行（2026-11-10，随 blockAds 默认开引入）
-      if (/adsbygoogle\.push\(\) error/.test(e.message)) {
+      if (settings.blockAds !== false && /adsbygoogle\.push\(\) error/.test(e.message)) {
+        suppressedAdErrors++;
         return;
       }
       errors.push("pageerror: " + e.message);
@@ -111,7 +112,7 @@ async function runScenario(name, url, { settings = {}, after } = {}) {
     await page.goto(url, { waitUntil: "domcontentloaded", timeout: 60000 });
     await page.waitForFunction(() => typeof window.jQuery !== "undefined", null, { timeout: 30000 });
     if (await isBlocked(page)) {
-      check(`${name}：被站点人机验证拦截`, false, "SKIPPED（安全验证页）");
+      check(`${name}：被站点人机验证拦截`, false, "SKIPPED（安全验证页）", true);
       return {};
     }
     const { bundle, requires } = readBundle();
@@ -124,6 +125,11 @@ async function runScenario(name, url, { settings = {}, after } = {}) {
       errors.filter((e) => e.startsWith("pageerror")).length === 0,
       JSON.stringify(errors.slice(0, 3)),
     );
+    if (suppressedAdErrors > 0) {
+      console.log(
+        `（已放行 ${suppressedAdErrors} 条 AdSense 零宽槽位报错——屏蔽广告的预期副作用，非脚本异常）`,
+      );
+    }
     return state;
   } catch (error) {
     check(`${name}：场景执行`, false, String(error).slice(0, 300));
@@ -133,10 +139,21 @@ async function runScenario(name, url, { settings = {}, after } = {}) {
   }
 }
 
-/* 首页：无标准页头的布局下脚本也要能正常启动（不挂页头按钮、不抛异常） */
+/* 首页：无标准页头的布局下脚本也要能正常启动（不挂页头按钮、不抛异常），
+   顺带验「屏蔽 AdSense」的标记与可见性（blockAds 默认开） */
 await runScenario("首页", "https://www.mcmod.cn/", {
   after: async (page) => {
     await page.waitForTimeout(3000);
+    const ad = await page.evaluate(() => ({
+      marker: document.documentElement.classList.contains("mcmodder-block-ads"),
+      visibleAds: [...document.querySelectorAll("ins.adsbygoogle")].filter(
+        (el) => el.getClientRects().length > 0,
+      ).length,
+      textLen: (document.body.innerText || "").length,
+    }));
+    check("首页：屏蔽广告标记挂载", ad.marker, JSON.stringify(ad));
+    check("首页：无可见 AdSense 槽位", ad.visibleAds === 0, `visible=${ad.visibleAds}`);
+    check("首页：正文未被广告规则误伤", ad.textLen > 200, `textLen=${ad.textLen}`);
   },
 });
 
@@ -181,13 +198,13 @@ await runScenario("模组类目页", "https://www.mcmod.cn/class/1.html", {
   },
 });
 
-const failed = results.filter((r) => !r.ok);
-const blocked = results.filter((r) => !r.ok && r.detail?.includes("SKIPPED"));
-if (blocked.length === results.length && results.length > 0) {
+const failed = results.filter((r) => !r.ok && !r.skipped);
+const skipped = results.filter((r) => r.skipped);
+if (skipped.length === results.length && results.length > 0) {
   // 整个站点被人机验证拦住：本次 smoke 未执行，CI 记为通过并给出醒目提示
   console.log("\nSKIPPED：所有场景均被站点「安全验证」拦截，本次 smoke 未实际执行。");
   process.exitCode = 0;
 } else {
-  console.log(`\n共 ${results.length} 项，失败 ${failed.length} 项`);
+  console.log(`\n共 ${results.length} 项，失败 ${failed.length} 项，跳过 ${skipped.length} 项`);
   process.exitCode = failed.length ? 1 : 0;
 }

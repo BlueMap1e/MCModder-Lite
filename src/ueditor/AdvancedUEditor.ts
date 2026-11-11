@@ -259,6 +259,49 @@ export class AdvancedUEditor extends UEditor {
     // 快速提交
     this.$document.keydown((e) => this.fastSubmitOverride(e));
 
+    // 接管站点原生的自动链接键（默认 Alt+X）：站点把 keydown 处理器挂在编辑器 body
+    // 上（冒泡阶段），先于我们的 $document 处理器执行——直接换键位会双重触发面板。
+    // 这里在 iframe 文档的捕获阶段先行拦截：匹配本脚本键位时阻断站点监听并改开本
+    // 面板；改绑其它键后，原生 Alt+X 原样还原。刻意不设「输入框放行」守卫——镜像
+    // 站点自身处理器的行为面（Alt+X 非文本编辑键，无吞键风险）。
+    this.document.addEventListener(
+      "keydown",
+      (e) => {
+        if (this.parent.utils.isKeyMatchConfig("keybindFastLink", e)) {
+          e.preventDefault();
+          e.stopImmediatePropagation();
+          this.showAutoLinkList();
+        }
+      },
+      true,
+    );
+    // 编辑页上站点还在父文档挂了一份同键位监听（焦点不在编辑器内时也会弹原生
+    // 面板）：同样捕获接管，使 Alt+X 在整页行为一致。仅在站点提供了原生入口时绑定。
+    if (typeof showAutoLinkList === "function") {
+      document.addEventListener(
+        "keydown",
+        (e) => {
+          if (this.parent.utils.isKeyMatchConfig("keybindFastLink", e)) {
+            e.preventDefault();
+            e.stopImmediatePropagation();
+            this.showAutoLinkList();
+          }
+        },
+        true,
+      );
+      // 全量接管（可关，见 takeoverNativeAutolink 设置）：showAutoLinkList 是站点
+      // 自动链接的总入口（原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」都路由到
+      // 它）。原生面板与本面板同名同皮（本面板本就复刻自原生、连类名都复用），并存
+      // 时用户无法分辨——统一改开本面板，行为收敛为一份。value 参数（搜索按钮的
+      // 预填词）暂不透传：本面板没有外部预填接口，打开后自行搜索。关闭接管或本脚本
+      // 未接管编辑器的页面（useAdvanced=false 等）不做替换，原生面板原样保留。
+      if (this.parent.configRepository.getSettings("takeoverNativeAutolink") !== false) {
+        showAutoLinkList = () => {
+          this.showAutoLinkList();
+        };
+      }
+    }
+
     const postRow = $(".post-row").first();
     const editTools = $(".edit-tools").first();
 
