@@ -12,6 +12,7 @@ import "codemirror/mode/xml/xml.js";
 import "codemirror/lib/codemirror.css";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
+import cjkFriendly from "markdown-it-cjk-friendly";
 // js-beautify 的默认导出是一个「默认按 JS 美化」的可调用对象，HTML 美化在 .html_beautify 上。
 // 之前 build 走 CDN 全局（全局名恰好就是 HTML 美化函数）、dev 走 npm（拿到的是 JS 美化），
 // 同一行代码两端行为不同且不报错，故统一走 npm 并显式取 .html_beautify。
@@ -244,6 +245,11 @@ export class AdvancedUEditor extends UEditor {
     this.htmlEditorContainer.hide().insertBefore(this.$innerFrame);
 
     this.addTool("mcmodder-tool-md", "Markdown → HTML", () => this.performMarkdownIt());
+    // 单向覆盖语义的被动说明：悬停可见，零打扰（配合首次点击的一次性弹窗）
+    $("#mcmodder-tool-md").attr(
+      "title",
+      "把当前 Markdown 源单向写入正文；正文随后的修改不会回流 MD 源",
+    );
 
     this.addTool("mcmodder-tool-brfix", "修复 br 换行", () => this.performBrFix());
 
@@ -549,6 +555,19 @@ export class AdvancedUEditor extends UEditor {
           onDisable: () => this.mdEditorOption?.[1].setCurrentValue(false),
           onLoad: () => {
             this.turndownSurvice = new TurndownService().use(gfm);
+            // span 加粗（百科历史正文最常见的加粗形态）turndown 默认不识别，会静默
+            // 拍平：加一条规则转成 **，让降级至少在 MD 源里可见（颜色 MD 无对应
+            // 概念，只能靠入口警告提示）。上游同病（ce61200 亦无此规则）。
+            this.turndownSurvice.addRule("mcmodderSpanBold", {
+              filter: (node) => {
+                const el = node as HTMLElement;
+                return (
+                  el.nodeName === "SPAN" &&
+                  /font-weight\s*:\s*(bold|[6-9]\d\d)/i.test(el.getAttribute("style") ?? "")
+                );
+              },
+              replacement: (content) => (content.trim() ? `**${content.trim()}**` : content),
+            });
             if (this.$body) {
               const content = this.$body.clone();
               content
@@ -709,14 +728,38 @@ export class AdvancedUEditor extends UEditor {
    * - `pre` 剥掉标签只留文本，未指定语言的提醒补语言；
    * - 统一 `ul` 列表的缩进类，并把 `li` 里的裸文本包成 `<p>`（百科只接受 `li > p` 结构）。
    */
-  performMarkdownIt() {
+  async performMarkdownIt() {
     // 预处理
     // this.mdEditor.find("p > br").remove();
     if (!this.mdEditorApp || !this.body || !this.$document) return;
+    // 一次性说明（持久化，终身一次；Modrinth 自动流豁免）：「Markdown → HTML」是
+    // **单向覆盖**——正文随后的修改不会回流 MD 源，对包含表格 / 样式文字的已有
+    // 正文转换有损。不做过期检测：html 比对无法归因修改来源，次次弹等于骚扰
+    //（2026-11-12 用户裁定：警告放按钮、一次性，不做入口拦截与逐次过期弹窗）。
+    if (!this.isModrinthVer && !this.configs.getSettings("mdOverwriteHintShown")) {
+      this.configs.setSettings("mdOverwriteHintShown", true);
+      const ok = await swal
+        .fire({
+          type: "info",
+          title: "Markdown → HTML",
+          html: "此操作会把当前 Markdown 源<strong>单向覆盖</strong>写入正文：正文随后的修改<strong>不会回流</strong> MD 源；对包含表格 / 样式文字的已有正文，转换会丢失这些结构。纯文本与外部 Markdown（Modrinth / CurseForge / GitHub 日志）不受影响。",
+          showCancelButton: true,
+          confirmButtonText: "转换",
+          cancelButtonText: "取消",
+        })
+        .then((result) => result.value === true);
+      if (!ok) return;
+    }
     const inlineCodeConverter = this.configs.getSettings("mdEditorInlineCodeConverter") ?? 0;
     const blockquoteConverter = this.configs.getSettings("mdEditorBlockquoteConverter") ?? 0;
 
     const md = (this.window as any).markdownit();
+    // CommonMark 的 emphasi 格阑规则在「标点 + CJK」边界失效：`）**汉字` 的闭合 ** 无法
+    // 闭合（前面是标点 2a 失败、后面是非标点 2b 失败），输出字面 `**`——标题以全角括号
+    // 收尾再接正文即命中（2026-11-12 用户实测）。markdown-it 11 不含该修复，
+    // markdown-it-cjk-friendly 按 W3C CJK 强调要求补齐（Node 实测 16 组用例全过）。
+    // 插件随包构建，作用于运行时懒加载的 markdown-it 实例，与其加载方式无关。
+    md.use(cjkFriendly);
     // markdown-it 没有「软换行不输出字符」的选项（`breaks` 只决定软换行是否转成 <br>），
     // 默认情况下段落内的换行会被渲染成一个 "\n"。
     // 这里直接重写渲染规则，让软换行输出单个空格以实现「词间分隔」的作用。

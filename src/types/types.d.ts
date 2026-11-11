@@ -203,6 +203,8 @@ interface Settings {
   minimumRequestInterval: number;
   keybindFastLink: Key;
   takeoverNativeAutolink: boolean;
+  /** 内部键：「Markdown → HTML」一次性说明已展示（无面板行，同 markdownIt / lastRequestTime） */
+  mdOverwriteHintShown: boolean;
   keybindFastSubmit: Key;
   keybindVerifyPass: Key;
   keybindVerifyRefund: Key;

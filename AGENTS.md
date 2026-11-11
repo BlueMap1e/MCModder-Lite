@@ -166,6 +166,13 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
   anywhere else is a rule nobody can find (a past contributor's "don't touch CHANGELOG" note
   once took a repo-wide hunt to recover). When a working decision carries a reason, its reason
   lands in this file (rule) or HANDOFF.md (environment facts / anecdotes).
+- **Warnings for destructive actions belong ON the destructive action, shown once** (2026-11-12,
+  MD editor round): a warning at feature-entry fires on every page load for habitual users
+  ("first creation" is per-instance, not per-lifetime); a state-drift warning based on HTML
+  comparison cannot attribute _who_ changed the content, so the user's own legitimate
+  non-MD edits trigger it — an unattributable warning is noise, and noise trains users to
+  dismiss real warnings. Persisted one-time hints + hover text + setting-description copy
+  are the passive channels; recurring modals are the last resort.
 - Editor enhancements must be defensive: editor globals / UEditor DOM may be absent on 404 or
   restricted pages. Guard `editor`, wrap `init()` in try/catch, and skip rather than throw.
 - Changing a setting's `value:` default only affects users who never toggled it — persisted
@@ -200,7 +207,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GreasyFork channel ab
     editor) and `pangu` 4.0.7 (中英间添加空格). Add new libraries through `package.json` +
     `import`, never through `@require`; a new runtime remote load needs an entry here.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
-    `pinyin-match`, `turndown`, `turndown-plugin-gfm`.
+    `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it-cjk-friendly` (applied to
+    the lazily-loaded markdown-it instance in `performMarkdownIt`: fixes CommonMark emphasis
+    failing at punctuation+CJK boundaries, e.g. `）**汉字`).
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
     ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
   - **Shared code must stay jQuery-1.7-compatible**: host pages ship different jQuery
