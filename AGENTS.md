@@ -55,6 +55,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GF channel abandoned;
 - **`CHANGELOG.md` is the public release history.** Edit it when the work calls for it
   (add the prepared version's section, fix wrong entries), keep the format, never invent
   entries. Version bumps, release timing and the announcement post stay the user's call.
+  Entries are user-facing release notes: describe behavior changes only — no internal
+  process, actors or decision narrative (audit sources, 用户裁定, testing dates belong
+  in HANDOFF / commit messages, not here).
 - Comments, config titles/descriptions, and UI copy are Chinese, matching the existing style.
 - **Every setting must be read by code.** Before adding a setting, add the reader; before
   removing a feature, delete its setting from `ConfigLoader.ts` and `Settings`. Dead toggles
