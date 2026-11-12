@@ -673,6 +673,20 @@ export const settings = [
         ],
       },
       {
+        id: "codeblock",
+        label: "代码块",
+        settings: [
+          {
+            id: "codeBrushLanguages",
+            title: "YAML / TOML / TS 代码块支持",
+            description:
+              "站点的高亮引擎自带刷子仅有命令方块 / Java / Python / ZenScript，YAML、TOML、TypeScript 只有下拉项没有着色。开启后：阅读页为 brush:yaml / brush:toml / brush:ts 代码块补装语法着色（夜间模式同样适用），「插入代码」菜单追加这三项，Markdown 编辑器的 ```yaml 等代码围栏灌入时同步映射为对应代码块。关闭后完全回退站点原生（此类代码块不着色，与站点现状一致）。刷新页面后生效。",
+            type: "checkbox",
+            value: true,
+          },
+        ],
+      },
+      {
         id: "keybind",
         label: "快捷键",
         settings: [

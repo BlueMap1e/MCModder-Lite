@@ -203,6 +203,8 @@ interface Settings {
   minimumRequestInterval: number;
   keybindFastLink: Key;
   takeoverNativeAutolink: boolean;
+  /** 代码块语言扩展总开关：阅读页 YAML / TOML / TS 高亮、插入代码菜单追加项、Markdown 围栏映射 */
+  codeBrushLanguages: boolean;
   /** 内部键：「Markdown → HTML」一次性说明已展示（无面板行，同 markdownIt / lastRequestTime） */
   mdOverwriteHintShown: boolean;
   keybindFastSubmit: Key;

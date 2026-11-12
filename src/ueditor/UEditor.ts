@@ -3,6 +3,8 @@ import { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { Values } from "../Values";
 import { addUploadFileButton } from "./UploadFileButton";
+import { extendInsertCodeMenu } from "./InsertCodeMenu";
+import { installPreviewBrushCapture } from "./PreviewBrushCapture";
 
 /**
  * 百科原生 UEditor 的封装基类：把 `editor` 实例解包成一系列好用的 DOM 引用，
@@ -166,6 +168,14 @@ export class UEditor {
     if (this.configs.getSettings("uploadFileButton")) {
       addUploadFileButton(this);
     }
+
+    // 「插入代码」菜单追加 YAML / TOML / TypeScript（默认开）：站点下拉有 25 种
+    // 语言却只有 3 种刷子（cb / java / python 粗体项）。页面上文注入实现，
+    // 见 InsertCodeMenu；设置关闭或非内容编辑页（center 精简编辑器等）不注入。
+    extendInsertCodeMenu(this.parent);
+    // 预览桥·编辑侧：正文预览是独立页且服务端销毁 brush 类名，点击时把编辑器
+    // 里的刷名序列带过去，预览页才能重着色（见 PreviewBrushCapture）。
+    installPreviewBrushCapture(this.parent);
 
     // 宽度自适应：监听窗口 resize，并立即手动触发一次（iframe 内的文档不会自动继承外层尺寸）
     window.addEventListener("resize", () => this.widthAutoResize());

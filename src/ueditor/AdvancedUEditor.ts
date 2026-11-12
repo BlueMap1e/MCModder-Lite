@@ -828,6 +828,26 @@ export class AdvancedUEditor extends UEditor {
       });
     }
 
+    // 代码围栏映射（codeBrushLanguages，默认开）：markdown-it 把 ```yaml 等围栏
+    // 输出为 <pre><code class="language-xxx">，而百科阅读页靠 <pre class="brush:xxx">
+    // 消费。白名单精确匹配（yaml / yml / toml / ts / typescript），class 恒为
+    // 常量字符串；内容经 textContent 平移（文本节点，不经 HTML 解析）。
+    if (this.configs.getSettings("codeBrushLanguages") !== false) {
+      content?.find("pre > code[class*='language-']").each((_, e) => {
+        const codeEl = e as HTMLElement;
+        const match = /(?:^|\s)language-(yaml|yml|toml|ts|typescript)(?:\s|$)/i.exec(
+          codeEl.className,
+        );
+        if (!match) return;
+        const lang = match[1].toLowerCase();
+        const brush = lang === "typescript" ? "ts" : lang;
+        const pre = codeEl.parentElement;
+        if (!pre || pre.tagName !== "PRE") return;
+        pre.className = "brush:" + brush;
+        pre.textContent = codeEl.textContent ?? "";
+      });
+    }
+
     // 后期检测：代码与引用块已在渲染阶段按配置转换，
     // 这里只处理「保留并警告」的情况
     if (inlineCodeConverter === 0) {

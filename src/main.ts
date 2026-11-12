@@ -6,8 +6,13 @@ import "./devCheck";
 import { GM_getValue, GM_addValueChangeListener } from "$";
 import { Mcmodder } from "./Mcmodder";
 import bbsCss from "./css/bbs.css?raw";
+import { installCodeBrushEarly } from "./init/CodeBrushInit";
 
 (() => {
+  // 代码高亮扩展（YAML/TOML/TS）：必须在求值期注入——/preview/ 等页面的自身
+  // 消费脚本早于 DOMContentLoaded 跑，且真机上 Init 循环在该类页面的存活无保证
+  //（见 CodeBrushInit 顶部取证注释）。设置自读，早于一切 jQuery 等待。
+  installCodeBrushEarly();
   // 兜底记录未捕获异常，便于用户反馈时定位；不改变任何行为
   window.addEventListener("error", (event) => {
     if (event.error) console.error("[MCModder-Lite] 未捕获异常：", event.error);
