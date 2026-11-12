@@ -27,10 +27,10 @@ import type { PopoverExpose } from "../../types/props";
  */
 
 /** 触发弹出框的方式 */
-export type PopoverTrigger = "click" | "pointerover";
+type PopoverTrigger = "click" | "pointerover";
 
 /** 弹出框控制器的构造参数 */
-export interface PopoverControllerConfig<
+interface PopoverControllerConfig<
   TOption extends PopoverOption,
   TProps extends TOption,
   TEvents extends Record<string, (e: Event) => void>,
@@ -57,7 +57,7 @@ export function createPopoverContainer(): HTMLElement {
  * 手动派发事件的函数：事件名取自组件的 `inputEvents`，
  * 第二个参数为要传递的事件对象，缺省时按事件名构造一个空的 `Event`。
  */
-export type PopoverEventSender<TEvents extends Record<string, (e: Event) => void>> = (
+type PopoverEventSender<TEvents extends Record<string, (e: Event) => void>> = (
   eventName: keyof TEvents,
   event?: Event,
 ) => void;

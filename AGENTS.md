@@ -145,8 +145,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GF channel abandoned;
 - `uploadFileButton` rides on the site's undocumented UEditor endpoints (`uploadfile` /
   `listfile`); if the site changes them the button fails silently. It is off by default, and
   `Values.ueditorFileAccept` must list every extension the setting description promises.
-- Deferred cleanup (do not start without a plan): zero-reference `Utils` helpers / `Values`
-  data, splitting `ConfigLoader` / `Utils` / `Values`, per-page CSS or bundle splitting.
+- Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Utils` /
+  `Values`, per-page CSS or bundle splitting. (Zero-reference `Utils`/`Values` members
+  were audited to 0 on 2026-11-13 — dead-file scanning now lives in the e2e workspace as
+  `dead-files2.mjs`; the older `dead-files.mjs` self-matches basenames and reports a
+  structurally false 0.)
   The shipped bundle is ~1.5 MB; splitting mainly helps low-end devices and adds
   loading / debugging complexity.
 

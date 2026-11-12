@@ -4,7 +4,7 @@ import Popover from "../components/Popover.vue";
 import type { PopoverBaseOption } from "../../types/props";
 
 /** `Popover` 组件对外暴露的接口（重新定位、显隐同步、高度测量） */
-export type PopoverInstance = ComponentExposed<typeof Popover>;
+type PopoverInstance = ComponentExposed<typeof Popover>;
 
 /**
  * 弹出框默认的 z-index（与 `base.css` 里 `.mcmodder-popover` 的取值一致）。
@@ -15,7 +15,7 @@ export type PopoverInstance = ComponentExposed<typeof Popover>;
 const DEFAULT_Z_INDEX = 500;
 
 /** 透传给 `<Popover>` 的属性 */
-export interface PopoverProps {
+interface PopoverProps {
   /** 定位锚点（以此元素的矩形计算位置与宽度） */
   anchorElement: HTMLElement | undefined;
   /** z-index */
@@ -25,7 +25,7 @@ export interface PopoverProps {
 }
 
 /** `usePopoverHost` 的可选参数 */
-export interface UsePopoverHostOptions {
+interface UsePopoverHostOptions {
   /**
    * 弹出框的显示状态。
    *
