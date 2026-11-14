@@ -335,6 +335,32 @@ html.dark .f_c {
   border: 1px solid var(--mcmodder-color-background-dark3);
 }
 
+/* 付费/权限提示条（购买主题、需支付 EU 等，viewthread 的 .locked）：站点原生
+   白底 + locked.gif 小图标 + hover 浅灰，夜间是刺眼白块且文字对比不足
+   （2026-11-14 真机报告 thread-24201）。background 简写顺带清掉图标贴图；
+   站点 :hover 的 #F7F7F7 必须同强度覆盖否则悬停闪白；.locked a 的 #369 深蓝
+   在暗底不可读，走链接变量。红色虚线框语义是「锁定警示」，暗底上可读，保留。 */
+html.dark .locked {
+  background: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+
+html.dark .locked:hover {
+  background: var(--mcmodder-color-background-dark2);
+}
+
+html.dark .locked a,
+html.dark .pcb .locked a {
+  color: var(--mcmodder-color-link);
+}
+
+/* 「5 EU」价格强调色：站点原生 #F26C4F 在暗底可读，但会被后段的
+   html.dark .plc strong 同特异性规则吃掉，同强度反制 */
+html.dark .locked strong,
+html.dark .pcb .locked strong {
+  color: #f26c4f;
+}
+
 html.dark #fastpostmessage {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);
