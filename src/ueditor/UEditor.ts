@@ -148,6 +148,24 @@ export class UEditor {
     // 弹窗内容 iframe 的样式注入整页挂一次即可，多个编辑器实例不会重复挂载
     UEditor.attachDialogStyleListener(this.parent);
 
+    // Gecko（Firefox / Zen / Floorp 等）：UEditor 的选区恢复祖传分支在每次
+    // range.select() 时调用 document.body.focus()（ueditor.all.js：
+    // `browser.gecko ? this.document.body.focus() : e.focus()`——弹窗关闭、命令
+    // 完成、窗口重新聚焦都走这条路径）。Gecko 的 focus 滚动语义会把宿主页滚动
+    // 容器对齐到内文档 body 的起始邻域：在本脚本的高度自适应几何下（iframe 被
+    // 撑到内容高、滚动发生在宿主页），表现为长文任意位置触发插入代码/图片/链接
+    // 或切窗口回来后宿主页被拽离编辑区（真机：宿主页 8002→3662「跳到中段」，
+    // 光标留在编辑位置但出屏；lab 实测归因见 HANDOFF）。focus({preventScroll:
+    // true}) 是 Gecko 标准解：焦点照常恢复、选区照常生效，滚动副作用归零
+    //（lab 对照：8002→8002）。仅 Gecko 生效（Chromium 无此分支也无此语义）。
+    // Bug fix，deliberately unswitched。
+    if (/\bFirefox\b/.test(navigator.userAgent) && this.body) {
+      const body = this.body;
+      const originalFocus = body.focus.bind(body);
+      body.focus = ((opts?: FocusOptions) =>
+        originalFocus({ preventScroll: true, ...(opts ?? {}) })) as typeof body.focus;
+    }
+
     // 现代化按钮
     // if (this.configs.get("mcmodderUI")) {
     const toolBar = this.$outerFrame.find(".edui-editor-toolbarboxinner");
