@@ -361,6 +361,35 @@ html.dark .pcb .locked strong {
   color: #f26c4f;
 }
 
+/* 2026-11-14 定向扫描（style_13_*.css 白底声明 × 真帖出现实证）补齐的帖子内
+   条件组件——它们只在含对应内容的帖子里渲染（[code] 块 / 隐藏帖 / 附件无权限），
+   模板级审计扫不到，属「页面 × 状态」长尾。其余文本扫描候选经真实页计算样式
+   审计证实已被广泛规则覆盖或不出现。 */
+/* [code] 代码块：站点原生 #F7F7F7 浅底；文字颜色已由 .t_f div 规则提亮，
+   只需翻底色与行 hover */
+html.dark .blockcode,
+html.dark .pl .blockcode {
+  background: var(--mcmodder-color-background-dark2);
+}
+
+html.dark .pl .blockcode ol li:hover {
+  background: var(--mcmodder-color-background-dark3);
+}
+
+/* 隐藏帖提示（FFFAF3）与附件无权限框（FFFFEE + 贴图）：与 .locked 同族的
+   付费/权限提示盒。attach 框不在 .t_f 内，文字颜色需显式提亮；链接的
+   .plc 祖先规则吃色问题与 .locked a 相同，预防性同强度反制。 */
+html.dark .hiddenpoststip,
+html.dark .attach_nopermission {
+  background: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+
+html.dark .attach_nopermission a,
+html.dark .pcb .attach_nopermission a {
+  color: var(--mcmodder-color-link);
+}
+
 html.dark #fastpostmessage {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);
