@@ -1298,6 +1298,17 @@ pre {
   font-family: var(--mcmodder-font-monospace);
   line-height: 1.3em;
 }
+/* 夜间裸代码块可见性：编辑器正文与阅读页未消费的 pre 块仅有 dark1 底色、
+   无块边界，在深底上与背景融为一体（2026-11-14 真机报告）。#333 低对比描边
+   给出块边界，dark1 底色维持轻抬升；内边距/圆角与站点编辑器对 pre 的原生
+   规则同值，编辑器内视觉不变，阅读页裸块顺带获得同等面板。日间 dark1 与白底
+   对比充分，维持原样。（dark2/dark3 夜间档为 #414141/#656565，作底色过重，
+   截图复核后弃用。） */
+html.dark pre {
+  border: 1px solid #333;
+  border-radius: 8px;
+  padding: 0.4em 0.6em;
+}
 div#mcmodder-text-result {
   font-family: var(--mcmodder-font-monospace);
   display: block;
