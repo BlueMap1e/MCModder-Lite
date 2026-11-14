@@ -238,6 +238,81 @@ const BRUSH_SCRIPT = String.raw`
     }
   }
 
+  // —— 语言自检（阅读页）：发布/过审管线会把未知刷名服务端改写为 brush:none
+  //（2026-11-14 实证：item/1007552.html 原始 HTML 为 3 × pre.brush:none，原始
+  // toml 名在发布环节已物理消失，与预览管线同行为）——阅读页拿不到原始名，
+  // 注册多少刷子都无用武之地。唯一对所有访问者可行的修复 = 对 none 块做保守的
+  // 结构检测：高置信才重着色，拿不准保持素块（=现状，零损失）。误报代价仅为
+  // 「纯文本块被按检测出的语言着色」，漏报代价为现状，两者都可接受。
+  function detectLang(text) {
+    try {
+      var lines = text.split("\n");
+      var sections = 0, assigns = 0, comments = 0, kv = 0, lists = 0, kw = 0, braces = 0;
+      for (var i = 0; i < lines.length; i++) {
+        var line = lines[i];
+        if (/^\s*\[[\w.$-]+\]\s*$/.test(line)) sections++;
+        else if (/^\s*[\w.$-]+\s*=\s*\S/.test(line)) assigns++;
+        if (/^\s*#/.test(line)) comments++;
+        if (/^\s*[\w\u4e00-\u9fa5.$-]+:\s*(\S|$)/.test(line) && !/^\s*\w+:\s*\/\//.test(line)) kv++;
+        else if (/^\s*-\s+\S/.test(line)) lists++;
+        if (/\b(?:const|let|var|function|return|import|export|interface|type|class|new)\b/.test(line)) kw++;
+        if (/[;{}]/.test(line) || /=>/.test(line)) braces++;
+      }
+      // 锚点判定（顺序即优先级）：TS 关键词最特异；TOML 靠节头/赋值（配置惯例
+      // 是赋值行伴随 # 注释，单赋值短块靠注释佐证）；YAML 靠键值行/列表行。
+      // 真实发布块常只有 4-5 行（2026-11-14 真机：1 赋值 + 3 注释的短块），
+      // 统一分数门槛会漏，锚点制按结构定性。
+      if (kw >= 2 || (kw >= 1 && braces >= 2)) return "ts";
+      if (sections >= 1 || assigns >= 2 || (assigns >= 1 && comments >= 1)) return "toml";
+      if (kv >= 2 || (kv >= 1 && lists >= 1)) return "yaml";
+      return null;
+    } catch (e) {
+      return null;
+    }
+  }
+  window.__mcmodderDetectLang = detectLang;
+
+  function rebuildHighlighted(S, oldNode, text, lang) {
+    var pre = document.createElement("pre");
+    pre.className = "brush:" + lang;
+    pre.textContent = text;
+    oldNode.parentNode.replaceChild(pre, oldNode);
+    S.highlight(null, pre);
+  }
+
+  function detectAndRecolor() {
+    try {
+      var S = window.SyntaxHighlighter;
+      if (!S || !S.brushes) return;
+      var n = 0;
+      // 形态 1：已被站点批次按 none 消费的容器（常态）
+      var containers = document.querySelectorAll(".syntaxhighlighter.none");
+      for (var i = 0; i < containers.length; i++) {
+        var container = containers[i];
+        var codeDiv = container.querySelector(".code .container");
+        if (!codeDiv) continue;
+        var lines = codeDiv.querySelectorAll(".line");
+        var text = [];
+        for (var j = 0; j < lines.length; j++) text.push(lines[j].textContent || "");
+        var lang = detectLang(text.join("\n"));
+        if (!lang) continue;
+        rebuildHighlighted(S, container, text.join("\n"), lang);
+        n++;
+      }
+      // 形态 2：尚未被消费的裸 pre（防站点批次晚到的兜底）
+      var pres = document.querySelectorAll("pre[class*='brush:none']");
+      for (var k = 0; k < pres.length; k++) {
+        var lang2 = detectLang(pres[k].textContent || "");
+        if (!lang2) continue;
+        rebuildHighlighted(S, pres[k], pres[k].textContent || "", lang2);
+        n++;
+      }
+      if (n) console.log(TAG, "语言自检重着色 " + n + " 个 none 代码块");
+    } catch (e) {
+      console.warn(TAG, "语言自检失败：", e);
+    }
+  }
+
   // —— 预览桥（/preview/ 页专用）：服务端把全部 pre 的 brush 类改写为 none，
   // 原始刷名由编辑页点击「正文预览」时经 GM 存储带来。按文档序把 none 容器
   // 重着色；数量不匹配、名字不在注册表或无数据则不动。未知刷名（不在别名
@@ -283,17 +358,25 @@ const BRUSH_SCRIPT = String.raw`
         return;
       }
       if (!registered && !register(cur, true)) return;
-      // 让站点自己的 load 批次先行：150ms 后只捡剩下来的裸块（幂等）
+      // 让站点自己的 load 批次先行：150ms 后只捡剩下来的裸块 + 语言自检（幂等）；
+      // 二扫 1200ms 兜底异步渲染的晚到容器
       setTimeout(function () {
         catchUp(cur);
+        detectAndRecolor();
       }, 150);
+      setTimeout(function () {
+        detectAndRecolor();
+      }, 1200);
     }, 0);
   });
 
   if (document.readyState === "complete") {
     setTimeout(function () {
       var cur = window.SyntaxHighlighter;
-      if (cur && register(cur, true)) catchUp(cur);
+      if (cur && register(cur, true)) {
+        catchUp(cur);
+        detectAndRecolor();
+      }
     }, 0);
   }
 
