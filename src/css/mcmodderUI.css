@@ -842,6 +842,14 @@ body .edui-default .edui-editor-toolbarboxinner {
 .message-list li .avatar img {
   border-radius: 50%;
 }
+/* 消息中心布局配对规则：.message-menu 在皮肤下为悬浮列，.message-main 需要此
+   内边距让位（2026-11-15 真机回归：209a9e6 删减时 53 页审计清单不含 /message/，
+   被误判死规则删除，内容滑进菜单底下——同一删减的第三个盲区假阴性，已捞回） */
+@media (min-width: 581px) {
+  .message-main {
+    padding-left: 200px !important;
+  }
+}
 .content-new .badge {
   margin-right: var(--mcmodder-width-padding-3);
 }
