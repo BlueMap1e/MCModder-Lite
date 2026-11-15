@@ -127,8 +127,9 @@ export function installCodeBrushEarly() {
  *   正则经 String.fromCharCode(96) 构造。
  * - 着色类只用 shCore.css 实际存在的：string / comments / color1 / color2 /
  *   value / functions / keyword（无 constant 类）。
- * - 尾部可选携带预览桥数据（`__mcmodderPreviewBrushes`，白名单过滤后的刷名
- *   数组），仅 /preview/ 页会有。
+ * - 预览桥数据（`__mcmodderPreviewBrushes`，白名单过滤后的刷名数组，仅 /preview/
+ *   页有）由宿主侧拼在脚本**之前**（见 installCodeBrushEarly 的 prelude 注释），
+ *   本脚本的桥轮询以它的存在为安装条件。
  */
 const BRUSH_SCRIPT = String.raw`
 (function () {

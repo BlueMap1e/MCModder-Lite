@@ -780,7 +780,6 @@ export class Utils {
 
   /** 将 Key 对象拆解为修饰键+主键的字符串序列（如 `["Ctrl","Shift","C"]`） */
   static keyToRawList(e: Key) {
-    // if (!(e instanceof Object)) e = JSON.parse(e);
     if (!e.key && !e.keyCode) return [];
     const k = [];
     let c;
@@ -1043,63 +1042,6 @@ export class Utils {
       y: window.scrollY + rect.top,
     };
   }
-
-  // private static readonly segmenter = typeof Intl.Segmenter === "function" ?
-  //   new Intl.Segmenter("zh-Hans", {
-  //     granularity: "word"
-  //   }) : undefined;
-
-  // static tokenize(text: string, withRange?: false): string[];
-  // static tokenize(text: string, withRange: true): [string, [number, number]][];
-  // static tokenize<V extends boolean | undefined = false>(text: string, withRange: V = undefined as V) {
-  //   type VT = [string, [number, number]];
-  //   type VF = string;
-  //   const lowerCase = text.toLowerCase();
-  //   const cnTokens: (VT | VF)[] = [];
-
-  //   // 分词
-  //   if (Utils.segmenter !== undefined) {
-  //     for (const { index, segment, isWordLike } of Utils.segmenter.segment(lowerCase)) {
-  //       if (!isWordLike || segment.length === 2) { // 二元组已被下文操作覆盖
-  //         continue;
-  //       }
-  //       if (withRange) {
-  //         cnTokens.push([segment, [index, index + segment.length]] );
-  //       } else {
-  //         cnTokens.push(segment);
-  //       }
-  //     }
-  //   }
-
-  //   // 二元组
-  //   const reg = /[\p{Script=Han}]+/gu;
-  //   if (withRange) {
-  //     for (const run of lowerCase.matchAll(reg)) {
-  //       const index = run.index;
-  //       const substr = run[0];
-  //       for (let i = 0; i < substr.length - 1; i++) {
-  //         cnTokens.push([substr.slice(i, i + 2), [index + i, index + i + 2]]);
-  //       }
-  //     }
-  //   } else {
-  //     for (const substr of lowerCase.match(reg) ?? []) {
-  //       for (let i = 0; i < substr.length - 1; i++) {
-  //         cnTokens.push(substr.slice(i, i + 2));
-  //       }
-  //     }
-  //   }
-
-  //   // 拼音转换
-  //   const transform = (token: VT | VF, style: IPinyinStyle) => {
-  //     const text = withRange ? token[0] : token as string;
-  //     const py = pinyin(text, { style }).join("");
-  //     return withRange ? [py, token[1]] : py;
-  //   }
-  //   const pinyinFull = cnTokens.map(token => transform(token, "normal"));
-  //   const pinyinInit = cnTokens.map(token => transform(token, "first_letter"));
-
-  //   return [...cnTokens, ...pinyinFull, ...pinyinInit] as V extends true ? VT[] : VF[];
-  // }
 
   /** 防抖包装：`wait` 毫秒内重复调用只执行最后一次 */
   static debounce = <T extends (...args: never[]) => void>(func: T, wait: number) => {
@@ -1451,7 +1393,6 @@ export class Utils {
           }
           Utils.queueRequestLog(content);
         }
-        // console.debug("Send Async request: ", config);
         GM_xmlhttpRequest(config);
       }, lastRequestTime - now);
     });
