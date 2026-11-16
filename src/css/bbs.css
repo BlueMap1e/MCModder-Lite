@@ -1782,3 +1782,13 @@ html.dark .mg_img {
   background-color: var(--mcmodder-color-background-dark2);
   border-radius: 6px;
 }
+
+/* 通知页未读标记：Discuz 给未读通知下发**内联** style `color:#000;font-weight:bold`
+   （source/include/space/space_notice.php：$value['style']）——日间白底是经典的
+   「黑粗体=未读」，夜间暗底上即黑底黑字（2026-11-15 初见报告：好友通过通知首屏
+   黑字不可读，刷新转已读后内联样式清空、无法复现）。内联样式只能用 !important
+   反制（地雷图谱唯一通道）；未读语义由内联的 bold 保留，颜色交还调色板。
+   影响面：home.php 全部通知视图（view=app/friend/pm/...）的 .ntc_body 条目。 */
+html.dark .ntc_body {
+  color: var(--mcmodder-color-text) !important;
+}
