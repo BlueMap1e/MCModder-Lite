@@ -20,7 +20,7 @@ npm run verify   # lint + lint:config + format:check (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
-GF_UNMINIFIED=1 npm run build   # unminified debug bundle (GF channel abandoned; revival path archived in HANDOFF)
+GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channel and pack-time variant removed)
 ```
 
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused

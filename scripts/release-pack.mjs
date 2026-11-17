@@ -1,14 +1,12 @@
 #!/usr/bin/env node
 /**
- * 发版打包工具：两遍构建（压缩产物 + GF 未压缩变体）→ 按版本号命名 →
- * 标准 Deflate zip → dist/release/
+ * 发版打包工具：构建压缩产物 → 按版本号命名 → 标准 Deflate zip → dist/release/
  *
  * 用法：npm run pack
  *
  * 产物（dist/ 整体在 .gitignore 内，不会入库）：
  *   dist/release/mcmodder-lite.user-<版本号>.js            压缩产物（TM / 帖内 zip）
  *   dist/release/mcmodder-lite-<版本号>.zip                内含上述 js（Deflate 压缩）
- *   dist/release/mcmodder-lite.user-<版本号>.unminified.js GF 未压缩变体（手动上传）
  *
  * 版本号取自 package.json（唯一事实源）；若与 vite.config.ts 的 userscript
  * 元数据版本不一致会拒绝打包——两者必须同步 bump，否则 CI 的 tag 会变成
@@ -48,23 +46,14 @@ if (firstHeading !== version) {
   process.exit(1);
 }
 
-/* ---------- 构建（两遍，产物各自落盘互不覆盖） ----------
+/* ---------- 构建 ----------
 
-   顺序有讲究：未压缩变体先构建、压缩产物最后构建。
-   这样 `dist/mcmodder-lite.user.js` 结束时是**压缩产物**——打包后随手把 dist 里的
-   js 拖进篡改猴或用 smoke 脚本取用的，都是要发布的那一份，而不是 2.4 MB 的 GF 变体。
-   两遍只跑一次 `vue-tsc`：类型检查与压缩方式无关，省掉一次 20 秒左右的门禁。 */
+   GF 未压缩变体已随 GreasyFork 渠道废止移除（2026-11-17）：该渠道从未成功
+   收下过未压缩包（2 MB 级产物超其 2,097,152 字符上限），变体只是每次打包的
+   固定开销。本地调试需要未压缩产物时仍可 `GF_UNMINIFIED=1 npm run build`。 */
 
 console.log("类型检查（vue-tsc，只跑一次）…");
 execSync("npm run build:types", { cwd: root, stdio: "inherit" });
-
-console.log("构建未压缩变体（GF_UNMINIFIED=1，GreasyFork 提交用）…");
-execSync("npm run build:only", {
-  cwd: root,
-  stdio: "inherit",
-  env: { ...process.env, GF_UNMINIFIED: "1" },
-});
-const jsRaw = readFileSync(`${root}dist/mcmodder-lite.user.js`);
 
 console.log("构建压缩产物（TM / 帖内 zip）…");
 execSync("npm run build:only", { cwd: root, stdio: "inherit" });
@@ -75,9 +64,7 @@ const jsMin = readFileSync(`${root}dist/mcmodder-lite.user.js`);
 const outDir = `${root}dist/release/`;
 mkdirSync(outDir, { recursive: true });
 const jsName = `mcmodder-lite.user-${version}.js`;
-const rawName = `mcmodder-lite.user-${version}.unminified.js`;
 writeFileSync(`${outDir}${jsName}`, jsMin);
-writeFileSync(`${outDir}${rawName}`, jsRaw);
 
 /* ---------- 最小 zip 容器（PKZIP：单文件 + Deflate） ----------
    zip 是标准格式：本地文件头 + 数据 + 中央目录 + 结束记录。Deflate 数据由
@@ -157,4 +144,3 @@ const kb = (n) => (n / 1024).toFixed(1);
 console.log(`打包完成（版本 ${version}）：`);
 console.log(`  dist/release/${jsName}  ${kb(jsMin.length)} KB（压缩产物，帖内 zip 用）`);
 console.log(`  dist/release/${zipName}  ${kb(zip.length)} KB（zip / Deflate，内含上述 js）`);
-console.log(`  dist/release/${rawName}  ${kb(jsRaw.length)} KB（GF 未压缩变体，手动上传）`);
