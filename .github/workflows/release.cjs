@@ -28,6 +28,19 @@ if (!firstHeading || firstHeading !== version) {
   process.exit(1);
 }
 
+// 从 CHANGELOG 提取本次版本小节作为 release notes。e256433 重构校验顺序时把这段
+// 孤儿化了（notes 未声明，首发尝试必 ReferenceError，2026-11-18 v2.4.2-lite.1
+// 首个真实首发暴露）——按版本前缀匹配小节标题，日期后缀不参与匹配。
+let notes = "";
+if (isNewVersion === "true" && changelog) {
+  const escapedVersion = version.replace(/\./g, "\\.");
+  const regex = new RegExp("##\\s*\\[" + escapedVersion + "\\][^\\n]*([\\s\\S]*?)(?=\\n##\\s*\\[|$)");
+  const match = changelog.match(regex);
+  if (match && match[1]) {
+    notes = match[1].trim();
+  }
+}
+
 if (!notes) {
   console.error("拒绝发版：release notes 为空（版本小节解析不到内容）。");
   process.exit(1);
