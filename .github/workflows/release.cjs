@@ -8,6 +8,15 @@ const targetSha = process.env.TARGET_SHA;
 
 const changelog = fs.existsSync("CHANGELOG.md") ? fs.readFileSync("CHANGELOG.md", "utf8") : "";
 
+// tag 已存在（IS_NEW_VERSION=false）：该提交的 [release] 字样晚于真正的发版
+// 提交到达（如修 bug 的提交信息里提到「[release]」字样），发版已完成，无事可做——
+// 直接成功退出，不进版本一致性/notes 校验（那些校验针对的是「即将创建」的形态，
+// 对已完成的历史提交会误报红灯，2026-11-17 实例）。
+if (isNewVersion !== "true") {
+  console.log(`Tag ${tagName} 已存在，本次推送无需重复发版，跳过。`);
+  process.exit(0);
+}
+
 // 版本一致性前置：CHANGELOG 的首个小节必须就是本次版本。
 // 否则说明清单没 bump / 小节写错，会打出重复 tag（vX_N）且 release notes 为空。
 const firstHeading = changelog.match(/^##\s*\[([^\]]+)\]/m)?.[1];
@@ -17,16 +26,6 @@ if (!firstHeading || firstHeading !== version) {
       `\n请先 bump package.json / vite.config.ts，并把 CHANGELOG 的 "${version}" 小节放到最前面。`,
   );
   process.exit(1);
-}
-
-let notes = "";
-if (isNewVersion === "true" && changelog) {
-  const escapedVersion = version.replace(/\./g, "\\.");
-  const regex = new RegExp("##\\s*\\[" + escapedVersion + "\\][^\\n]*([\\s\\S]*?)(?=\\n##\\s*\\[|$)");
-  const match = changelog.match(regex);
-  if (match && match[1]) {
-    notes = match[1].trim();
-  }
 }
 
 if (!notes) {
