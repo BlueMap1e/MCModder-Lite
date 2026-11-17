@@ -21,8 +21,7 @@ export class RankInit extends Init {
     let totalValue = 0,
       totalRate = 0,
       r = 0;
-    for (const _i in contentList.toArray()) {
-      const i = Number(_i);
+    for (const [i] of contentList.toArray().entries()) {
       const e = contentList.eq(i);
       const href = e.find("a").first().prop("href") ?? "";
       const safeHref = Utils.safeURL(href) || "#";

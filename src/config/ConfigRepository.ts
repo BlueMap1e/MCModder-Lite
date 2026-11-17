@@ -97,7 +97,7 @@ export class ConfigRepository {
     let data: AppStorage[T] | undefined;
     if (isCacheable) data = this.buffer.storageRef[item]!.value;
     else {
-      const raw = GM_getValue(item) as string | undefined;
+      const raw = GM_getValue(item);
       if (raw === undefined) return undefined;
       data = JSON.parse(raw) as AppStorage[T];
     }
@@ -124,7 +124,7 @@ export class ConfigRepository {
     const data = this.getAll(item);
     if (data === undefined) return undefined;
     const entry = data[key];
-    return entry as Required<AppStorage>[T][K];
+    return entry;
   }
 
   /** 读取 `mcmodderSettings` 下的一个配置项（等价于 `get("mcmodderSettings", key)`） */
@@ -285,7 +285,7 @@ export class ConfigRepository {
    * @param key 设置项字段名（`Settings` 的键）。
    */
   getSettingsWritableRef<K extends keyof Settings>(key: K) {
-    const ref = this.getRef("mcmodderSettings", key) as ComputedRef<Settings[K] | undefined>;
+    const ref = this.getRef("mcmodderSettings", key);
     return computed<Settings[K]>({
       get: () => ref.value ?? (this.getConfigData(key)?.value as Settings[K]),
       set: (value) => this.setSettings(key, value),
@@ -458,7 +458,7 @@ export class ConfigRepository {
     T extends Profile | Class,
     K extends KeysOfType<Required<AppStorage>, Record<string, string>>,
   >(storageKey: K, id: number) {
-    let raw = GM_getValue(storageKey) as string | undefined;
+    let raw = GM_getValue(storageKey);
     if (!raw) {
       GM_setValue(storageKey, "{}");
       raw = "{}";

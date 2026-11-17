@@ -16,7 +16,17 @@ export class AutoCheckinScheduleRequest extends ScheduleRequestType {
    * 从而实现「每天一次」。
    * 签到结果以 v4 的普通提示或 v3 的 swal 弹窗两种形式告知。
    */
-  async run(list: ScheduleRequestUtils) {
+  run(list: ScheduleRequestUtils) {
+    // 异步段封进私有方法并就地收口：基类契约 run(): void，ScheduleRequestUtils 的
+    // 调用是 fire-and-forget，异步拒绝不经任何 catch——在此记日志并提示
+    void this.checkin(list).catch((error: unknown) => {
+      console.error("[MCModder-Lite] 自动签到失败：", error);
+      Utils.commonMsg("自动签到执行失败，请查看控制台", false);
+    });
+  }
+
+  /** 执行签到（异步主体，收口说明见 run） */
+  private async checkin(list: ScheduleRequestUtils) {
     list.create(Utils.getStartTime(new Date()), "autoCheckin", this.parent.currentUID);
     const resp = await this.parent.utils.createRequest(
       {

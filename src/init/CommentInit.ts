@@ -20,7 +20,7 @@ export class CommentInit extends Init {
   /** 处理单个发布时间节点（幂等：已有容器则跳过） */
   private applyPublishTime(node: Element) {
     if (node.querySelector(`.${CommentInit.PUBLISH_TIME_CLASS}`)) return;
-    const published = CommentInit.parsePublishTime(node.textContent);
+    const published = Utils.parseUTC8Time(node.textContent);
     // 括号放进我们自己的容器里，整体一次插入：不能把括号插到日期节点两侧，
     // 否则整个日期会被括起来（2026-11-11 回归）；先渲染好文本再 append，
     // 避免「空括号 → 补字」的中间态被画出来。
@@ -97,14 +97,6 @@ export class CommentInit extends Init {
   private static readonly REPLY_PROCESSED_ATTR = "data-mcmodder-comment-reply-processed";
   /** 发布时间倒计时容器的标记类 */
   private static readonly PUBLISH_TIME_CLASS = "mcmodder-comment-publish-time";
-
-  /** 站点发布时间不带时区，固定按 UTC+8 解析，避免脚本在其它时区运行时倒计时整体偏移 */
-  private static parsePublishTime(text: string | null) {
-    const match = text?.matchAll(/\d+/g);
-    if (!match) return Date.parse(text ?? "");
-    const [year, month, day, hour, minute, second] = match;
-    return Date.UTC(+year, +month - 1, +day, +hour, +minute, +second) - 8 * 60 * 60 * 1000;
-  }
 
   private readonly commentObserver = new MutationObserver((mutationList) => {
     // 短评块被站点整块替换：旧观察者挂着的节点已脱离文档，换挂到新的块上

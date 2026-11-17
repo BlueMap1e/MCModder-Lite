@@ -80,7 +80,8 @@ export function addUploadFileButton(ueditor: UEditor) {
     if (!uploading) input.click();
   });
 
-  input.addEventListener("change", async () => {
+  // 具名 async 函数 + 监听处显式 void：change 监听要求 void 返回（no-misused-promises）
+  const onFilesSelected = async () => {
     const files = Array.from(input.files ?? []);
     if (!files.length) return;
     uploading = true;
@@ -92,7 +93,8 @@ export function addUploadFileButton(ueditor: UEditor) {
       button.removeClass("mcmodder-edui-uploading");
       input.value = "";
     }
-  });
+  };
+  input.addEventListener("change", () => void onFilesSelected());
 
   // 失败时靠 listfile 的差分找回刚上传的文件（见 recoverUploadedUrl）
   let knownUrls: Set<string> | null = null;
@@ -115,7 +117,7 @@ export function addUploadFileButton(ueditor: UEditor) {
         )
         .sort((a, b) => b.mtime - a.mtime);
     } catch (error) {
-      Utils.commonMsg(`附件列表获取失败... (${error})`);
+      Utils.commonMsg(`附件列表获取失败... (${String(error)})`);
       return null;
     }
   }
@@ -153,7 +155,7 @@ export function addUploadFileButton(ueditor: UEditor) {
         const bytes = await downloadBytes(item.url);
         if (bytes.length === file.size && signature(bytes) === want) return item.url;
       } catch (error) {
-        Utils.commonMsg(`附件内容比对失败... (${error})`);
+        Utils.commonMsg(`附件内容比对失败... (${String(error)})`);
       }
     }
     return "";
@@ -208,7 +210,7 @@ export function addUploadFileButton(ueditor: UEditor) {
     } catch (error) {
       // 请求异常（网络中断、被限速队列丢弃等）会走到这里，原始错误留在控制台
       console.warn("[Mcmodder] 文件上传失败：", error);
-      Utils.commonMsg(`文件上传失败... (${error})`, false);
+      Utils.commonMsg(`文件上传失败... (${String(error)})`, false);
       return;
     }
     if (!link) {

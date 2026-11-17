@@ -374,6 +374,15 @@ export const settings = [
               8: "8 个空格",
             },
           },
+          {
+            id: "coverGaussianBlurRadiusPercent",
+            title: "封面高斯模糊半径（%）",
+            description:
+              "模组编辑页「启用高斯模糊」按钮的默认模糊半径，按封面宽度的百分比计。编辑页滑杆调整后会自动记住。",
+            type: "slider",
+            value: 2,
+            range: [0, 20],
+          },
         ],
       },
       {

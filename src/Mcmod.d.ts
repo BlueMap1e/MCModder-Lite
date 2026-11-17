@@ -18,6 +18,7 @@ declare global {
     disableSelection(): JQuery;
     tooltip(option?: any): JQuery;
     webuiPopover(option?: any): JQuery;
+    cropper(...option: any[]): JQuery;
   }
 
   /* Swal */
@@ -86,7 +87,7 @@ declare global {
     page: number,
     showLoadImg?: boolean,
   ) => unknown;
-  var editAutoSaveLoop: any;
+  var editAutoSaveLoop: () => void;
   var nAutoSave: any;
   var bindFastSubmit: any;
   var editSave: any;

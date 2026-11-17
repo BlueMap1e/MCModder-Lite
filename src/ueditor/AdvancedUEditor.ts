@@ -13,6 +13,11 @@ import "codemirror/lib/codemirror.css";
 import TurndownService from "turndown";
 import { gfm } from "turndown-plugin-gfm";
 import cjkFriendly from "markdown-it-cjk-friendly";
+// pangu 浏览器构建源码（内置裁定 2026-11-17，不再从 npmmirror 运行时加载）：
+// spacingPage 的 XPath 绑定「求值域」的全局 document，而正文在 UEditor iframe 里，
+// 必须把 pangu 注入 iframe 域执行才能作用到正文（旧运行时加载路径同样如此），
+// 因此要的是源码文本而非模块本身，见 performSpacingPage。
+import panguBrowserSource from "pangu/dist/browser/pangu.min.js?raw";
 // js-beautify 的默认导出是一个「默认按 JS 美化」的可调用对象，HTML 美化在 .html_beautify 上。
 // 之前 build 走 CDN 全局（全局名恰好就是 HTML 美化函数）、dev 走 npm（拿到的是 JS 美化），
 // 同一行代码两端行为不同且不报错，故统一走 npm 并显式取 .html_beautify。
@@ -365,7 +370,7 @@ export class AdvancedUEditor extends UEditor {
       this.refreshTextNode = this.statsBar.find(".refresh-text");
 
       this.calculateBytes();
-      this.updateOriginalTextLength();
+      void this.updateOriginalTextLength();
       this.refreshTextNode.hide().click(() => {
         this.manualTriggerStatsUpdate();
       });
@@ -417,11 +422,11 @@ export class AdvancedUEditor extends UEditor {
     );
 
     if (this.configs.getSettings("markdownIt") || this.isModrinthVer) {
-      this.mdEditorOption![1].setCurrentValue(true); // Modrinth 日志以 Md 格式保存，自动添加日志时总是开启
+      this.mdEditorOption[1].setCurrentValue(true); // Modrinth 日志以 Md 格式保存，自动添加日志时总是开启
     }
 
     if (this.configs.getSettings("htmlEditor")) {
-      this.htmlEditorOption![1].setCurrentValue(true); // Modrinth 日志以 Md 格式保存，自动添加日志时总是开启
+      this.htmlEditorOption[1].setCurrentValue(true); // Modrinth 日志以 Md 格式保存，自动添加日志时总是开启
     }
 
     let isVertical = this.configs.getSettings("editorVertical");
@@ -430,11 +435,11 @@ export class AdvancedUEditor extends UEditor {
       this.configs.setSettings("editorVertical", isVertical);
     }
     if (isVertical) {
-      this.verticalOption![1].setCurrentValue(true);
+      this.verticalOption[1].setCurrentValue(true);
     }
 
     if (this.configs.getSettings("editorToolkit")) {
-      this.toolkitOption![1].setCurrentValue(true);
+      this.toolkitOption[1].setCurrentValue(true);
     }
 
     // 匿名吐槽
@@ -523,25 +528,10 @@ export class AdvancedUEditor extends UEditor {
    *
    * 惰性创建的原因是 CodeMirror 初始化开销不小，且并非所有用户需要。
    */
-  private async readyMarkdownEditor() {
+  private readyMarkdownEditor() {
     if (!this.$document || !this.head || !this.$outerFrame || !this.mdEditorOption) return;
-    const c = this.mdEditorOption![1].getValue();
+    const c = this.mdEditorOption[1].getValue();
     if (c) {
-      try {
-        await Utils.loadScript(
-          this.head,
-          null,
-          Values.assets.js.markdownit,
-          null,
-          "mcmodder-script-markdownit",
-          10000,
-        );
-      } catch (error) {
-        console.warn("[MCModder-Lite] Markdown 编辑器依赖加载失败：", error);
-        Utils.commonMsg("Markdown 编辑器加载失败，请检查网络后重试。", false);
-        return;
-      }
-
       if (!this.mdEditorApp && this.mdEditorContainer) {
         this.mdEditorApp = createApp(MainTextEditor, {
           id: "mcmodder-mdeditor",
@@ -560,7 +550,7 @@ export class AdvancedUEditor extends UEditor {
             // 概念，只能靠入口警告提示）。上游同病（ce61200 亦无此规则）。
             this.turndownSurvice.addRule("mcmodderSpanBold", {
               filter: (node) => {
-                const el = node as HTMLElement;
+                const el = node;
                 return (
                   el.nodeName === "SPAN" &&
                   /font-weight\s*:\s*(bold|[6-9]\d\d)/i.test(el.getAttribute("style") ?? "")
@@ -601,7 +591,7 @@ export class AdvancedUEditor extends UEditor {
             // 覆盖原生正文。
             if (this.isModrinthVer) $("#mcmodder-tool-md").click();
           },
-        }).mount(this.mdEditorContainer!.get(0)) as InstanceType<typeof MainTextEditor>;
+        }).mount(this.mdEditorContainer.get(0)) as InstanceType<typeof MainTextEditor>;
         this.mdEditor!.on(
           "change",
           Utils.throttle(() => {
@@ -632,7 +622,7 @@ export class AdvancedUEditor extends UEditor {
    * - 写回后立刻记下原生正文的**实际** HTML，使这次写回引发的回拉成为空操作；
    * - 源码编辑器里有未写回的改动时，原生正文的变化只会被暂缓，绝不覆盖用户正在编辑的内容。
    */
-  private async readyHtmlEditor() {
+  private readyHtmlEditor() {
     if (!this.$body) return;
     const c = this.htmlEditorOption?.[1].getValue();
     if (c) {
@@ -753,12 +743,15 @@ export class AdvancedUEditor extends UEditor {
     const inlineCodeConverter = this.configs.getSettings("mdEditorInlineCodeConverter") ?? 0;
     const blockquoteConverter = this.configs.getSettings("mdEditorBlockquoteConverter") ?? 0;
 
-    const md = (this.window as any).markdownit();
+    // markdown-it 内置（2026-11-17 裁定，不再从 npmmirror 运行时加载）：动态 import
+    // 保留「用到才求值」语义；渲染纯字符串进出，与正文 iframe 的 realm 无关。
+    const markdownit = (await import("markdown-it")).default;
+    const md = new markdownit();
     // CommonMark 的 emphasi 格阑规则在「标点 + CJK」边界失效：`）**汉字` 的闭合 ** 无法
     // 闭合（前面是标点 2a 失败、后面是非标点 2b 失败），输出字面 `**`——标题以全角括号
     // 收尾再接正文即命中（2026-11-12 用户实测）。markdown-it 11 不含该修复，
     // markdown-it-cjk-friendly 按 W3C CJK 强调要求补齐（Node 实测 16 组用例全过）。
-    // 插件随包构建，作用于运行时懒加载的 markdown-it 实例，与其加载方式无关。
+    // 插件与实例同在构建产物内。
     md.use(cjkFriendly);
     // markdown-it 没有「软换行不输出字符」的选项（`breaks` 只决定软换行是否转成 <br>），
     // 默认情况下段落内的换行会被渲染成一个 "\n"。
@@ -1001,22 +994,8 @@ export class AdvancedUEditor extends UEditor {
    *
    * 期间会临时把 `<body>` 设为不可编辑，因为 pangu 会跳过可编辑容器的子元素。
    */
-  async performSpacingPage() {
+  performSpacingPage() {
     if (!this.window || !this.head || !this.body || !this.$body) return;
-    try {
-      await Utils.loadScript(
-        this.head,
-        null,
-        Values.assets.js.pangu,
-        null,
-        "mcmodder-script-pangu",
-        10000,
-      );
-    } catch (error) {
-      console.warn("[MCModder-Lite] 自动排版组件加载失败：", error);
-      Utils.commonMsg("自动排版组件加载失败，请检查网络后重试。", false);
-      return;
-    }
     const isEditable = this.body.contentEditable;
     this.body.contentEditable = "false";
 
@@ -1057,6 +1036,11 @@ export class AdvancedUEditor extends UEditor {
         });
       });
 
+    // 注入 pangu 到正文 iframe 域（幂等：以 global 是否存在去重，与旧 loadScript 的
+    // id 去重等价）。spacingPage 由此天然作用于 iframe 文档，跨文本节点的 <pangu>
+    // 空格分隔、可编辑区跳过等原语义一并保留——这些靠宿主域逐节点 spacing() 复刻
+    // 不出来（probe-spacing 的 B 组标记两侧空格用例即依赖它）。
+    if (!(this.window as any).pangu) Utils.addScript(this.head, panguBrowserSource);
     (this.window as any).pangu.spacingPage();
     if (isEditable === "true")
       setTimeout(() => {

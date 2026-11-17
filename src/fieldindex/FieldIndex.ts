@@ -46,7 +46,7 @@ export class FieldIndex<T extends object, P extends keyof T, K = T[P]> {
     const mapKey = data[this.key];
     const handledKey = this.keyHandler?.(mapKey) ?? mapKey;
     if (handledKey instanceof Array) {
-      (handledKey as K[]).forEach((key) => {
+      handledKey.forEach((key) => {
         this.pushSingle(key, data);
       });
     } else {

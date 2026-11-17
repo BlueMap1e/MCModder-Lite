@@ -83,7 +83,7 @@ export class Utils {
     option: SweetAlertOption,
     interceptEvents: Record<string, (ev: Event) => unknown> = {},
   ) {
-    swal.fire(option).then(() => {
+    void swal.fire(option).then(() => {
       Object.entries(events).forEach(([eventName, callback]) => {
         window.removeEventListener(eventName, callback);
       });
@@ -1112,55 +1112,6 @@ export class Utils {
     loc.appendChild(script);
   }
 
-  /**
-   * 按 `src` 或内联 `content` 加载脚本，返回加载完成/失败的 Promise，可用 `id` 去重。
-   *
-   * @param loc 挂载 `<script>` 的宿主元素。
-   * @param content 内联脚本内容（与 `src` 二选一）。
-   * @param src 外部脚本地址（与 `content` 二选一）。
-   * @param type 脚本类型（默认 `"text/JavaScript"`）。
-   * @param id 标签 id；若目标文档中已存在该 id 则直接 resolve。
-   * @param timeout 超时毫秒数；默认不限制，失败或超时会移除脚本标签。
-   */
-  static loadScript(
-    loc: HTMLElement,
-    content?: string | null,
-    src?: string | null,
-    type?: string | null,
-    id?: string,
-    timeout = 0,
-  ) {
-    if (id && loc.ownerDocument.getElementById(id)) {
-      return new Promise<void>((resolve) => {
-        resolve();
-      });
-    }
-    return new Promise<void>((resolve, reject) => {
-      const script = document.createElement("script");
-      script.type = type ? type : "text/JavaScript";
-      if (id) script.id = id;
-      if (src) script.src = src;
-      if (content) script.innerHTML = content;
-      let timer: ReturnType<typeof setTimeout> | undefined;
-      const finish = (error?: Error) => {
-        clearTimeout(timer);
-        script.onload = script.onerror = null;
-        if (error) {
-          script.remove();
-          reject(error);
-        } else {
-          resolve();
-        }
-      };
-      script.onload = () => finish();
-      script.onerror = () => finish(new Error(`脚本加载失败：${src ?? id ?? "内联脚本"}`));
-      if (timeout > 0) {
-        timer = setTimeout(() => finish(new Error(`脚本加载超时：${src}`)), timeout);
-      }
-      loc.appendChild(script);
-    });
-  }
-
   /** 获取 UTC-8 时区下 0 点的毫秒时间戳，`num` 为相对天数偏移（正数向后，负数向前） */
   static getStartTime(d: number | Date, num = 1) {
     const time = typeof d === "number" ? d : d.getTime();
@@ -1188,6 +1139,14 @@ export class Utils {
   /** 格式化为 `YYYY-M-D HH:MM:SS` 日期时间字符串 */
   static getFormattedDateTime(date = new Date()) {
     return `${this.getFormattedDate(date)} ${this.getFormatted24hTime(date)}`;
+  }
+
+  /** 站点显示的时间不带时区，固定按 UTC+8 解析，避免脚本在其它时区运行时倒计时整体偏移 */
+  static parseUTC8Time(text: string | null) {
+    const match = text?.matchAll(/\d+/g);
+    if (!match) return Date.parse(text ?? "");
+    const [year, month, day, hour, minute, second] = match;
+    return Date.UTC(+year, +month - 1, +day, +hour, +minute, +second) - 8 * 60 * 60 * 1000;
   }
 
   /** 将字节数格式化为 B/KiB/MiB/GiB，保留两位小数 */
@@ -1359,7 +1318,7 @@ export class Utils {
                 }
               ).list;
               if (typeof list !== "function") {
-                resend();
+                void resend();
                 return;
               }
               list.call(
@@ -1373,7 +1332,7 @@ export class Utils {
                   if (!stored) {
                     console.warn("[MCModder-Lite] yxd_token 写入后回读不一致，继续重试");
                   }
-                  resend();
+                  void resend();
                 },
               );
             },
@@ -1462,7 +1421,7 @@ export class Utils {
     node.addClass("mcmodder-copyable").click((e) => {
       const text =
         typeof copyData === "function" ? copyData() : copyData || e.currentTarget.textContent;
-      navigator.clipboard.writeText(text.toString());
+      void navigator.clipboard.writeText(text.toString());
       Utils.commonMsg(`${typeName}已成功复制到剪贴板~ (${text})`);
     });
   }
@@ -1616,10 +1575,10 @@ export class Utils {
     };
   }
 
-  /** 将 `Item` 转换为物品编辑页提交所需的数据结构 */
-  static async itemToEditorData(item: Item): Promise<McmodItemEditorData> {
+  /** 将 `Item` 转换为物品编辑页提交所需的数据结构（纯映射，无异步步骤；保持 Promise 签名以稳定调用方） */
+  static itemToEditorData(item: Item): Promise<McmodItemEditorData> {
     const res = { "item-data": {} } as DeepPartial<McmodItemEditorData>;
-    const data = res["item-data"]! as Partial<McmodItemEditorInnerData>;
+    const data = res["item-data"]!;
     if (item.id) {
       res["action"] = "item_edit";
       res["edit-id"] = item.id.toString();
@@ -1644,7 +1603,7 @@ export class Utils {
     if (item.maxStackSize != undefined) data["maxstack"] = item.maxStackSize.toString();
     // if (item.tools) data["tools"] = item.tools;
 
-    return res as McmodItemEditorData;
+    return Promise.resolve(res as McmodItemEditorData);
   }
 
   /** 从物品编辑页 DOM 中解析完整物品信息为 `Item` */

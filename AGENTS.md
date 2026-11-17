@@ -149,9 +149,16 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   `Values`, per-page CSS or bundle splitting. (Zero-reference `Utils`/`Values` members
   were audited to 0 on 2026-11-13 — dead-file scanning now lives in the e2e workspace as
   `dead-files2.mjs`; the older `dead-files.mjs` self-matches basenames and reports a
-  structurally false 0.)
-  The shipped bundle is ~1.5 MB; splitting mainly helps low-end devices and adds
-  loading / debugging complexity.
+  structurally false 0. `dead-files2.mjs` itself had a third blind spot — side-effect
+  imports (`import "x"` with no `from`) were missed, which briefly flagged
+  `src/devCheck.ts` (a live, `main.ts`-imported dev check) as DEAD; fixed 2026-11-17,
+  full-tree re-scan = 0 dead. Trust a "DEAD" verdict only after grepping the symbol
+  repo-wide.)
+  The shipped bundle is ~1.6 MB (2026-11-17: libs all bundled + `?raw` CSS now
+  comment/whitespace-stripped at build by the `minifyRawCss` plugin in
+  `vite.config.ts` — deliberately NOT esbuild CSS minify, whose cross-position
+  rule merging rewrites cascade order in artifact-only ways, see HANDOFF);
+  splitting mainly helps low-end devices and adds loading / debugging complexity.
 
 ## Host-page constraints
 
@@ -165,15 +172,36 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token` retry). Never call
   `GM_xmlhttpRequest` directly.
 - External libraries:
-  - **No `@require`**: nothing is fetched at install time. Most third-party code is bundled
-    at build time (`package.json` + `import`); the two exceptions load lazily from
-    `registry.npmmirror.com` through `Utils.loadScript` — `markdown-it` 11.0.1 (Markdown
-    editor) and `pangu` 4.0.7 (中英间添加空格). Add new libraries through `package.json` +
-    `import`, never through `@require`; a new runtime remote load needs an entry here.
+  - **No `@require`, no runtime remote loads**: nothing is fetched at install time or from
+    the network at runtime — every third-party library is bundled at build time
+    (`package.json` + `import`). The last two runtime-remote exceptions (`markdown-it`
+    11.0.1 via dynamic `import`, `pangu` 4.0.7 via `?raw` source injected into the UEditor
+    content iframe) were bundled on 2026-11-17 to eliminate the npmmirror
+    remote-execution surface. Two pinned quirks to preserve: `markdown-it` stays at exact
+    11.0.1 and `pangu` at exact 4.0.7 (7.2.x regressed spacing; see HANDOFF), and `pangu`
+    must keep being evaluated inside the content iframe — its `spacingPage` XPath binds to
+    the evaluating realm's global `document`, so bundling it as a module (host-realm) would
+    silently space the wrong document. Add new libraries through `package.json` + `import`,
+    never through `@require` or a runtime `<script src>`.
+  - **Dynamic `import()` requires `inlineDynamicImports`** (already set in
+    `vite.config.ts` build.rollupOptions): without it rollup emits the dynamic chunk as a
+    separate file that a single-file userscript cannot carry, and at runtime the relative
+    specifier 404s (real-machine TM resolves it against the page URL; 2026-11-17 finding,
+    MD editor conversion crashed with repeated unhandled rejections). The GM-shim harness
+    cannot reproduce this — it lacks the TM bridge, so chunk loads happened to resolve
+    there. Any change to the loading structure must be clicked once on a real machine.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
-    `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it-cjk-friendly` (applied
-    to the lazily-loaded markdown-it instance in `performMarkdownIt`: fixes CommonMark
-    emphasis failing at punctuation+CJK boundaries).
+    `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it` (11.0.1, Markdown
+    editor), `pangu` (4.0.7, 中英间添加空格), `markdown-it-cjk-friendly` (applied to the
+    markdown-it instance in `performMarkdownIt`: fixes CommonMark emphasis failing at
+    punctuation+CJK boundaries).
+  - Type-aware ESLint subset (2026-11-17): `eslint.config.ts` runs 12 curated
+    `@typescript-eslint` type-checked rules over `src/**/*.ts` via `projectService`
+    (high-signal only — the `no-unsafe-*`/`no-explicit-any` family is deliberately NOT
+    adopted; host integrations would drown the output). Do not add those noise-family
+    rules; if a new type-checked rule fires on interface-conformance `async` methods with
+    no `await` (AppRepository implementations), use a scoped disable with the interface
+    rationale, as in `src/jsonframe/repository/`.
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
     ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
   - **Shared code must stay jQuery-1.7-compatible**: host pages ship different jQuery

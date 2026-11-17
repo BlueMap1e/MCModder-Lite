@@ -46,9 +46,16 @@ export class ItemIDBRepository extends IDBRepository<Item> implements ItemReposi
     };
   }
 
-  /** 初始化：完成父类建表后，再取得图标表句柄 */
+  /**
+   * 初始化：完成父类建表后，再取得图标表句柄。
+   * 同步实现（建表经父类的 async init），async 仅为满足 AppRepository 的 Promise
+   * 契约，见接口头注释。
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
   override async init() {
-    super.init();
+    // 父类 init 负责建表（Dexie 惰性建库），表句柄的取得不依赖 open 完成；
+    // 打开失败由后续首个查询经 Dexie 的 Promise 链暴露，这里不需要等待
+    void super.init();
     this.iconTable = this.db.table(ItemIDBRepository.iconTableName);
   }
 
@@ -185,12 +192,16 @@ export class ItemIDBRepository extends IDBRepository<Item> implements ItemReposi
     const [smallIcons, largeIcons] = await Promise.allSettled([
       Promise.allSettled(
         alignedIcons.map((icon) =>
-          icon?.smallIcon ? Utils.blob2Base64(icon.smallIcon) : undefined,
+          icon?.smallIcon
+            ? Promise.resolve(Utils.blob2Base64(icon.smallIcon))
+            : Promise.resolve(undefined),
         ),
       ),
       Promise.allSettled(
         alignedIcons.map((icon) =>
-          icon?.largeIcon ? Utils.blob2Base64(icon.largeIcon) : undefined,
+          icon?.largeIcon
+            ? Promise.resolve(Utils.blob2Base64(icon.largeIcon))
+            : Promise.resolve(undefined),
         ),
       ),
     ]);

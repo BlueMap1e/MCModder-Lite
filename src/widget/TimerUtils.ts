@@ -14,8 +14,9 @@ export class TimerUtils {
       list.find(id, user)?.time || 0;
   static DATAGETTER_CONSTANT = (time: number) => () => time;
 
-  static DATAFORMATTER_EN = Utils.getFormattedTime;
-  static DATAFORMATTER_ZH = Utils.getFormattedChineseTime;
+  // 格式化器包箭头：脱开 Utils 的 this 绑定面（unbound-method），调用语义不变
+  static DATAFORMATTER_EN = (time: number) => Utils.getFormattedTime(time);
+  static DATAFORMATTER_ZH = (time: number) => Utils.getFormattedChineseTime(time);
 
   /**
    * 共享倒计时表：所有倒计时共用一个 1 s ticker，而不是每个倒计时各起一个

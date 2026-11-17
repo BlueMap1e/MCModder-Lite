@@ -104,9 +104,9 @@ export class UEditor {
   protected init(editor: any) {
     const iframe = editor?.iframe;
 
-    this.outerFrame = $(iframe).parents("#editor-ueeditor").get(0) as HTMLElement;
+    this.outerFrame = $(iframe).parents("#editor-ueeditor").get(0);
     this.$outerFrame = $(this.outerFrame);
-    this.innerFrame = $(iframe).parents("#edui1").get(0) as HTMLElement;
+    this.innerFrame = $(iframe).parents("#edui1").get(0);
     this.$innerFrame = $(this.innerFrame);
     if (!this.outerFrame || !this.innerFrame) {
       console.warn("[MCModder-Lite] 编辑器外层 DOM 尚未就绪，跳过增强。");
@@ -162,8 +162,7 @@ export class UEditor {
     if (/\bFirefox\b/.test(navigator.userAgent) && this.body) {
       const body = this.body;
       const originalFocus = body.focus.bind(body);
-      body.focus = ((opts?: FocusOptions) =>
-        originalFocus({ preventScroll: true, ...(opts ?? {}) })) as typeof body.focus;
+      body.focus = (opts?: FocusOptions) => originalFocus({ preventScroll: true, ...(opts ?? {}) });
     }
 
     // 现代化按钮
@@ -213,7 +212,7 @@ export class UEditor {
     // childList 看不见（诊断日志实证）。归一化自身幂等，不会形成循环。
     // 观察器只在真实 DOM 变更时触发，属于「内容确实变了」的信号，按强制重算处理。
     this.bodyObserver = new MutationObserver(() => this.scheduleBodySync(true));
-    this.bodyObserver.observe(this.body!, { childList: true, subtree: true });
+    this.bodyObserver.observe(this.body, { childList: true, subtree: true });
     this.attachTableEscapeKeyHandler();
     // 兜底的兜底：contentchange / MutationObserver 这类事件路径在个别环境下存在
     // 无法本地复现的失效（Tampermonkey 沙箱 realm 与页面 realm 的调度差异，
@@ -221,7 +220,7 @@ export class UEditor {
     // 原生事件（光标移动/选区变化必发，不经过 UEditor），配合低频 watchdog 轮询。
     // 注意这两条只做**廉价的幂等检查**：只有真的改了 DOM 才重算统计，避免每次光标
     // 移动 / 每 1.5s 都整篇序列化正文（长文编辑时开销可观）。
-    this.document!.addEventListener("selectionchange", () => this.scheduleBodySync());
+    this.document.addEventListener("selectionchange", () => this.scheduleBodySync());
     this.startWatchdog();
     // bfcache 会让页面进入冻结状态：暂停轮询，恢复时重启（观察器/监听器无需移除）
     window.addEventListener("pagehide", () => this.stopWatchdog());
@@ -312,7 +311,7 @@ export class UEditor {
           this.ensureTrailingParagraph();
           target = table.nextElementSibling;
         }
-        if (!target || (target as Element).tagName === "TABLE") return;
+        if (!target || target.tagName === "TABLE") return;
         ev.preventDefault();
         ev.stopPropagation();
         const range = doc.createRange();

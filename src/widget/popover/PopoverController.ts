@@ -133,24 +133,7 @@ export abstract class PopoverController<
     // 任何已登记元素被点击 → 切换弹出框的当前服务对象
     // 先前为监听 focus，但是已经获得焦点的元素在失焦前无法再次被聚焦，导致当弹出框并非因锚点失焦而隐藏时，
     // 再次点击锚点不会让弹出框重新出现，因此现在改为监听 click 以优化交互
-    window.addEventListener(
-      "click",
-      async (e) => {
-        const closest = this.getClosestWithOption(e);
-        if (closest !== undefined) {
-          const { target, option } = closest;
-          const success = await this.serve("click", target, option);
-          if (success) {
-            return;
-          }
-        }
-
-        if (!this.inPopover(e)) {
-          this.closeActive();
-        }
-      },
-      this.opt,
-    );
+    window.addEventListener("click", (e) => void this.onClickServeOrClose(e), this.opt);
 
     // 页面滚动时重新量锚点位置（列表是 fixed 定位，需跟随输入框）
     window.addEventListener(
@@ -199,35 +182,11 @@ export abstract class PopoverController<
    * 只有悬停型的控制器才需要它（点击型的控制器不会用到这里的延时与「鼠标在框内」状态）。
    */
   protected installHoverListeners() {
-    window.addEventListener(
-      "pointerover",
-      async (e) => {
-        const target = e.target;
-        if (!(target instanceof HTMLElement) || this.pendingOptionSet.has(target)) {
-          return;
-        }
-
-        if (this.timeout !== null && this.inPopover(e)) {
-          clearTimeout(this.timeout);
-          this.timeout = null;
-          this.hoveringPopover = true;
-        }
-
-        const option = this.hasOption(target);
-        if (option) {
-          const success = await this.serve("pointerover", target, option);
-          if (success && this.timeout !== null) {
-            clearTimeout(this.timeout);
-            this.timeout = null;
-          }
-        }
-      },
-      this.opt,
-    );
+    window.addEventListener("pointerover", (e) => void this.onHoverServe(e), this.opt);
 
     window.addEventListener(
       "pointerout",
-      async (e) => {
+      (e) => {
         if (
           (this.activeTarget === e.target && this.timeout === null) ||
           (this.hoveringPopover && !this.inPopover(e))
@@ -241,6 +200,48 @@ export abstract class PopoverController<
       },
       this.opt,
     );
+  }
+
+  /**
+   * click 监听主体：命中登记元素则切换服务对象；未命中且点击在弹出框外则收起。
+   * （监听回调要求 void 返回，异步主体在此，调用处以 void 收口）
+   */
+  private async onClickServeOrClose(e: MouseEvent) {
+    const closest = this.getClosestWithOption(e);
+    if (closest !== undefined) {
+      const { target, option } = closest;
+      const success = await this.serve("click", target, option);
+      if (success) {
+        return;
+      }
+    }
+
+    if (!this.inPopover(e)) {
+      this.closeActive();
+    }
+  }
+
+  /** pointerover 监听主体：移入登记元素即弹出（收口说明同 onClickServeOrClose） */
+  private async onHoverServe(e: PointerEvent) {
+    const target = e.target;
+    if (!(target instanceof HTMLElement) || this.pendingOptionSet.has(target)) {
+      return;
+    }
+
+    if (this.timeout !== null && this.inPopover(e)) {
+      clearTimeout(this.timeout);
+      this.timeout = null;
+      this.hoveringPopover = true;
+    }
+
+    const option = this.hasOption(target);
+    if (option) {
+      const success = await this.serve("pointerover", target, option);
+      if (success && this.timeout !== null) {
+        clearTimeout(this.timeout);
+        this.timeout = null;
+      }
+    }
   }
 
   /** 已登记的「交互元素 → 选项」查询（懒映射里的选项也算） */

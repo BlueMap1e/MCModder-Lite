@@ -226,7 +226,9 @@ export class Mcmodder {
           this.hoverPreviewAnchor = undefined;
           this.hoverPreviewToken = Symbol("hover-preview");
         });
-        document.addEventListener("pointerover", async (e) => {
+        // 具名 async 函数 + 监听处显式 void：事件监听要求 void 返回，悬浮预览的
+        // 异步链在此处不等待、也不吞调用栈（no-misused-promises）
+        const onHoverPreviewOver = async (e: PointerEvent) => {
           const target = e.target;
           if (!(
             target instanceof HTMLAnchorElement && target.classList.contains("mcmodder-item-link")
@@ -370,7 +372,8 @@ export class Mcmodder {
           this.linkContentDictionary[sourceUrl] = final;
           this.linkPendingSet.delete(sourceUrl);
           previewFrame.attr("data-status", "fulfilled");
-        });
+        };
+        document.addEventListener("pointerover", (e) => void onHoverPreviewOver(e));
       }
     }
     Utils.updateAllTooltip();
@@ -706,7 +709,7 @@ export class Mcmodder {
       this.configRepository.setSettings("itemCustomTypeList", Values.itemCustomTypeList);
       this.itemTypeList = Values.itemCustomTypeList;
     }
-    this.itemTypeList = this.itemTypeList!.concat(Values.itemDefaultTypeList);
+    this.itemTypeList = this.itemTypeList.concat(Values.itemDefaultTypeList);
 
     // 表格修复
     if (this.configRepository.getSettings("tableFix")) {
@@ -902,7 +905,8 @@ export class Mcmodder {
     )
       setInterval(
         () => {
-          this.utils
+          // 轮询失败已由 createRequest 内部通知用户；这里显式 void 掉链式 Promise
+          void this.utils
             .createRequest(
               {
                 url: `${this.hostname}/frame/CommonHeader/`,

@@ -36,7 +36,7 @@ export class TabEditRecipeDisplay extends RecipeDisplay {
     this.instance.click(() => {
       const t = strTableSlotFocus;
       strTableSlotFocus = ""; // 屏蔽原生点击事件
-      this.write();
+      void this.write();
       setTimeout(() => {
         strTableSlotFocus = t;
       }, 100);

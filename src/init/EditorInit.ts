@@ -49,7 +49,7 @@ abstract class EditorAlertContextLink extends EditorAlertLink {
     this.range = this.editor[0]?.document?.createRange();
     this.contents = this.editor[0]?.$body?.find("*, * *").contents();
     if (!this.range || !this.contents) return false;
-    this.contents!.each((_, c) => {
+    this.contents.each((_, c) => {
       if (c.nodeType != Node.TEXT_NODE) return;
       if (state) return;
       state = this.checkContent(c.textContent, c);

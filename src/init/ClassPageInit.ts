@@ -247,8 +247,8 @@ export class ClassPageInit extends Init {
     }
 
     // 自动同步关注状态
-    this.syncSubscribeList(nClassID);
-    $(".subscribe").click(() => this.syncSubscribeList(nClassID));
+    void this.syncSubscribeList(nClassID);
+    $(".subscribe").click(() => void this.syncSubscribeList(nClassID));
 
     // 自动同步自定义资料类型
     let itemCustomTypeList: ItemCustomTypeList =
@@ -531,7 +531,7 @@ export class ClassPageInit extends Init {
           button.addClass("disabled");
           button.find("span").text("努力加载中...");
           button.find("i").attr("class", "fa fa-pulse fa-spinner");
-          this.parent.utils
+          void this.parent.utils
             .createRequest(
               {
                 url: `${this.parent.hostname}/${this.isClassPage ? "class" : "modpack"}/edit/${classID}/`,

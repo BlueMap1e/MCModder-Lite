@@ -67,7 +67,7 @@ export class StorageBuffer {
         data = JSON.parse(raw) as AppStorage[T] | undefined;
       }
     } catch (e) {
-      console.error("缓存项初始化失败: " + e);
+      console.error("缓存项初始化失败: ", e);
     }
 
     (this.storageRef[key] as ShallowRef<AppStorage[T]>) = shallowRef(
@@ -85,11 +85,11 @@ export class StorageBuffer {
         } catch (e) {
           // 跨标签页写入了非 JSON 文本（损坏值）：保留本地现值并记录，不抛未捕获异常
           // （审计 F-16）。本地后续写入会用完整对象把坏值覆盖回去。
-          console.error("[MCModder-Lite] 跨标签页缓存值解析失败，保留本地现值: " + e);
+          console.error("[MCModder-Lite] 跨标签页缓存值解析失败，保留本地现值: ", e);
           return;
         }
       }
-      this.storageRef[key]!.value = value as AppStorage[T];
+      this.storageRef[key]!.value = value;
     });
 
     return this;

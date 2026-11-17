@@ -227,12 +227,12 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
       splashStyle.textContent = `body { animation: mcmodder-fadein .3s ease forwards; } @keyframes mcmodder-fadein { from { opacity: 0; } to { opacity: 1; } }`;
       setTimeout(() => splashStyle.remove(), 300);
     } else {
-      void (async () => {
+      try {
         new Mcmodder();
-      })().catch((error) => {
+      } catch (error) {
         console.error("Mcmodder 启动失败：", error);
         clearScreenCover();
-      });
+      }
     }
   };
   let started = false;

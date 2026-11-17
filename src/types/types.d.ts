@@ -232,6 +232,8 @@ interface Settings {
   autolinkStyleSpace: boolean;
   preferredAutolinkStyle: 1 | 2;
   preferredDragPos: Record<string, number>;
+  /** 封面高斯模糊半径，按封面宽度的百分比计（模组编辑页工具，移植自上游 #127） */
+  coverGaussianBlurRadiusPercent: number;
   /** 主题样式包：预设 id 或 custom（自定义细调模式） */
   themePreset: import("../config/themePresets").ThemePresetId;
   /** 自定义细调模式开启中（开放主/副配色取色器）；由样式包控件读写，无面板行 */

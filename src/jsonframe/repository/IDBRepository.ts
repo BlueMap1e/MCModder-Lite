@@ -52,7 +52,12 @@ export class IDBRepository<T extends object> implements AppRepository<T> {
     };
   }
 
-  /** 初始化：按 schema 建表并取得表句柄 */
+  /**
+   * 初始化：按 schema 建表并取得表句柄。
+   * 同步实现，async 仅为满足 AppRepository 的 Promise 契约（保留实现内抛错 →
+   * 拒绝的语义），见接口头注释。
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async init() {
     this.version.stores(this.getSchema());
     this.table = this.db.table(this.tableName);
@@ -64,7 +69,11 @@ export class IDBRepository<T extends object> implements AppRepository<T> {
     return existFiles.concat(this.tempFiles) as string[];
   }
 
-  /** 新建空文件：仅登记文件名到内存，不落盘（见类注释「文件语义」） */
+  /**
+   * 新建空文件：仅登记文件名到内存，不落盘（见类注释「文件语义」）。
+   * 同步实现，async 仅为满足 AppRepository 的 Promise 契约，见接口头注释。
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async createFile(filename: string) {
     this.tempFiles.push(filename);
   }

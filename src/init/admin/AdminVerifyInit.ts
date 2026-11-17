@@ -192,7 +192,7 @@ export class AdminVerifyInit extends AdminBaseInit {
           if ($(".page-header .title").text() != "模组区内容审核") {
             return;
           }
-          this.compareAndUpdateVerifyList();
+          void this.compareAndUpdateVerifyList();
         },
         Math.max(interval * 60 * 1e3, 6e3),
       );
@@ -651,7 +651,7 @@ export class AdminVerifyInit extends AdminBaseInit {
 
           data.link ??= {};
           const isCustom = !Utils.isKeyOfObject(Values.siteMap, name);
-          data.link![index] = {
+          data.link[index] = {
             title: isCustom ? "other" : name,
             custom: isCustom ? name : "",
             text: desc,
@@ -720,7 +720,7 @@ export class AdminVerifyInit extends AdminBaseInit {
           const id = Utils.getKeyValueOfObject(Values.loaderID, loader);
           if (id !== undefined) {
             data.api ??= {};
-            data.api![id] = id;
+            data.api[id] = id;
           } else {
             console.warn("未知的运作方式：" + loader);
           }
@@ -1202,7 +1202,7 @@ export class AdminVerifyInit extends AdminBaseInit {
     if (lastSubmissionText === null) {
       throw new Error("`lastSubmissionText` is null");
     }
-    this.lastSubmission.value = Date.parse(lastSubmissionText[0]);
+    this.lastSubmission.value = Utils.parseUTC8Time(lastSubmissionText[0]);
     this.assistantSuggestionElement.value = this.verifyFrame!.find(".assistant-sug");
 
     if (this.timeline === undefined) {

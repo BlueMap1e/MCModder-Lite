@@ -37,7 +37,7 @@ export class ItemDisplay {
       } else {
         title = `
           <span class="mcmodder-slim-danger">未知物品</span>
-          <br><span class="mcmodder-item-regname mcmodder-monospace">${this.id}</span>
+          <br><span class="mcmodder-item-regname mcmodder-monospace">${String(this.id)}</span>
         `;
       }
     }

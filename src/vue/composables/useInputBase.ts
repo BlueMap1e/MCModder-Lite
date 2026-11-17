@@ -27,11 +27,14 @@ export function useInputBase<T>(opts: {
 
   const validate =
     opts.validate ??
-    ((newValue) => {
+    // 显式返回类型：`??` 右侧不承接断言时，字面量会被推断成缺 msg 的窄对象，
+    // 与左侧联合后 resp.msg 无从读取（原为 `as InputValidInfo<T>` 断言，
+    // no-unnecessary-type-assertion 判其冗余——它实际承担着这里的返回类型标注职责）
+    ((newValue): InputValidInfo<T> => {
       return {
         isok: valueRef.value != newValue,
         final: newValue,
-      } as InputValidInfo<T>;
+      };
     });
 
   const getDOMValue =

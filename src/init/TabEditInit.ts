@@ -28,7 +28,7 @@ export class TabEditInit extends Init {
   private recipeTable = $();
   private frame = $();
   private recipeFrame?: JQuery;
-  private onGuiOpen = async () => {};
+  private onGuiOpen = () => {};
   private oredict?: string[];
   private guiLocker = 0;
   private guiLockerToggle?: InstanceType<typeof CheckboxInput>;
@@ -163,7 +163,7 @@ export class TabEditInit extends Init {
         const parsedRecipe = this.parseRecipeRegisterName(recipe);
         const splitedRecipeList = this.splitRecipe(recipe);
         const splitedParsedRecipeList = this.splitRecipe(parsedRecipe /* , Number(nItemID) */);
-        for (const index in splitedRecipeList) {
+        for (const [index] of splitedRecipeList.entries()) {
           const recipe = splitedRecipeList[index];
           const parsedRecipe = splitedParsedRecipeList[index];
           const outputs = Object.values(parsedRecipe.out_id!);
@@ -210,14 +210,14 @@ export class TabEditInit extends Init {
     if (this.getGui() === id) return;
     let success = false;
     return new Promise<void>((resolve) => {
-      this.onGuiOpen = async () => {
+      this.onGuiOpen = () => {
         success = true;
         resolve();
       };
       $("#item-table-gui-select").selectpicker("val", id.toString());
       setTimeout(() => {
         if (!success) {
-          this.setGui(id).then(() => resolve());
+          void this.setGui(id).then(() => resolve());
         }
       }, 2e3);
     });
@@ -434,7 +434,7 @@ export class TabEditInit extends Init {
       <td><strong>概率 (%)</strong></td>`).appendTo(recipeTbody.children().first());
 
     let recipeTr, recipeTd, recipeInput;
-    for (const i in input) {
+    for (const [i] of input.entries()) {
       if (!input[i].valid) continue;
       recipeTr = $("<tr>").appendTo(recipeTbody);
       $(`<td class="input-head" data-toggle="tooltip" title="${i} 号材料">
@@ -508,7 +508,7 @@ export class TabEditInit extends Init {
     $("#item-table-gui-frame > .tab-li").hide();
     $(".tips").remove();
 
-    for (const i in output) {
+    for (const [i] of output.entries()) {
       if (!output[i].valid) continue;
       recipeTr = $("<tr>").appendTo(recipeTbody);
       $(`<td class="output-head" data-toggle="tooltip" title="${i} 号成品">
@@ -579,7 +579,7 @@ export class TabEditInit extends Init {
           .css("cursor", "no-drop");
     }
 
-    for (const i in fuel) {
+    for (const [i] of fuel.entries()) {
       if (!fuel[i].valid) continue;
       recipeTr = $("<tr>").appendTo(recipeTbody);
       $(`<td class="fuel-head" data-toggle="tooltip" title="燃料">
@@ -609,7 +609,7 @@ export class TabEditInit extends Init {
         .val(fuel[i].number);
     }
 
-    for (const i in extra) {
+    for (const [i] of extra.entries()) {
       if (!extra[i].valid) continue;
       recipeTr = $("<tr>").appendTo(recipeTbody);
 
@@ -714,22 +714,22 @@ export class TabEditInit extends Init {
     const target = e.currentTarget as HTMLInputElement;
     if (e.keyCode === 13) {
       let col = 0;
-      for (const i in target.parentNode?.parentNode?.childNodes)
-        if (target.parentNode.parentNode?.childNodes[Number(i)]?.childNodes[0] === target) {
-          col = Number(i);
-          break;
-        }
-      for (const i in target.parentNode?.parentNode?.parentNode?.childNodes)
-        if (
-          target.parentNode.parentNode.parentNode?.childNodes[Number(i)]?.childNodes[col]
-            ?.childNodes[0] === target
-        ) {
-          (
-            target.parentNode.parentNode.parentNode?.childNodes[parseInt(i) + (e.shiftKey ? -1 : 1)]
-              ?.childNodes[col]?.childNodes[0] as HTMLInputElement
-          )?.focus();
-          return;
-        }
+      const cells = target.parentNode?.parentNode?.childNodes;
+      if (cells)
+        for (let i = 0; i < cells.length; i++)
+          if (cells[i]?.childNodes[0] === target) {
+            col = i;
+            break;
+          }
+      const rows = target.parentNode?.parentNode?.parentNode?.childNodes;
+      if (rows)
+        for (let i = 0; i < rows.length; i++)
+          if (rows[i]?.childNodes[col]?.childNodes[0] === target) {
+            (
+              rows[i + (e.shiftKey ? -1 : 1)]?.childNodes[col]?.childNodes[0] as HTMLInputElement
+            )?.focus();
+            return;
+          }
     } else if (e.keyCode === 38 || e.keyCode === 40) {
       let num;
       if (target.value.trim() != "") num = Number(target.value.trim());

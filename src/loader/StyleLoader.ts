@@ -139,7 +139,7 @@ export class StyleLoader {
    *
    * @param parent 组合根 `Mcmodder` 实例（取用 `configRepository`、`styleColors`、`css` 等）。
    */
-  static async run(parent: Mcmodder) {
+  static run(parent: Mcmodder) {
     const configs = parent.configRepository;
     const module = import.meta.glob("../css/*.css", {
       query: "?raw",

@@ -158,20 +158,12 @@ export class HorizontalDraggableFrame {
         Math.min(this.rightCollapseThreshold, this.rightDraggableLimit) * 100,
       ),
     });
-    this.instance.addEventListener("pointerdown", (ev) =>
-      this.onInstancePointerdown(ev as PointerEvent),
-    );
-    this.instance.addEventListener("pointermove", (ev) =>
-      this.onInstancePointermove(ev as PointerEvent),
-    );
-    this.instance.addEventListener("pointerup", (ev) =>
-      this.onInstancePointerup(ev as PointerEvent),
-    );
-    this.instance.addEventListener("pointercancel", (ev) =>
-      this.onInstancePointerup(ev as PointerEvent),
-    );
+    this.instance.addEventListener("pointerdown", (ev) => this.onInstancePointerdown(ev));
+    this.instance.addEventListener("pointermove", (ev) => this.onInstancePointermove(ev));
+    this.instance.addEventListener("pointerup", (ev) => this.onInstancePointerup(ev));
+    this.instance.addEventListener("pointercancel", (ev) => this.onInstancePointerup(ev));
     this.instance.addEventListener("dblclick", () => this.onInstanceDblclick());
-    this.instance.addEventListener("keydown", (ev) => this.onInstanceKeydown(ev as KeyboardEvent));
+    this.instance.addEventListener("keydown", (ev) => this.onInstanceKeydown(ev));
   }
 
   /**

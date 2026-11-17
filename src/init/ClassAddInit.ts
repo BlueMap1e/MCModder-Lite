@@ -38,7 +38,7 @@ export class ClassAddInit extends Init {
     $('<a id="mcmodder-crash-protector">[刷新]</a>')
       .appendTo($("div.text-danger").first())
       .click(() => {
-        this.runCrashProtector();
+        void this.runCrashProtector();
       });
     this.refreshCrashList();
 

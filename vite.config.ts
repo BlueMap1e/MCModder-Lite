@@ -1,3 +1,4 @@
+import { readFileSync } from "node:fs";
 import { defineConfig, type Plugin } from "vite";
 import vue from "@vitejs/plugin-vue";
 import monkey from "vite-plugin-monkey";
@@ -36,7 +37,7 @@ const devPrivateNetworkAccess: Plugin = {
 const userscriptMeta = {
   name: "MCModder-Lite",
   author: "BlueMap1e (based on Mcmodder by Charcoal-Black)",
-  version: "2.4.1-lite.12",
+  version: "2.4.2-lite.1",
   description: "MCModder-Lite：MC 百科轻量编审脚本（AGPL-3.0）",
   license: "AGPL-3.0",
   homepageURL: "https://github.com/BlueMap1e/MCModder-Lite",
@@ -131,14 +132,95 @@ const devMonkeyClientCacheBust: Plugin = {
   },
 };
 
+/**
+ * 构建期压缩以 `?raw` 引入的 `src/css/*.css`（base / bbs / mcmodderUI 等）。
+ *
+ * 这批 CSS 走 `?raw` 以字符串形态进产物（StyleLoader / main.ts 注入 style 元素用），
+ * 不经 vite 对普通 css 的压缩管线，注释与空白原样进包——base.css 一家就有大量教学
+ * 注释。仓库源文件保持可读（教学注释留在 src），仅产物瘦身。
+ *
+ * 刻意不用 esbuild CSS 压缩（2026-11-17 实测裁定）：它会把同体规则跨位置合并，
+ * bbs.css 的 `html.dark .tl tr:hover th/td` 双份规则正是靠「第二份写在置顶行规则
+ * 之后」压住悬停底色——合并后置顶行规则反超，悬停置顶行底色真实改变（级联顺序
+ * 被改写，且仅产物内变，源码无痕）。本函数只做两件事：删注释、把空白串收敛成
+ * 单个空格——不合并规则、不改写任何声明，级联顺序与源码逐一对应。
+ * 字符串感知：引号内（content/属性选择器值）不做任何处理。
+ *
+ * 顺带把 AGENTS.md 的铁律「src/css 里不得出现字面 style 标签」变成构建期断言：
+ * Utils.addStyle 走 jQuery .html()，字面 style 标签会把整张样式表截断成两半。
+ */
+const minifyRawCss: Plugin = {
+  name: "mcmodder-minify-raw-css",
+  enforce: "pre",
+  load(id) {
+    if (!/\/src\/css\/[^?]+\.css\?raw$/.test(id.replaceAll("\\", "/"))) return null;
+    const css = readFileSync(id.split("?")[0], "utf8");
+    let out = "";
+    let inStr: string | null = null;
+    for (let i = 0; i < css.length;) {
+      const c = css[i];
+      if (inStr) {
+        out += c;
+        if (c === "\\") {
+          out += css[i + 1] ?? "";
+          i += 2;
+          continue;
+        }
+        if (c === inStr) inStr = null;
+        i++;
+        continue;
+      }
+      if (c === '"' || c === "'") {
+        inStr = c;
+        out += c;
+        i++;
+        continue;
+      }
+      if (c === "/" && css[i + 1] === "*") {
+        const end = css.indexOf("*/", i + 2);
+        if (end < 0) break;
+        i = end + 2;
+        out += " ";
+        continue;
+      }
+      if (/\s/.test(c)) {
+        let j = i;
+        while (j < css.length && /\s/.test(css[j])) j++;
+        out += " ";
+        i = j;
+        continue;
+      }
+      out += c;
+      i++;
+    }
+    if (/<\/?style[\s>]/i.test(out)) {
+      throw new Error(`[mcmodder-minify-raw-css] ${id} 压缩后出现字面 style 标签，构建中止`);
+    }
+    return `export default ${JSON.stringify(out)}`;
+  },
+};
+
 // https://vitejs.dev/config/
 export default defineConfig({
   // GreasyFork 要求用户脚本不得混淆或压缩：GF_UNMINIFIED=1 时产出未压缩变体，
   // 供向 GreasyFork 提交使用；正常构建保持 esbuild 压缩不变。
-  build: { minify: process.env.GF_UNMINIFIED ? false : "esbuild" },
+  build: {
+    minify: process.env.GF_UNMINIFIED ? false : "esbuild",
+    rollupOptions: {
+      output: {
+        // userscript 是单文件分发：源码里的动态 import()（markdown-it）会被 rollup
+        // 裂成独立 chunk，不内联的话 chunk 不会进产物，真机 TM 桥接域把它相对解析
+        // 到页面 URL 下必 404（2026-11-17 真机发现：MD 编辑器转换未处理异常刷屏）。
+        // harness 无 TM 沙箱桥接，探不出此病——动态 import 改动必须真机点一次。
+        // 内联后语义不变：模块工厂仍在首次 import() 时才求值。
+        inlineDynamicImports: true,
+      },
+    },
+  },
   plugins: [
     devPrivateNetworkAccess,
     devMonkeyClientCacheBust,
+    minifyRawCss,
     vue(),
     monkey({
       entry: "src/main.ts",

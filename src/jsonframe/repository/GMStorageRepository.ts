@@ -13,6 +13,10 @@ import type { AppRepository } from "./AppRepository";
  *   大 JSON 文件（尤其带 Base64 图标）下开销很大 —— 这也是 `ItemIDBRepository` 被引入的原因。
  * - 所有方法虽声明为 async，但底层为同步调用，仅为了满足 `AppRepository` 接口。
  */
+/* eslint-disable @typescript-eslint/require-await --
+ * AppRepository 约定全部方法返回 Promise（见 AppRepository.ts 头注释）：本实现底层
+ * 全同步，async 包装是接口一致性的承重结构，同时保留「实现内抛错 → Promise 拒绝」
+ * 的语义，勿改为同步方法或 Promise.resolve 直返。 */
 export class GMStorageRepository<T extends object> implements AppRepository<T> {
   private readonly configs: ConfigRepository;
   /** 承载全部文件的 GM 存储键名（须为 `AppStorage` 中值为 `Record<string, object[]>` 的键） */
@@ -63,3 +67,4 @@ export class GMStorageRepository<T extends object> implements AppRepository<T> {
     this.configs.set(this.configName, filename, data);
   }
 }
+/* eslint-enable @typescript-eslint/require-await */

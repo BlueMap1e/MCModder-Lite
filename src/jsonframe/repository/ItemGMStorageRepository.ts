@@ -58,7 +58,12 @@ export class ItemGMStorageRepository
     });
   }
 
-  /** GM 形态数据本就内嵌图标，无需补回，直接原样返回入参 */
+  /**
+   * GM 形态数据本就内嵌图标，无需补回，直接原样返回入参。
+   * 同步实现，async 仅为满足 ItemRepository 的 Promise 契约（保留实现内抛错 →
+   * 拒绝的语义），见接口头注释。
+   */
+  // eslint-disable-next-line @typescript-eslint/require-await
   async readByItems(items: Item[]) {
     return items;
   }

@@ -100,6 +100,31 @@ export default defineConfig([
     },
   },
   {
+    // 类型感知 lint（2026-11-17 跑量后收编的精选子集）：只收真 bug 探测器，不带
+    // no-unsafe-* / no-explicit-any 噪音族——宿主 globals 本就豁免，全量实测 778 条
+    // 里 87% 是它，收编即噪音洪水。刻意不 re-set no-unused-vars，保留上方块里
+    // `_` 前缀豁免。代价：projectService 令 lint 7.2s → 10.3s（类型器成本为主）。
+    // .vue 的类型感知需要 projectService 经 vue-eslint-parser 转发，暂未开启。
+    files: ["src/**/*.ts"],
+    languageOptions: {
+      parserOptions: { projectService: true },
+    },
+    rules: {
+      "@typescript-eslint/no-floating-promises": "error",
+      "@typescript-eslint/no-misused-promises": "error",
+      "@typescript-eslint/no-for-in-array": "error",
+      "@typescript-eslint/await-thenable": "error",
+      "@typescript-eslint/no-implied-eval": "error",
+      "@typescript-eslint/no-redundant-type-constituents": "error",
+      "@typescript-eslint/no-base-to-string": "error",
+      "@typescript-eslint/restrict-template-expressions": "error",
+      "@typescript-eslint/restrict-plus-operands": "error",
+      "@typescript-eslint/no-unnecessary-type-assertion": "error",
+      "@typescript-eslint/require-await": "error",
+      "@typescript-eslint/unbound-method": "error",
+    },
+  },
+  {
     files: ["src/main.ts"], // 祖传代码，重构前豁免
     rules: {
       "no-empty": "off",

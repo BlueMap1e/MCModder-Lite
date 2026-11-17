@@ -116,12 +116,6 @@ export class Values {
         levelup: "/static/public/sound/task/levelup.ogg",
       },
     },
-    js: {
-      // 运行时按需从 npmmirror 加载的两个库（MD 编辑器 / 中英空格），避免 cdnjs /
-      // jsdelivr 在大陆网络下不可达。其余第三方库在构建期打包。
-      markdownit: "https://registry.npmmirror.com/markdown-it/11.0.1/files/dist/markdown-it.min.js",
-      pangu: "https://registry.npmmirror.com/pangu/4.0.7/files/dist/browser/pangu.min.js",
-    },
     nightMode: {
       imagesNone: "https://i.mcmod.cn/editor/upload/20241213/1734019784_179043_sDxX.jpg",
     },
