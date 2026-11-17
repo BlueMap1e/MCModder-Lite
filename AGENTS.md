@@ -187,6 +187,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - **Page-specific feature** -> new `Init` subclass in `src/init/` (`canRun()` = URL/DOM gate,
   `run()` = DOM work), registered in `src/loader/InitLoader.ts`. Never put page logic in
   `src/main.ts`.
+- **Eval-time early injection** (document-start level, bypasses InitLoader) -> leaf module
+  following the `earlySplash.ts` / `CodeBrushInit.ts` pattern: only the `$` alias imported,
+  host-side logic injected as page-context script text in `String.raw` (no backticks, no
+  `${` in the content). Justification for bypassing InitLoader lives in each module's header.
 - **SPA-like pages** (center, admin) -> sub-inits in `src/init/center/` / `src/init/admin/`
   dispatched by `MutationObserver`, following `CenterInit` / `AdminInit`. `AdminBaseInit`
   subclasses are matched by their `h1.title` and run on every navigation: repeatable
@@ -244,6 +248,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 
 - `src/main.ts` — `document-start` bootstrap: anti-flash overlay, `bbs.mcmod.cn` night mode,
   waits for host jQuery, then constructs `Mcmodder`.
+- `src/init/CodeBrushInit.ts` — eval-time leaf module (see "Eval-time early injection"):
+  code-highlight registration / preview bridge / language self-detection.
 - `src/Mcmodder.ts` — composition root: services, `InitLoader`, `StyleLoader`, `main()`.
 - `src/loader/*` — `ConfigLoader`, `StyleLoader`, `StorageBufferLoader`,
   `ScheduleRequestLoader`, `MenuCommandLoader`, `InitLoader`.
@@ -267,3 +273,7 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   commit (`--target`), and `release.cjs` refuses to publish unless the first `## [...]`
   heading in `CHANGELOG.md` equals `package.json`'s version. `npm run pack` enforces the
   same check.
+- The literal `[release]` anywhere in a push's head commit message triggers the release job.
+  Later commits touching a released version must avoid that literal — `release.cjs` skips
+  when the tag already exists (added 2026-11-17 after a red false positive), but keeping it
+  out of messages keeps CI history clean.
