@@ -93,6 +93,15 @@ async function runScenario(name, url, prepare, assert, { waitFor = ".rank-list-b
       check(`${name}：站点安全验证`, false, "SKIPPED（安全验证页）", true);
       return;
     }
+    // 榜单按日期区间取数，UTC+8 零点后当日区间暂无数据是站点正常形态（假红实录
+    // 2026-11-19 00:02 CI），此时断言目标不存在，与安全验证同样按 SKIPPED 处理
+    const emptyRank = await page.evaluate(
+      () => !!document.querySelector(".rank-list-block li.empty"),
+    );
+    if (emptyRank && waitFor === ".rank-list-block li a.name") {
+      check(`${name}：站点榜单数据`, false, "SKIPPED（榜单区间暂无数据，多为零点后）", true);
+      return;
+    }
     await page.waitForSelector(waitFor, { timeout: 30000 });
     await prepare(page);
     const { bundle, requires } = readBundle();
