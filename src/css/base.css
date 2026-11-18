@@ -3082,6 +3082,19 @@ html.mcmodder-ueditor-dialog.dark body .tabbody .panel {
   background-color: var(--mcmodder-color-background);
 }
 
+/* mcmodderUI 的卡片化规则（.panel { border-radius / padding / box-shadow /
+   margin-bottom }，为 Bootstrap 面板设计）随整份 parent.css 注入弹窗 iframe 后，
+   命中 UEditor 上传面板 #upload.panel——站点 image.css 按「无内边距 + content-box」
+   设计的 630×346 面板被撑成 654×370，弹窗出现横纵滚动条（2026-11-18 真机回归报告，
+   昼夜皆复现：该皮肤规则不分昼夜）。此处以 (0,1,1) 特异性反制皮肤的 (0,1,0)
+   （特异性制胜，与级联顺序无关），恢复弹窗面板的站点原生盒模型。 */
+html.mcmodder-ueditor-dialog .panel {
+  padding: 0;
+  margin-bottom: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+
 /* 远程图片预览区 */
 html.mcmodder-ueditor-dialog.dark body #remote #preview {
   border-color: var(--mcmodder-color-background-dark2);
@@ -3097,8 +3110,42 @@ html.mcmodder-ueditor-dialog.dark body #upload .filelist li:not(.filePickerBlock
   background-image: none;
   background-color: var(--mcmodder-color-background-dark1);
 }
+/* 上条规则的盲区：filePickerBlock 自身的白底图标贴图 + #eee 边框（图标烧在图里，
+   清图即失图标）。用 invert(0.9) 整格反相——白色精确落到 255×0.1 ≈ 暗1（#1a1a1a），
+   灰色图标反相后仍为中灰可辨，亮边框同步转暗（2026-11-18 真机报告）。
+   反相区内不得叠加调色规则（HANDOFF Discuz 地雷图谱：反相区计算色与渲染色相反）。 */
+html.mcmodder-ueditor-dialog.dark body #upload .filelist li.filePickerBlock {
+  filter: invert(0.9);
+}
 html.mcmodder-ueditor-dialog.dark body #upload .statusBar .info {
   color: var(--mcmodder-color-text-dark2);
+}
+
+/* 状态栏按钮排（WebUploader 渲染）：「继续添加」白底灰字、「开始上传」亮青底
+   （站点 #00b7ee），夜间刺眼（2026-11-18 真机报告）。继续添加走暗底浅字，
+   开始上传保留色相、压低明度（白字对比约 4.8:1）；悬停态同强度反制——注意
+   webuploader-pick 的悬停是 JS 挂的 class（.webuploader-pick-hover），不是
+   :hover 伪类，两个机制都要点名。 */
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .webuploader-pick,
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .webuploader-pick-hover {
+  border-color: var(--mcmodder-color-background-dark3);
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+}
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .webuploader-pick:hover {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn,
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn.state-uploading,
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn.state-paused {
+  border-color: transparent;
+  background-color: #0e6d96;
+  color: #fff;
+}
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn:hover,
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn.state-uploading:hover,
+html.mcmodder-ueditor-dialog.dark body #upload .statusBar .btns .uploadBtn.state-paused:hover {
+  background-color: #0b5d80;
 }
 
 /* 在线图片 / 图片搜索标签页：图墙底色、卡片边框与链接条 */
