@@ -9,6 +9,12 @@ Removed modules (attitudes/Supabase, GIF editor, ECharts dashboards, achievement
 request queues, JSON import UI, structure editor, entertainment extras) stay removed unless
 the user explicitly asks.
 
+**Upstream interaction**: never open PRs/issues over design or philosophy differences
+(including the removed modules). Do send minimal drive-by fixes when a module Lite shares
+with upstream (isomorphic code) has an obvious, reproducible bug — behavior-only diff,
+root cause + reproduction in the PR body, no comment/style/scope churn. Precedent:
+Charcoal-Black/Mcmodder#133.
+
 ## Commands
 
 ```bash
