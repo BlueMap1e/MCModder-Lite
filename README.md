@@ -10,8 +10,6 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 
 需要功能更全、更好玩的版本，请用上游 [Mcmodder](https://github.com/Charcoal-Black/Mcmodder)。
 
----
-
 ## 安装
 
 1. 安装用户脚本管理器：
@@ -24,8 +22,6 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 如果与上游 Mcmodder 同时安装，尽量别同时打开。 两者很可能会冲突。
 
 出于轻量化，网络安全与常见的使用习惯考虑，MCModder-Lite移除了多账号等一系列功能。
-
----
 
 ## 修改详情
 
@@ -43,16 +39,12 @@ MC 百科（[mcmod.cn](https://www.mcmod.cn)）轻量UI优化与编审辅助脚�
 
 **安全**：外部内容以纯文本渲染，链接仅放行 http(s)，请求失败显式报错。
 
----
-
 ## 方向
 
 - **设计理念**：稳定、安全、兼容优先，不追求功能数量。
 - 上游修复按需移植，不直接合并上游分支。
 
 完整变更记录见 [CHANGELOG.md](./CHANGELOG.md)，架构与代码约定见 [AGENTS.md](./AGENTS.md)。
-
----
 
 ## 反馈与贡献
 
