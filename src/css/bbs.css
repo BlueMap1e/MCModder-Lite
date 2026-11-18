@@ -902,6 +902,15 @@ html.dark .ratl th a {
   color: var(--mcmodder-color-link);
 }
 
+/* 评分表数字徽章（.ratl .xw1 .xi1）：站点 (0,3,0) 的 #FFF4DD 奶油底压过通用
+   .xi1 夜间规则（(0,2,2)——类列 3>2，元素列不参与比较），奶油底在暗底上刺眼
+   （2026-11-19 真机报告「没感觉」实为字色已改、底色未动）。同结构反制：
+   暗2 徽章底 + 基础琥珀字，保留强调语义 */
+html.dark .ratl .xw1 .xi1 {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-accent);
+}
+
 html.dark .mbx_left,
 html.dark .mbx_right,
 html.dark .mbx .line {
