@@ -762,11 +762,11 @@ function switchPlatform(p: PlatformId) {
 .mcmodder-vh-table-wrap table {
   min-width: 860px;
 }
-/* 可读性：行底用中性面板色统一抬升（不用主题色染色，避免随主题变暖/变蓝整体发色），
-   主题色只出现在悬停焦点上；行间用细分隔线保持可扫读性。
-   仅作用于此表的实例 id，不影响其它 GenericTable（编辑表格等）的既有观感 */
+/* 行底透明（平底表，GitHub dark 风格）：原 dark2 满铺实底在暗页上整块灰板观感
+   沉重（2026-11-19 用户反馈「灰阶不舒服」）；分隔交给 td 的 dark3 下边线，悬停
+   提亮已有专属规则。仅作用于此表的实例 id，不影响其它 GenericTable 的既有观感 */
 #mcmodder-version-menu tr:not(.mcmodder-table-empty) {
-  background-color: var(--mcmodder-color-background-dark2);
+  background-color: transparent;
 }
 #mcmodder-version-menu tbody td {
   padding: 6px 8px;
