@@ -141,6 +141,12 @@ html.dark .top-main .navs .app-url .li:hover {
   background-color: var(--mcmodder-color-background-dark3);
 }
 
+/* 下拉菜单项文字（.li .text，如「命令方块指令生成」）：站点原生 #555 压暗底
+   对比度极差（2026-11-19 真机报告），提亮到次级文字色 */
+html.dark .top-main .navs .app-url .li .text {
+  color: var(--mcmodder-color-text-dark1);
+}
+
 html.dark .top-main .info .separate-li,
 html.dark .top-main .more-info .separate-li {
   border-top-color: var(--mcmodder-color-background-dark3);
@@ -920,9 +926,11 @@ html.dark .diban {
   border: 1px solid var(--mcmodder-color-background-dark3);
 }
 
+/* 评分表数字（参与人数/RF）等 .xi1 强调数字：琥珀 #fbbf24 在暗底上偏亮
+   （2026-11-19 真机报告「有点亮」），降一档到基础强调色，保留高亮语义 */
 html.dark body .xi1 {
   background-color: transparent;
-  color: var(--mcmodder-color-accent-dark2);
+  color: var(--mcmodder-color-accent);
 }
 
 html.dark body#nv_forum .tl tr.ts th,
