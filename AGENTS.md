@@ -94,8 +94,13 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
   switching and per-account credential storage were removed on purpose; multi-account is the
   browser's job. `GM_cookie` is used only for `yxd_token`; the write is read back with
-  `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless). Do not reintroduce
-  account switching.
+  `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless). The write is
+  deliberately `httpOnly: false`: the token arrives via a `<script>` challenge payload and
+  lands through `document.cookie`, which cannot set HttpOnly, so non-HttpOnly is the
+  site-native shape — tightening ours would make the browser silently ignore the site's own
+  same-name refresh writes (settled 2026-11-18: no site JS references the name, no
+  anonymous `Set-Cookie` carries it, and the live jar holds no `yxd_token` at all between
+  challenges). Do not reintroduce account switching.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
@@ -146,14 +151,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   `listfile`); if the site changes them the button fails silently. It is off by default, and
   `Values.ueditorFileAccept` must list every extension the setting description promises.
 - Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Utils` /
-  `Values`, per-page CSS or bundle splitting. (Zero-reference `Utils`/`Values` members
-  were audited to 0 on 2026-11-13 — dead-file scanning now lives in the e2e workspace as
-  `dead-files2.mjs`; the older `dead-files.mjs` self-matches basenames and reports a
-  structurally false 0. `dead-files2.mjs` itself had a third blind spot — side-effect
-  imports (`import "x"` with no `from`) were missed, which briefly flagged
-  `src/devCheck.ts` (a live, `main.ts`-imported dev check) as DEAD; fixed 2026-11-17,
-  full-tree re-scan = 0 dead. Trust a "DEAD" verdict only after grepping the symbol
-  repo-wide.)
+  `Values`, per-page CSS or bundle splitting. (Zero-reference members audited to 0
+  on 2026-11-13, full-tree re-scan = 0 on 2026-11-17 — dead-file scanning lives in the
+  e2e workspace as `dead-files2.mjs`; both earlier scanners were structurally
+  untrustworthy (self-matching basenames, missed side-effect imports), so trust a
+  "DEAD" verdict only after grepping the symbol repo-wide.)
   The shipped bundle is ~1.6 MB (2026-11-17: libs all bundled + `?raw` CSS now
   comment/whitespace-stripped at build by the `minifyRawCss` plugin in
   `vite.config.ts` — deliberately NOT esbuild CSS minify, whose cross-position

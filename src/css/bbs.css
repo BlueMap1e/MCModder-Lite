@@ -390,6 +390,30 @@ html.dark .pcb .attach_nopermission a {
   color: var(--mcmodder-color-link);
 }
 
+/* 模组名片（.modinfo，「本贴模组名片」插件块，仅带关联模组的帖子渲染，站点样式
+   内联在 viewthread 页面的 style 元素里——Discuz 缓存 CSS 与模板级审计都扫不到）：
+   白底卡片 + #f1f5fb 标题条 + #CCC 图片框，夜间是刺眼白块（2026-11-18 真机报告
+   thread-24237，问题继承自上游）。卡片抬升为暗2 + 暗3描边（与 .pob 徽章/快速回帖
+   框同约定），标题条反转为暗1（日间即比卡片深的灰条，镜像其关系）；蓝签 #71b3f7
+   白字是品牌强调色，同 .locked strong 的保留思路不动；描述文字日间吃站点深色继承，
+   翻底后必须显式提亮；名称链接色已由全局 html.dark a 覆盖，无需单列。 */
+html.dark .modinfo {
+  background-color: var(--mcmodder-color-background-dark2);
+  border: 1px solid var(--mcmodder-color-background-dark3);
+}
+
+html.dark .modinfo .title {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+
+html.dark .modinfo .block .img {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
+html.dark .modinfo .block .text {
+  color: var(--mcmodder-color-text);
+}
+
 html.dark #fastpostmessage {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);

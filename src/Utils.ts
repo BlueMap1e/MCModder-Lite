@@ -1293,8 +1293,10 @@ export class Utils {
               domain: hostname,
               path: path || "/",
               secure: true,
-              // 站点以脚本形式下发 token，客户端是否读取尚未证实；
-              // 暂不设 HttpOnly，避免破坏站点自身的 token 刷新（待实测后再收紧）
+              // token 由 <script> 挑战载荷下发、经客户端 document.cookie 落地——结构上
+              // 不可能带 HttpOnly，非 HttpOnly 即站点原生形态。设 true 反而会使浏览器
+              // 静默忽略站点自身的同名 document.cookie 刷新写入，故刻意保持 false
+              //（2026-11-18 取证查结：站点 JS 与 Set-Cookie 均无此名，勿收紧）
               httpOnly: false,
             },
             (err) => {
