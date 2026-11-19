@@ -426,7 +426,7 @@ export class AdvancedUEditor extends UEditor {
     }
 
     if (this.configs.getSettings("htmlEditor")) {
-      this.htmlEditorOption[1].setCurrentValue(true); // Modrinth 日志以 Md 格式保存，自动添加日志时总是开启
+      this.htmlEditorOption[1].setCurrentValue(true); // 恢复用户上次的 HTML 编辑器开关
     }
 
     let isVertical = this.configs.getSettings("editorVertical");
