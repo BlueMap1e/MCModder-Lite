@@ -1833,3 +1833,15 @@ html.dark .mg_img {
 html.dark .ntc_body {
   color: var(--mcmodder-color-text) !important;
 }
+
+/* Layer 2 渲染实锤（2026-11-19，用户真机判「不刺眼」但同意顺手收口）：
+   帖内分隔线 hr.l（站点原生 #CDCDCD 浅灰在暗底偏亮）压到暗3 一档 */
+html.dark hr.l {
+  background-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-background-dark3);
+}
+/* 帖头「回复/浏览」统计数字（.yudi_tp_action）：站点原生 #666 小字号在暗底偏暗，
+   提亮一档到次级文字色 */
+html.dark .yudi_tp_action span {
+  color: var(--mcmodder-color-text-dark1);
+}
