@@ -1763,6 +1763,13 @@ html.dark .cgtl caption {
   border-color: var(--mcmodder-color-background-dark3);
   color: var(--mcmodder-color-text);
 }
+/* 类型信息表的 th/td:站点只给了下边框颜色(#C2D5E3),其余三边未指定 → 按规范
+   继承 currentColor,夜间文字提亮后三边随之变亮框,紧排成一摞亮框(2026-11-19
+   真机报告「样式僵硬」,编辑员申请模板帖)。显式给暗色边框统一四边 */
+html.dark .cgtl th,
+html.dark .cgtl td {
+  border-color: var(--mcmodder-color-background-dark3);
+}
 
 /* 特殊主题自定义表单（编辑员申请等 .exfm 表单，table.tfm）：站点
    .exfm.cl table td/th 写死 #e5e7f2 浅底，特异性 (0,2,2) 压过通用 .ptm
