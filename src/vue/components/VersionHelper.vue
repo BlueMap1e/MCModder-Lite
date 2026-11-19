@@ -444,11 +444,20 @@ const ghModule: PlatformModule = {
 
 const modules: Record<PlatformId, PlatformModule> = { cf: cfModule, mr: mrModule, gh: ghModule };
 
-/** CF 文件列表：分页拉取（1s 间隔），保留站点人机验证的重试与引导 */
+/** CF 文件列表：分页拉取（1s 间隔），保留站点人机验证的重试与引导。
+ * 失败收口不变量：外层 promise 必须 settle（resolve 或 reject）——内部链一旦死亡
+ * （.then 无 .catch / 解析抛错无人接），caller 的 catch/finally 永不执行，
+ * querying 永久卡死，面板表现为「无限转圈」（上游 issue #128 的症状）。 */
 function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
   return new Promise((resolve, reject) => {
     let fileList: NormalizedRow[] = [];
     let captchaAttempt = 0;
+    const fail = (error: unknown): void => {
+      // 进度条与转圈同处加载遮罩内，Lite 流程遮罩不重进 loading 态（无 showLoading
+      // 调用方），此 hide 为防御性收口；真正可见的失败反馈靠 caller 的 setStatus
+      table.value!.loadingProgress!.hide();
+      reject(error instanceof Error ? error : new Error(String(error)));
+    };
     const work = (index: number): void => {
       parent.utils
         .createRequest(
@@ -477,15 +486,23 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
                 })
                 .then((isConfirm) => {
                   if (isConfirm.value) GM_openInTab("https://www.curseforge.com");
-                  reject(new Error("CF 人机验证未通过"));
+                  fail(new Error("CF 人机验证未通过"));
                 });
             }
             return;
           }
-          const data = JSON.parse(resp.responseText) as {
-            pagination: { totalCount: number };
-            data: CFGameVersion[];
-          };
+          let data: { pagination?: { totalCount: number }; data?: CFGameVersion[] };
+          try {
+            data = JSON.parse(resp.responseText);
+          } catch {
+            // 拦截页形态不止「Just a moment...」一种标题，非 JSON 响应在此显式失败
+            fail(new Error(`CF 响应不是有效数据（HTTP ${resp.status}），可能被拦截或限流`));
+            return;
+          }
+          if (!data?.pagination || !Array.isArray(data.data)) {
+            fail(new Error(`CF 响应缺少版本列表字段（HTTP ${resp.status}）`));
+            return;
+          }
           const releaseMap = ["-", "Release", "Beta", "Alpha"];
           fileList = fileList.concat(
             data.data.map((i) => ({
@@ -513,6 +530,10 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
             table.value!.loadingProgress!.hide();
             resolve(fileList);
           }
+        })
+        .catch((error: unknown) => {
+          // 网络失败/超时/中止（createRequest reject）与本页处理的任何异常统一收口
+          fail(error);
         });
     };
     work(0);
