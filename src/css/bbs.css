@@ -1605,6 +1605,23 @@ html.dark ul.reasonselect {
 html.dark ul.reasonselect li:hover {
   color: var(--mcmodder-color-accent);
 }
+/* SweetAlert 操作反馈弹窗(评分成功等):主站夜间早有同款适配(base.css 的
+   .sweet-alert 规则组),但 base.css 不在 bbs 注入,社群域弹窗白壳依旧,夜间
+   浅字压白底(2026-11-19 真机报告「评分成功弹窗白底」)——按主站同款移植 */
+html.dark .sweet-alert {
+  background-color: var(--mcmodder-color-background);
+}
+html.dark .sweet-alert h2 {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .sweet-alert p {
+  color: var(--mcmodder-color-text-dark2);
+}
+html.dark .sweet-alert .sa-icon.sa-success::before,
+html.dark .sweet-alert .sa-icon.sa-success::after,
+html.dark .sweet-alert .sa-icon.sa-success .sa-fix {
+  background-color: var(--mcmodder-color-background);
+}
 /* 弹窗内输入框的 dark3 边在深色弹窗里对比不足、易被忽略(同上真机报告),
    边框提亮一档到中性中灰 */
 html.dark .fwin .px {
