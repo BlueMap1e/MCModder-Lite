@@ -13,7 +13,13 @@ the user explicitly asks.
 (including the removed modules). Do send minimal drive-by fixes when a module Lite shares
 with upstream (isomorphic code) has an obvious, reproducible bug — behavior-only diff,
 root cause + reproduction in the PR body, no comment/style/scope churn. Precedent:
-Charcoal-Black/Mcmodder#133. **Boundary (2026-11-19)**: the user's own repos
+Charcoal-Black/Mcmodder#133. **Commit messages in our repos must never contain
+cross-repo issue references** (`Charcoal-Black/Mcmodder#N` or any `owner/repo#N`
+form): GitHub scans pushes and posts a `referenced` event to that issue's timeline —
+an unauthorized trace in upstream space (incident 2026-11-20 on issue #128; the event
+is immutable once created — amend, force push and commit deletion do NOT remove it).
+Refer to upstream issues as 「上游 issue N」 plain text, no `#` marker.
+**Boundary (2026-11-19)**: the user's own repos
 (BlueMap1e/MCModder-Lite, BlueMap1e/Mcmodder) are free to operate — commits, releases,
 branch pushes, rollbacks, no permission needed. Anything landing in Charcoal-Black spaces
 (push, PR, comment) happens only on the user's explicit per-action instruction — prepare
