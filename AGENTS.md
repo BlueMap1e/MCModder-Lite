@@ -9,27 +9,15 @@ Removed modules (attitudes/Supabase, GIF editor, ECharts dashboards, achievement
 request queues, JSON import UI, structure editor, entertainment extras) stay removed unless
 the user explicitly asks.
 
-**Upstream interaction**: never open PRs/issues over design or philosophy differences
-(including the removed modules). Do send minimal drive-by fixes when a module Lite shares
-with upstream (isomorphic code) has an obvious, reproducible bug — behavior-only diff,
-root cause + reproduction in the PR body, no comment/style/scope churn. Precedent:
-Charcoal-Black/Mcmodder#133. **Commit messages in our repos must never contain
-cross-repo issue references** (`Charcoal-Black/Mcmodder#N` or any `owner/repo#N`
-form): GitHub scans pushes and posts a `referenced` event to that issue's timeline —
-an unauthorized trace in upstream space (incident 2026-11-20 on issue #128; the event
-is immutable once created — amend, force push and commit deletion do NOT remove it).
-Refer to upstream issues as 「上游 issue N」 plain text, no `#` marker.
-**Boundary (2026-11-19)**: the user's own repos
+**Upstream**: `Charcoal-Black/Mcmodder` is a read-only reference — never merge it; port
+manually when needed. Nothing lands in upstream space (push / PR / issue / comment) except
+on the user's explicit instruction. **Commit messages in our repos must never contain
+cross-repo issue references** (any `owner/repo#N` form): GitHub's push scan posts a
+permanent `referenced` event to that issue's timeline, and the event survives amend /
+force push / commit deletion (empirically confirmed 2026-11-20). If an upstream issue must
+be mentioned, write 「上游 issue N」 plain text. The user's own repos
 (BlueMap1e/MCModder-Lite, BlueMap1e/Mcmodder) are free to operate — commits, releases,
-branch pushes, rollbacks, no permission needed. Anything landing in Charcoal-Black spaces
-(push, PR, comment) happens only on the user's explicit per-action instruction — prepare
-branches, diffs and body drafts locally, then hand over; general intent ("deliver today")
-is not authorization. **Endorsement gate**: a PR the user cannot personally vouch
-for must not be built beyond a branch and a short summary — confirm the user is
-willing to sign the diff before assembling full packages; if they cannot read the
-diff well enough (upstream legacy code, diverged surfaces), the PR stays unopened
-and the materials go dormant (2026-11-20: the #128 fix package was built and
-validated in full, then the user declined to open the PR on exactly these grounds).
+branch pushes, rollbacks.
 
 ## Commands
 
@@ -115,14 +103,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   body content.
 - The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
   switching and per-account credential storage were removed on purpose; multi-account is the
-  browser's job. `GM_cookie` is used only for `yxd_token`; the write is read back with
-  `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless). The write is
-  deliberately `httpOnly: false`: the token arrives via a `<script>` challenge payload and
-  lands through `document.cookie`, which cannot set HttpOnly, so non-HttpOnly is the
-  site-native shape — tightening ours would make the browser silently ignore the site's own
-  same-name refresh writes (settled 2026-11-18: no site JS references the name, no
-  anonymous `Set-Cookie` carries it, and the live jar holds no `yxd_token` at all between
-  challenges). Do not reintroduce account switching.
+  browser's job — do not reintroduce it. `GM_cookie` is used only for `yxd_token`; the write
+  is read back with `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless).
+  The write is deliberately `httpOnly: false` — non-HttpOnly is the site-native shape (the
+  token lands via `document.cookie`, which cannot set HttpOnly); see the comment in `Utils.ts`.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
@@ -148,17 +132,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - Global keyboard shortcuts must return early when the event target is an `input`,
   `textarea`, `select` or `isContentEditable`; otherwise they swallow native Ctrl+A/C/Z on
   every page where the owner is mounted.
-- **Picking a keyboard shortcut means a four-layer conflict check**: ① browser menu
-  accelerators; ② site-native bindings — mcmod.cn edit pages bind keys in **inline scripts**,
-  so page-source forensics is mandatory; ③ browser/app layers (Zen, overlay tools) — if the
-  keybind recorder cannot capture a key at all, something above the page swallowed it:
-  change layers, don't re-pick blind; ④ hand ergonomics (left-hand keyboard / right-hand
-  mouse). **Prefer taking over a site-native documented key with a capture-phase listener
-  over inventing a new one** — a site's own key is guaranteed to reach the page on every
-  machine (see the Alt+X takeover in `AdvancedUEditor.advinit`).
-- Conventions live here, not in code comments, chat logs or PR descriptions — a rule recorded
-  anywhere else is a rule nobody can find. A working decision's reason lands in this file
-  (rule) or HANDOFF.md (environment facts / anecdotes).
+- **Keyboard shortcuts**: before picking one, check browser menu accelerators and
+  site-native bindings — mcmod.cn edit pages bind keys in **inline scripts**, so
+  page-source forensics is mandatory. Prefer taking over a site-native documented key with
+  a capture-phase listener over inventing a new one — a site's own key is guaranteed to
+  reach the page on every machine (see the Alt+X takeover in `AdvancedUEditor.advinit`).
+- Conventions live here, not in code comments or chat logs — a rule recorded anywhere else
+  is a rule nobody can find. A working decision's reason lands in this file (rule) or
+  HANDOFF.md (environment facts).
 - **Warnings for destructive actions belong ON the destructive action, shown once.** Entry
   warnings fire on every page load for habitual users ("first creation" is per-instance, not
   per-lifetime); state-drift warnings based on HTML comparison cannot attribute who changed
@@ -173,16 +154,12 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   `listfile`); if the site changes them the button fails silently. It is off by default, and
   `Values.ueditorFileAccept` must list every extension the setting description promises.
 - Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Utils` /
-  `Values`, per-page CSS or bundle splitting. (Zero-reference members audited to 0
-  on 2026-11-13, full-tree re-scan = 0 on 2026-11-17 — dead-file scanning lives in the
-  e2e workspace as `dead-files2.mjs`; both earlier scanners were structurally
-  untrustworthy (self-matching basenames, missed side-effect imports), so trust a
-  "DEAD" verdict only after grepping the symbol repo-wide.)
-  The shipped bundle is ~1.6 MB (2026-11-17: libs all bundled + `?raw` CSS now
-  comment/whitespace-stripped at build by the `minifyRawCss` plugin in
-  `vite.config.ts` — deliberately NOT esbuild CSS minify, whose cross-position
-  rule merging rewrites cascade order in artifact-only ways, see HANDOFF);
-  splitting mainly helps low-end devices and adds loading / debugging complexity.
+  `Values`, per-page CSS or bundle splitting. Dead-file scanning lives in the e2e
+  workspace as `dead-files2.mjs`; trust a "DEAD" verdict only after grepping the symbol
+  repo-wide. The shipped bundle is ~1.6 MB, and `?raw` CSS is comment/whitespace-stripped
+  at build by the `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild
+  CSS minify, whose cross-position rule merging rewrites cascade order; splitting mainly
+  helps low-end devices and adds loading / debugging complexity.
 
 ## Host-page constraints
 
@@ -198,28 +175,22 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - External libraries:
   - **No `@require`, no runtime remote loads**: nothing is fetched at install time or from
     the network at runtime — every third-party library is bundled at build time
-    (`package.json` + `import`). The last two runtime-remote exceptions (`markdown-it`
-    11.0.1 via dynamic `import`, `pangu` 4.0.7 via `?raw` source injected into the UEditor
-    content iframe) were bundled on 2026-11-17 to eliminate the npmmirror
-    remote-execution surface. Two pinned quirks to preserve: `markdown-it` stays at exact
-    11.0.1 and `pangu` at exact 4.0.7 (7.2.x regressed spacing; see HANDOFF), and `pangu`
-    must keep being evaluated inside the content iframe — its `spacingPage` XPath binds to
-    the evaluating realm's global `document`, so bundling it as a module (host-realm) would
-    silently space the wrong document. Add new libraries through `package.json` + `import`,
-    never through `@require` or a runtime `<script src>`.
+    (`package.json` + `import`); never through `@require` or a runtime `<script src>`.
+    Two pins to preserve: `markdown-it` stays at exact 11.0.1 and `pangu` at exact 4.0.7
+    (7.2.x regressed spacing). `pangu` must keep being evaluated inside the content
+    iframe — its `spacingPage` XPath binds to the evaluating realm's global `document`,
+    so bundling it as a module would silently space the wrong document.
   - **Dynamic `import()` requires `inlineDynamicImports`** (already set in
     `vite.config.ts` build.rollupOptions): without it rollup emits the dynamic chunk as a
     separate file that a single-file userscript cannot carry, and at runtime the relative
-    specifier 404s (real-machine TM resolves it against the page URL; 2026-11-17 finding,
-    MD editor conversion crashed with repeated unhandled rejections). The GM-shim harness
-    cannot reproduce this — it lacks the TM bridge, so chunk loads happened to resolve
-    there. Any change to the loading structure must be clicked once on a real machine.
+    specifier 404s. The GM-shim harness cannot reproduce this (it lacks the TM bridge) —
+    any change to the loading structure must be clicked once on a real machine.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
     `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it` (11.0.1, Markdown
     editor), `pangu` (4.0.7, 中英间添加空格), `markdown-it-cjk-friendly` (applied to the
     markdown-it instance in `performMarkdownIt`: fixes CommonMark emphasis failing at
     punctuation+CJK boundaries).
-  - Type-aware ESLint subset (2026-11-17): `eslint.config.ts` runs 12 curated
+  - Type-aware ESLint subset: `eslint.config.ts` runs 12 curated
     `@typescript-eslint` type-checked rules over `src/**/*.ts` via `projectService`
     (high-signal only — the `no-unsafe-*`/`no-explicit-any` family is deliberately NOT
     adopted; host integrations would drown the output). Do not add those noise-family
@@ -327,5 +298,4 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   same check.
 - The literal `[release]` anywhere in a push's head commit message triggers the release job.
   Later commits touching a released version must avoid that literal — `release.cjs` skips
-  when the tag already exists (added 2026-11-17 after a red false positive), but keeping it
-  out of messages keeps CI history clean.
+  when the tag already exists, but keeping it out of messages keeps CI history clean.
