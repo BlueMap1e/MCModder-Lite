@@ -1591,6 +1591,25 @@ html.dark .fwin textarea.pt {
   color: var(--mcmodder-color-text);
   border-color: var(--mcmodder-color-background-dark3);
 }
+/* 评分弹窗「可选评分理由」列表(#reasonselect):Discuz 给这个 ul 挂了 .pt 输入框类,
+   站点白底 + px.png 贴图;但元素是 ul,输入框夜间规则按元素类型(input/textarea/
+   select)匹配够不到 → 夜间浅字压白底不可读(2026-11-19 真机报告「闪瞎」)。
+   按输入框形态适配:暗2 底清贴图 + dark3 边 + 圆角;li 悬停以琥珀字提示可选 */
+html.dark ul.reasonselect {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  border: 1px solid var(--mcmodder-color-background-dark3);
+  border-radius: 4px;
+  color: var(--mcmodder-color-text);
+}
+html.dark ul.reasonselect li:hover {
+  color: var(--mcmodder-color-accent);
+}
+/* 弹窗内输入框的 dark3 边在深色弹窗里对比不足、易被忽略(同上真机报告),
+   边框提亮一档到中性中灰 */
+html.dark .fwin .px {
+  border-color: #565656;
+}
 html.dark .fwin .pns {
   background-image: none;
   background-color: var(--mcmodder-color-background-dark1);
