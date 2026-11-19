@@ -53,6 +53,13 @@
   background-image: none;
   color: var(--mcmodder-color-accent-dark2);
 }
+/* 上面的 .btn:hover 扁平化会清掉 background-image,殃及主页底部导航条的搜索
+   按钮(.btn.mcmodder-content-block):它的放大镜图标就是 mc_search.gif 贴图,
+   hover 整钮变黑(2026-11-19 真机报告)。恢复贴图;hover 高亮由底色透出贴图
+   透明部分承担 */
+.banner .m_menu .m_center form._search input.btn.mcmodder-content-block:hover {
+  background-image: url("https://www.mcmod.cn/images/mc_search.gif");
+}
 .btn.btn-success:not(:disabled):not(.disabled):hover,
 .btn.btn-dark.btn-success:not(:disabled):not(.disabled):hover,
 .btn.btn-light.btn-success:not(:disabled):not(.disabled):hover {
