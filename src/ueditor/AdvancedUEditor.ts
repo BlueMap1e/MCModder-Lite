@@ -1,4 +1,4 @@
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { TemplateFrame } from "../TemplateFrame.ts";
 import { Utils } from "../Utils";
 import { Values } from "../Values";
@@ -853,7 +853,10 @@ export class AdvancedUEditor extends UEditor {
     }
 
     this.$document.find("pre").each((_, c) => {
-      $(c).html($(c).text());
+      // 「剥掉标签只留文本」：解码后的文本经 textContent 写回（文本节点，不经 HTML
+      // 解析）。历史上用 .html() 重解析，会把代码里的 <tag> 序列变成真实元素——
+      // 既是显示损坏，也是远程日志（Modrinth/GitHub changelog 作者可控内容）的注入面。
+      c.textContent = $(c).text();
       if (!c.classList.length) Utils.commonMsg("转换结果中出现代码块 (pre)，记得设置相应语言~");
     });
 

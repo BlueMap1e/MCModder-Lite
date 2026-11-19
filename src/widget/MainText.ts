@@ -1,5 +1,5 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { Values } from "../Values";
 
@@ -153,7 +153,7 @@ export class MainText {
         else if (!["image/png", "image/jpg", "image/jpeg", "image/gif"].includes(contentType))
           container // editor.options.fileAllowFiles ?
             .append(
-              `<span class="badge badge-warning mcmodder-localize-check">该图片尚未本地化，但是使用了本地图床不支持的文件格式 (${contentType})</span>`,
+              `<span class="badge badge-warning mcmodder-localize-check">该图片尚未本地化，但是使用了本地图床不支持的文件格式 (${Utils.escapeHTML(contentType)})</span>`,
             )
             .css("border", "10px solid var(--mcmodder-color-warning)");
         else

@@ -1,4 +1,5 @@
 import { Values } from "../Values";
+import { Utils } from "../Utils";
 import { CenterCardInit } from "./center/CenterCardInit";
 import { CenterSettingInit } from "./center/CenterSettingInit";
 import { Init } from "./Init";
@@ -188,10 +189,15 @@ export class CenterInit extends Init {
       bgImg !== this.configs.getSettings("defaultBackground") &&
       suffix &&
       Values.supportedImageSuffix.includes(suffix)
-    )
-      $("div.bbs-link").append(
-        `<p align="right"><a href="${bgImg}" target="_blank">查看个人中心背景图片</a></p>`,
-      );
+    ) {
+      // 背景图 URL 由被访问页的主人设置（CSSOM 序列化不转义 HTML 属性），必须过
+      // safeURL 白名单 + 属性转义再进 href；不合规格（如 data:/javascript:）降级为不渲染链接
+      const safeBg = Utils.safeURL(bgImg);
+      if (safeBg)
+        $("div.bbs-link").append(
+          `<p align="right"><a href="${Utils.escapeHTML(safeBg)}" target="_blank">查看个人中心背景图片</a></p>`,
+        );
+    }
 
     // 近期编辑记录
     $("div.bbs-link").append(`

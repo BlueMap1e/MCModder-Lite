@@ -1,6 +1,6 @@
 import { createApp } from "vue";
-import { AdvancedUEditor } from "./ueditor/AdvancedUEditor.ts";
-import { UEditor } from "./ueditor/UEditor.ts";
+import type { AdvancedUEditor } from "./ueditor/AdvancedUEditor.ts";
+import type { UEditor } from "./ueditor/UEditor.ts";
 import { Utils } from "./Utils.ts";
 import { Values } from "./Values.ts";
 import ContextMenu from "./vue/components/ContextMenu.vue";
@@ -44,9 +44,9 @@ export class TemplateFrame {
     $(".group li").remove();
     const groupUl = $(".group ul");
     this.list.forEach((item) => {
-      const entry = $(`<li data-tag="${item.id}">
-        <p class="title">${item.title}</p>
-        <p class="text">${item.description}</p>
+      const entry = $(`<li data-tag="${Utils.escapeHTML(item.id)}">
+        <p class="title">${Utils.escapeHTML(item.title)}</p>
+        <p class="text">${Utils.escapeHTML(item.description)}</p>
       </li>`).appendTo(groupUl);
       if (!item.description) entry.find(".text").hide();
     });

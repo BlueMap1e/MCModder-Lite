@@ -344,9 +344,11 @@ export class ClassPageInit extends Init {
         .each((_, _text) => {
           const text = $(_text);
           text.parent().find("> i").remove();
-          text.replaceWith(
-            `<span class="mcmodder-subtitle">${text.text().replace(":", "")}</span>`,
-          );
+          // 模组页信息条目文本（含作者名等用户可控内容）走文本节点替换，不经 HTML 解析
+          const span = document.createElement("span");
+          span.className = "mcmodder-subtitle";
+          span.textContent = text.text().replace(":", "");
+          text.replaceWith(span);
         });
       $(".mcmodder-class-info .author .fold").remove();
 

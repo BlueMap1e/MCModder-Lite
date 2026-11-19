@@ -22,9 +22,6 @@ export class TabEditInit extends Init {
   private guiFrame?: Element;
   private slotFrame?: Element;
   private modID = 1;
-  // private modName = "";
-  private dependences: number[] = [];
-  // private expansions: number[] = [];
   private recipeTable = $();
   private frame = $();
   private recipeFrame?: JQuery;
@@ -206,7 +203,7 @@ export class TabEditInit extends Init {
     return Number($("#item-table-gui-select").val());
   }
 
-  async setGui(id: number) {
+  async setGui(id: number, attempts = 0) {
     if (this.getGui() === id) return;
     let success = false;
     return new Promise<void>((resolve) => {
@@ -217,7 +214,14 @@ export class TabEditInit extends Init {
       $("#item-table-gui-select").selectpicker("val", id.toString());
       setTimeout(() => {
         if (!success) {
-          void this.setGui(id).then(() => resolve());
+          // 重试有上限：GUI 永远打不开（站点改版 / 弹窗遮挡）时不能无限递归重试，
+          // 到顶后大声记录并放行，避免 promise 链无限增长、caller 永久挂起
+          if (attempts >= 4) {
+            console.warn(`[MCModder-Lite] setGui(${id}) 重试 5 次仍未等到 GUI 打开，放弃等待`);
+            resolve();
+            return;
+          }
+          void this.setGui(id, attempts + 1).then(() => resolve());
         }
       }, 2e3);
     });
@@ -283,11 +287,11 @@ export class TabEditInit extends Init {
       const zh = img.alt.split(" (")[0];
       const en = img.alt.replace(zh + " (", "");
       $(`<div>
-          <span class="mcmodder-slim-dark zh-name">${target.attr("item-id")}</span>
-          <span class="zh-name">${zh}</span>
-          <span class="en-name">${en.slice(0, en.length - 1)} [${
-            target.attr("data-original-title").split("<b>")[1].split("</b>")[0]
-          }]</span>
+          <span class="mcmodder-slim-dark zh-name">${Utils.escapeHTML(String(target.attr("item-id")))}</span>
+          <span class="zh-name">${Utils.escapeHTML(zh)}</span>
+          <span class="en-name">${Utils.escapeHTML(en.slice(0, en.length - 1))} [${Utils.escapeHTML(
+            target.attr("data-original-title").split("<b>")[1].split("</b>")[0],
+          )}]</span>
         </div>
         <a class="delete"><i class="fa fa-trash" /></a>
       `).appendTo(target);
@@ -818,9 +822,6 @@ export class TabEditInit extends Init {
     GM_setValue("modDependences", "");
     GM_setValue("modExpansions", "");
 
-    this.dependences =
-      this.configs.getAsNumberList("modDependences_v2", this.modID.toString()) ?? [];
-    // this.expansions = this.configs.getAsNumberList(this.modID, "modExpansions_v2");
     if (this.configs.getSettings("tabSelectorInfo")) {
       const mutationCallback: MutationCallback = (_mutationList, itemSearchObserver) => {
         itemUsedObserver.disconnect();
@@ -949,7 +950,6 @@ export class TabEditInit extends Init {
         note.val(`${s}\n${note.val()}`);
         Utils.commonMsg("成功将此提示插入备注中~");
       });
-      this.dependences.concat([2524, 1171, 327]); // GCYL, GTCE, GT5
     }
   }
 

@@ -305,8 +305,11 @@ const configResourceInteractorProps: ConfigResourceInteractorProps<
         "字数榜首",
         (rawData: string) => {
           const data = rawData.split(",") as unknown as [number, number, number]; // [userID, bytes, ratio]
-          return `<a target="_blank" href="${Utils.getCenterURL(data[0])}">${data[0]}</a> 
-          (${data[1].toLocaleString()} 字节, ${(data[2] * 100).toFixed(1)}%)`;
+          // 排行数据可经配置导入进入：三段值全部 Number 强转（非法值 → NaN 文本，
+          // 不会拼出可解析的 HTML），uid 再过 getCenterURL 白名单
+          const uid = Number(data[0]) || 0;
+          return `<a target="_blank" href="${Utils.getCenterURL(uid)}">${Number(data[0]).toLocaleString()}</a>
+          (${Number(data[1]).toLocaleString()} 字节, ${(Number(data[2]) * 100).toFixed(1)}%)`;
         },
       ],
       totalEdited: ["前 60 名总编辑字数", (data: number) => `${data.toLocaleString()} 字节`],
