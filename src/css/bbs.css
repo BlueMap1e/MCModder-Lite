@@ -1834,11 +1834,13 @@ html.dark .ntc_body {
   color: var(--mcmodder-color-text) !important;
 }
 
-/* Layer 2 渲染实锤（2026-11-19，用户真机判「不刺眼」但同意顺手收口）：
-   帖内分隔线 hr.l（站点原生 #CDCDCD 浅灰在暗底偏亮）压到暗3 一档 */
+/* Layer 2 渲染实锤（2026-11-19）：帖内分隔线 hr.l（站点原生 #CDCDCD 浅灰在暗底
+   偏亮如 bug）。首版压到暗3（1.16:1）真机反馈「基本蒸发」——该帖作者把 hr 当
+   大段分界线用，完全蒸发会丢文章结构，故半透明白 14% 叠加（面板底上 ≈#3e3e3e，
+   ~1.5:1）：扫读可发现、阅读时不打扰；叠加法使其在任意底色上都落在正确台阶 */
 html.dark hr.l {
-  background-color: var(--mcmodder-color-background-dark3);
-  color: var(--mcmodder-color-background-dark3);
+  background-color: rgba(255, 255, 255, 0.14);
+  color: rgba(255, 255, 255, 0.14);
 }
 /* 帖头「回复/浏览」统计数字（.yudi_tp_action）：站点原生 #666 小字号在暗底偏暗，
    提亮一档到次级文字色 */
