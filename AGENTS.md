@@ -13,7 +13,12 @@ the user explicitly asks.
 (including the removed modules). Do send minimal drive-by fixes when a module Lite shares
 with upstream (isomorphic code) has an obvious, reproducible bug — behavior-only diff,
 root cause + reproduction in the PR body, no comment/style/scope churn. Precedent:
-Charcoal-Black/Mcmodder#133.
+Charcoal-Black/Mcmodder#133. **Boundary (2026-11-19)**: the user's own repos
+(BlueMap1e/MCModder-Lite, BlueMap1e/Mcmodder) are free to operate — commits, releases,
+branch pushes, rollbacks, no permission needed. Anything landing in Charcoal-Black spaces
+(push, PR, comment) happens only on the user's explicit per-action instruction — prepare
+branches, diffs and body drafts locally, then hand over; general intent ("deliver today")
+is not authorization.
 
 ## Commands
 
