@@ -442,14 +442,21 @@ html.dark .bar {
 }
 
 /* 输入框用抬升面而非页底色：多个页面（如个人资料）表单区背景透明，
-   页底色会让输入框与页面融为一体（用户实测）；亮面输入框对应日间白底语义 */
+   页底色会让输入框与页面融为一体（用户实测）；亮面输入框对应日间白底语义。
+   站点原生是简写 background:#FFF url(px.png)（白色渐变贴图），只覆盖
+   background-color 会在输入框顶部残留一条亮带、整体观感僵硬（2026-11-19
+   真机报告），贴图须一并清掉；圆角 4px 做柔和化（不参与布局计算，零风险） */
 html.dark input[type="text"],
 html.dark input[type="password"],
 html.dark select,
-html.dark textarea {
+html.dark textarea,
+html.dark input.px,
+html.dark textarea.pt {
   background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
   color: var(--mcmodder-color-text);
   border: 1px solid var(--mcmodder-color-background-dark3);
+  border-radius: 4px;
 }
 
 html.dark input[type="text"]:focus,
