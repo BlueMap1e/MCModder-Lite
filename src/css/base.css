@@ -3863,3 +3863,21 @@ html.mcmodder-block-ads ins.adsbygoogle {
 html.mcmodder-block-ads .mcmodder-ad-shell {
   display: none !important;
 }
+
+/* 主页底部导航条(.banner .m_menu .m_center)与搜索框夜间观感收口(2026-11-19
+   用户反馈「透明度怪怪的 / 搜索框僵硬」):实测条带自身不透明,但夜间渐变尾部
+   为深海军蓝(#021027),与横幅底部深蓝水面同色,条带边界溶解产生「半透明错觉」
+   ——改中性实底;搜索输入框(条带内 form._search)为 rgba(33,33,33,.8) 半透明底
+   + #ccc 亮边 + 直角,改实底 + dark3 边 + 4px 圆角,占位文字降为次级灰 */
+html.dark .banner .m_menu .m_center {
+  background-image: none;
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.dark .banner .m_menu .m_center form._search input.text {
+  background-color: var(--mcmodder-color-background-dark2);
+  border-color: var(--mcmodder-color-background-dark3);
+  border-radius: 4px;
+}
+html.dark .banner .m_menu .m_center form._search input.text::placeholder {
+  color: var(--mcmodder-color-text-dark3);
+}
