@@ -160,19 +160,6 @@ export const settings = [
             value: 1,
             range: [0, 1],
           },
-          // {
-          //   id: "mcmodderUI",
-          //   title: "Mcmodder风格UI",
-          //   description:
-          //     "启用 Mcmodder 风格的 UI 界面。（目前此配置项尚未完全分离，强烈建议保持该配置项为启用状态！）",
-          //   type: "checkbox",
-          // },
-          // {
-          //   id: "unlockHeaderContainer",
-          //   title: "取消锁定导航栏",
-          //   description: "使页面最上方导航栏默认隐藏，只有当光标移至其上时才会显示。",
-          //   type: "checkbox",
-          // },
           {
             id: "autoExpandPage",
             title: "自动展开页面",
@@ -185,13 +172,6 @@ export const settings = [
             description: "减少每个综合子资料所占用的页面空间。",
             type: "checkbox",
           },
-          // {
-          //   id: "compactedTablist",
-          //   title: "紧凑化合成表",
-          //   description:
-          //     "减少每个合成表所占用的页面空间，同时使用物品小图标替代材料统计中的物品名称，以及显示合成表 ID！本机安装字体 <a href=\"https://ftp.gnu.org/gnu/unifont/\" target=\"_blank\">Unifont</a> 后食用风味更佳。",
-          //   type: "checkbox",
-          // },
           {
             id: "compactedVerifylist",
             title: "紧凑化待审列表",

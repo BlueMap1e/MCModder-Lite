@@ -55,7 +55,7 @@ export class ClassEditorInit extends Init {
       e.find(".checkbox").each((_, _f) => {
         const f = $(_f);
         // .trim()：站点新增的前置检测控件会给 label 文本带来首尾空白，导致正确的
-        // 版本被误判为不合法（上游 #129）
+        // 版本被误判为不合法（上游 issue 129）
         const version = f.find("label").text().trim();
         if (!Utils.validateVersionForLoaderID(version, loaderID)) {
           if (loaderID != "2") {

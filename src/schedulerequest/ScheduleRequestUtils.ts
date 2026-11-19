@@ -1,5 +1,5 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { ScheduleRequestType } from "./ScheduleRequestType";
 

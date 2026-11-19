@@ -1,5 +1,5 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { Values } from "../Values";
 import { addUploadFileButton } from "./UploadFileButton";
@@ -154,10 +154,10 @@ export class UEditor {
     // 完成、窗口重新聚焦都走这条路径）。Gecko 的 focus 滚动语义会把宿主页滚动
     // 容器对齐到内文档 body 的起始邻域：在本脚本的高度自适应几何下（iframe 被
     // 撑到内容高、滚动发生在宿主页），表现为长文任意位置触发插入代码/图片/链接
-    // 或切窗口回来后宿主页被拽离编辑区（真机：宿主页 8002→3662「跳到中段」，
-    // 光标留在编辑位置但出屏；lab 实测归因见 HANDOFF）。focus({preventScroll:
-    // true}) 是 Gecko 标准解：焦点照常恢复、选区照常生效，滚动副作用归零
-    //（lab 对照：8002→8002）。仅 Gecko 生效（Chromium 无此分支也无此语义）。
+    // 或切窗口回来后宿主页被拽离编辑区（真机：宿主页滚动位置 8002→3662「跳到
+    // 中段」，光标留在编辑位置但出屏）。focus({preventScroll: true}) 是 Gecko
+    // 标准解：焦点照常恢复、选区照常生效，滚动副作用归零。仅 Gecko 生效
+    //（Chromium 无此分支也无此语义）。
     // Bug fix，deliberately unswitched。
     if (/\bFirefox\b/.test(navigator.userAgent) && this.body) {
       const body = this.body;
@@ -166,7 +166,6 @@ export class UEditor {
     }
 
     // 现代化按钮
-    // if (this.configs.get("mcmodderUI")) {
     const toolBar = this.$outerFrame.find(".edui-editor-toolbarboxinner");
     for (let i = 0; i < Values.ueButton1.length; i++) {
       toolBar
@@ -178,7 +177,6 @@ export class UEditor {
       .find(".edui-arrow")
       .addClass("mcmodder-edui-arrow fa fa-caret-down")
       .css("background-image", "none");
-    // }
 
     // 「上传文件」按钮：站点工具栏只给了图片上传，附件上传接口虽有却没有入口。默认关闭，需在设置里开启。
     // 短评编辑器与资料编辑器（`AdvancedUEditor`）的工具栏都注入，避免正文里只能放图片。
@@ -333,7 +331,7 @@ export class UEditor {
   /**
    * 归一化正文的尾随行，保证表格之后永远存在可放置光标的落点。
    *
-   * "表格墙"的三种形态（诊断日志实证，见诊断脚本 harness-build/mcmodder-tablewall-diag.user.js）：
+   * "表格墙"的三种形态（诊断日志实证）：
    * 1. 正文以表格结尾，表格后没有任何元素——光标困在最后一个单元格里；
    * 2. 尾随行是**无 `<br>` 的空段落** `<p></p>`——删除尾随行的 `<br>` 即产生此形态，
    *    该变化发生在 p **内部**，body 层的 childList 观察不可见；Firefox 下光标

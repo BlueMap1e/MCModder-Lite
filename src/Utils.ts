@@ -10,7 +10,7 @@ import {
 } from "$";
 import { AnimationFrameScheduler } from "./AnimationFrameScheduler";
 import { ConfigRepository } from "./config/ConfigRepository";
-import { Mcmodder } from "./Mcmodder";
+import type { Mcmodder } from "./Mcmodder";
 import { Values } from "./Values";
 
 export interface ThemeColorSet {
@@ -102,18 +102,6 @@ export class Utils {
     Object.entries(events).forEach(([eventName, callback]) => {
       window.addEventListener(eventName, callback, true);
     });
-  }
-
-  /** 转发到百科原生的 `showTaskTip`，弹出任务/成就提示 */
-  static showTaskTip(
-    imageUrl: string,
-    title: string,
-    text: string,
-    achieveTime: string,
-    progress: number,
-    rewardExp: number | string,
-  ) {
-    showTaskTip(imageUrl, title, text, achieveTime, progress, rewardExp);
   }
 
   /** 从配置中读取主/副主题色，返回 `{ tc1, tc2 }` */
@@ -256,13 +244,6 @@ export class Utils {
     const result = this.configs.get("mcmodderInteracts", id);
     this.configs.set("mcmodderInteracts", id, null);
     return result;
-  }
-
-  /** 将交互数据写入一个随机 id 的条目，并返回该 id */
-  setInteract(value: unknown) {
-    const id = Utils.randStr(8);
-    this.configs.set("mcmodderInteracts", id, value);
-    return id;
   }
 
   /** 将形如 `rgb(r,g,b)` 的字符串转换为 `#rrggbb` */
@@ -1488,77 +1469,6 @@ export class Utils {
       : null;
   }
 
-  /** 按 ID 抓取物品资料页并解析为 `Item`，失败返回 undefined */
-  async getItemByID(id: string | number) {
-    id = Number(id);
-    const resp = await this.createRequest(
-      {
-        url: `${this.parent.hostname}/item/${id}.html`,
-        method: "GET",
-        redirect: "manual",
-        anonymous: true,
-      },
-      "获取物品基础信息",
-    );
-    if (resp.status > 300 || !resp.responseXML) {
-      return;
-    }
-    const doc = $(resp.responseXML);
-    return Utils.parseItemDocument(doc);
-  }
-
-  /** 按 ID 抓取物品编辑页并解析为 `Item`，未登录或失败返回 undefined */
-  async getDetailedItemByID(id: string | number) {
-    if (!this.parent.currentUID) return;
-    id = Number(id);
-    const resp = await this.createRequest(
-      {
-        url: `${this.parent.hostname}/item/edit/${id}/`,
-        method: "GET",
-        redirect: "manual",
-      },
-      "获取物品详细信息",
-    );
-    if (resp.status > 300 || !resp.responseXML) {
-      return;
-    }
-    const doc = $(resp.responseXML);
-    return Utils.parseItemEditorDocument(doc);
-  }
-
-  /** 从物品资料页 DOM 中解析物品信息为 `Item` */
-  static parseItemDocument($doc: JQuery = $(document)) {
-    const keywords = $doc.find("meta[name=keywords]").attr("content").split(",");
-    const itemRow = $doc.find(".item-row").first();
-    const command = itemRow.find(".item-give")?.attr("data-command")?.slice(9)?.split(" ");
-    const righttable = itemRow.find(".righttable tbody > tr");
-    const nav = $doc.find(".common-nav li");
-    const classID = Utils.abstractIDFromURL(nav.eq(4).find("a").attr("href"), "class");
-    const itemType = Number(
-      nav.eq(6).find("a").attr("href").split(`/item/list/${classID}-`)[1].slice(0, -5),
-    );
-    const res: Item = {
-      id: Utils.abstractIDFromURL(itemRow.find(".tool a").first().prop("href"), "item/edit"),
-      classID: classID,
-      name: keywords[0],
-      englishName: keywords[1],
-      itemType: itemType,
-      smallIcon: "",
-      largeIcon: "",
-      creativeTabName: righttable.eq(3).find("a")?.text(),
-      harvestTools: `[${Array.from(righttable.eq(5).find(".item-table-hover"))
-        ?.map((e) => e.getAttribute("item-id"))
-        .join(",")}]`,
-    };
-    if (command) {
-      res.registerName = command[0];
-      res.maxStackSize = Number(command[1]) || 1;
-      if (command.length > 2) res.metadata = Number(command[2]) || 0;
-    }
-    Utils.deleteEmptyProperties(res);
-    return res;
-  }
-
   /** 从模组页 DOM 中解析模组信息，返回节点与 `classData` */
   static parseClassDocument($doc: JQuery = $(document)) {
     const name = $doc.find(".class-title h3");
@@ -1575,64 +1485,5 @@ export class Utils {
         cover: $doc.find(".class-cover-image img").attr("src"),
       } as Class,
     };
-  }
-
-  /** 将 `Item` 转换为物品编辑页提交所需的数据结构（纯映射，无异步步骤；保持 Promise 签名以稳定调用方） */
-  static itemToEditorData(item: Item): Promise<McmodItemEditorData> {
-    const res = { "item-data": {} } as DeepPartial<McmodItemEditorData>;
-    const data = res["item-data"]!;
-    if (item.id) {
-      res["action"] = "item_edit";
-      res["edit-id"] = item.id.toString();
-    } else {
-      res["action"] = "item_add";
-    }
-    res["class-id"] = item.classID.toString();
-
-    data["content"] = item.content || "";
-    data["name"] = item.name;
-    if (item.englishName) data["ename"] = item.englishName;
-    data["category"] = { 0: "1" };
-    data["type"] = item.creativeTabName;
-    data["icon-32x-data"] =
-      item.smallIcon || Utils.appendBase64ImgPrefix(Utils.getImageURLByItemID(item.id, 32)) || "";
-    data["icon-128x-data"] =
-      item.largeIcon || Utils.appendBase64ImgPrefix(Utils.getImageURLByItemID(item.id, 128)) || "";
-    data["is-general-node"] = "0";
-    data["is-general-parents"] = "0";
-    if (item.OredictList && item.OredictList.length <= 2)
-      data["oredict"] = item.OredictList.slice(1, -1).replaceAll(", ", ",");
-    if (item.maxStackSize != undefined) data["maxstack"] = item.maxStackSize.toString();
-    // if (item.tools) data["tools"] = item.tools;
-
-    return Promise.resolve(res as McmodItemEditorData);
-  }
-
-  /** 从物品编辑页 DOM 中解析完整物品信息为 `Item` */
-  static parseItemEditorDocument($doc: JQuery = $(document)) {
-    const headScript = $doc.find("head > script").last().html().split(";");
-    const bodyScript = $doc.find("body > script").last().html();
-    const inputs = $doc.find(".input-group");
-    const nav = $doc.find(".common-nav li");
-    const res: Item = {
-      id: Utils.abstractIDFromURL(nav.eq(8).find("a").attr("href"), "item"),
-      classID: Number(headScript[2].slice(16, -1)), // var nClassID = '1'
-      creativeTabName: headScript[3].slice(23, -1), // var strItemTypeName = 'foo'
-      smallIcon: Utils.appendBase64ImgPrefix(headScript[5]?.slice(7, -1)),
-      largeIcon: Utils.appendBase64ImgPrefix(headScript[7]?.slice(7, -1)),
-      name: inputs.find("[data-multi-id=name]").val(),
-      englishName: inputs.find("[data-multi-id=ename]").val(),
-      harvestTools: `[${bodyScript.split(");addItemTools(").slice(1).map(parseInt).join(",")}]`,
-      OredictList: `[${inputs.find("[data-multi-id=oredict]").val()}]`,
-      maxDurability: Number(inputs.find("[data-multi-id=damage]").val()),
-      maxStackSize: Number(inputs.find("[data-multi-id=maxstack]").val()),
-      registerName: inputs.find("[data-multi-id=regname]").val(),
-      metadata: inputs.find("[data-multi-id=metadata]").val(),
-    };
-    Utils.deleteEmptyProperties(res);
-    const generalAlert = $(".edit-user-alert.isgeneral");
-    if (generalAlert.length)
-      res.generalTo = Utils.abstractIDFromURL(generalAlert.find("a").attr("href"), "item");
-    return res;
   }
 }

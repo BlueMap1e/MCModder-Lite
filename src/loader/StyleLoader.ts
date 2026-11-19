@@ -1,4 +1,4 @@
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 
 /**
@@ -132,7 +132,7 @@ export class StyleLoader {
    *    加载平台、版本标记、分类状态等固定色板），直接以 `[]` 修饰表产出基础变量；
    * 4. 将上述变量并入 `:root`（亮色）与 `:root.dark`（夜间）两个选择器，
    *    并根据用户配置开关拼接 `base`/`mcmodderUI`/`tableThemeColor`/`tableLeftAlign`/
-   *    `tabSelectorInfo`/`splitScreenOnVerify`/`codemirrorCss`/`aprilFools` 等静态 CSS；
+   *    `tabSelectorInfo`/`splitScreenOnVerify`/`codemirrorCss`/`reducedMotion` 等静态 CSS；
    * 5. 合并结果存入 `parent.css` 并通过 `Utils.addStyle` 注入 `<head>`；
    * 6. 写入 `--mcmodder-ratio-radius` 圆角比例变量，调用 `parent.updateNightMode()`
    *    应用当前主题，最后给防闪烁遮罩写入淡入动画并移除遮罩，完成首屏渲染。
@@ -546,9 +546,6 @@ export class StyleLoader {
     if (configs.getSettings("dimCoverAtNight")) {
       htmlNode.addClass("mcmodder-config-dim-cover");
     }
-    // if (configs.get("disableFadeTransition")) {
-    //   htmlNode.addClass("mcmodder-config-disable-fade-transition")
-    // }
 
     let style = "";
     style += css.themeColor;
@@ -573,9 +570,7 @@ export class StyleLoader {
     if (configs.getSettings("splitScreenOnVerify") && !Utils.isMobileClient()) {
       style += css.splitScreenOnVerify;
     }
-    // if (configs.get("markdownIt")) {
     style += css.codemirrorCss;
-    // }
     style += css.reducedMotion;
 
     parent.css = style;

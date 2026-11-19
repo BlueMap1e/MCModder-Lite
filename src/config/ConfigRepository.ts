@@ -118,9 +118,6 @@ export class ConfigRepository {
    * @returns 字段值；键或字段不存在时为 undefined。
    */
   get<T extends keyof AppStorage, K extends keyof Required<AppStorage>[T]>(item: T, key: K) {
-    // mcmodderUI 被修复后请移除下一行
-    // if (key === "mcmodderUI" && item === "mcmodderSettings") return true;
-
     const data = this.getAll(item);
     if (data === undefined) return undefined;
     const entry = data[key];
@@ -433,18 +430,6 @@ export class ConfigRepository {
   }
 
   /**
-   * 判断某个 UID 是否已缓存该用户的资料（`userProfile` 中是否存在该 id 的记录，不校验内容完整性）。
-   *
-   * @param uid 用户 UID，默认当前登录用户。
-   */
-  doesProfileDataExist(uid = this.parent.currentUID) {
-    const rawData = GM_getValue("userProfile");
-    if (!rawData) return false;
-    const profiles: Record<string, string> = JSON.parse(rawData);
-    return Object.prototype.hasOwnProperty.call(profiles, uid);
-  }
-
-  /**
    * 读取「id → JSON 字符串」型记录存储中某个 id 的完整记录并解析为对象。
    *
    * 存储格式：GM 键的值是 `Record<string, string>`，key 为记录 id（UID 或 classID），
@@ -524,21 +509,6 @@ export class ConfigRepository {
   }
 
   /**
-   * 删除某个 id 的整条记录。
-   *
-   * @param storageKey 记录型存储键（`userProfile` 或 `classData`）。
-   * @param id 记录 id。
-   */
-  private deleteAllRecord<K extends KeysOfType<Required<AppStorage>, Record<string, string>>>(
-    storageKey: K,
-    id: number,
-  ) {
-    const profiles = JSON.parse(GM_getValue(storageKey) || "{}") as Record<string, string>;
-    delete profiles[id];
-    GM_setValue(storageKey, JSON.stringify(profiles));
-  }
-
-  /**
    * 读取当前（或指定）用户的资料中的一个字段。
    *
    * @param key 字段名。
@@ -564,27 +534,6 @@ export class ConfigRepository {
   setProfile<P extends keyof Profile>(key: P, value: Profile[P], uid = this.parent.currentUID) {
     this.setRecord<Profile, "userProfile", P>("userProfile", key, value, uid);
   }
-  // setProfiles(obj: Partial<McmodderProfileData>, uid = this.parent.currentUID) {
-  //   Object.entries(obj).forEach(([key, value]) => (this.setProfile as any)(key, value, uid));
-  // }
-  /**
-   * 合并写入当前（或指定）用户的完整资料（自动更新 lastUpdated）。
-   *
-   * @param content 待合并字段。
-   * @param uid 用户 UID，默认当前用户。
-   */
-  setAllProfile(content: Profile, uid = this.parent.currentUID) {
-    this.setAllRecord("userProfile", content, uid);
-  }
-  /**
-   * 删除当前（或指定）用户的整条资料记录。
-   *
-   * @param uid 用户 UID，默认当前用户
-   */
-  deleteAllProfile(uid = this.parent.currentUID) {
-    this.deleteAllRecord("userProfile", uid);
-  }
-
   /**
    * 读取某个模组记录中的一个字段。
    *
@@ -620,13 +569,5 @@ export class ConfigRepository {
    */
   setAllClass(content: Class, classID: number) {
     this.setAllRecord("classData", content, classID);
-  }
-  /**
-   * 删除某个模组的整条记录。
-   *
-   * @param classID 模组 ID。
-   */
-  deleteAllClass(classID: number) {
-    this.deleteAllRecord("classData", classID);
   }
 }

@@ -1,7 +1,7 @@
 /* ===== prefers-reduced-motion：减弱动态效果 =====
  *
  * 用户在系统层开启「减弱动态效果」时，把脚本自身引入的循环动画与过渡全部收敛掉：
- * - 循环 / 趣味性动画（渐变流光、加载圆点缩放、头像抖动、愚人节旋转等）直接停掉；
+ * - 循环 / 趣味性动画（渐变流光、加载圆点缩放、头像抖动等）直接停掉；
  * - 位移、缩放、淡入淡出一类过渡改为瞬时完成（`transition: none`），交互反馈本身保留；
  * - 只负责「换色」的动画（流光描边）停掉后补一个静态主色，避免元素退化成默认配色。
  *
@@ -41,11 +41,6 @@
 
   /* 个人中心头像被点击时的抖动（5 次） */
   body .center-header .user-icon .user-icon-img.tapped {
-    animation: none !important;
-  }
-
-  /* 愚人节彩蛋：任务卡整块旋转（enableAprilFools 开启时） */
-  .center-task-block:first-child {
     animation: none !important;
   }
 

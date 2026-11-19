@@ -1,6 +1,6 @@
 import { GM_openInTab } from "$";
 import { ConfigUtils } from "./config/ConfigUtils";
-import { MemuCommandLoader } from "./loader/MenuCommandLoader";
+import { MenuCommandLoader } from "./loader/MenuCommandLoader";
 import { ScheduleRequestLoader } from "./loader/ScheduleRequestLoader";
 import { ScheduleRequestUtils } from "./schedulerequest/ScheduleRequestUtils";
 import { StorageBufferLoader } from "./loader/StorageBufferLoader";
@@ -72,7 +72,7 @@ export class Mcmodder {
       Number(headerUserName.attr("href")?.split("//center.mcmod.cn/")[1]?.split("/")[0]) || 0;
     this.ueditorFrame = [];
     this.href = window.location.href;
-    MemuCommandLoader.run();
+    MenuCommandLoader.run();
     this.title = this.titleNode.html().replace(" - MC百科|最大的Minecraft中文MOD百科", "");
     this.hostname = Values.hostname;
 
@@ -84,7 +84,8 @@ export class Mcmodder {
     this.utils = new Utils(this);
     this.configRepository = this.utils.configs;
 
-    // 计划任务调度器：注册全部定时任务（自动签到等）并启动每秒轮询。
+    // 计划任务调度器：注册全部定时任务（目前仅自动签到），按最近到期时间挂单次
+    // setTimeout，到点由 check 重排。
     // 这行曾在 lite.2 移除预编辑轮询时被连带删除，导致自动签到静默失效——勿再删除。
     this.scheduleRequestUtils = new ScheduleRequestUtils(this);
     ScheduleRequestLoader.run(this.scheduleRequestUtils);
@@ -572,11 +573,7 @@ export class Mcmodder {
     }
   }
 
-  /**
-   * 把夜间模式偏好（0 跟随系统 / 1 固定日间 / 2 固定夜间）解析为生效值 nightMode。
-   * 跟随系统时取 prefers-color-scheme，手动偏好下系统变化不再覆写；
-   * 仅在生效值将要变化时写入，避免无意义的跨标签页同步。
-   */
+  /** 一次性迁移：布尔自适应开关 adaptableNightMode → 三态偏好 nightModePreference，无条件写入（机制见方法内注释；解析偏好在 computeNightMode/resolveNightMode）。 */
   private migrateNightModePreference() {
     // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
     // 关闭过自适应的老用户按当时的生效值固定下来，避免升级后被系统配色突然改写外观。
@@ -870,8 +867,6 @@ export class Mcmodder {
       });
     }
 
-    // TODO: 取消锁定导航栏
-
     if (this.isV4) {
       window.addEventListener(
         "scroll",
@@ -934,7 +929,7 @@ export class Mcmodder {
                 this.applyBellNotify();
               } catch (e) {
                 if (e instanceof SyntaxError) {
-                  console.error("Failed to parse data: " + resp.responseText);
+                  console.error("Failed to parse data (len=" + resp.responseText.length + ")");
                 }
               }
             });

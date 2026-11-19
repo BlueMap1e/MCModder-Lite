@@ -331,47 +331,8 @@ export class EditorInit extends Init {
         EditorAlertLink.appendButton,
         () => $("#item-type-frame"),
       ),
-      // new EditorAlertTextLink(this.getEditor(), [], () => {
-
-      // }, )
     );
   }
-
-  // private runLatex() {
-  // let mathjax_config = document.createElement("script");
-  // mathjax_config.id = "mcmodder-mathjax-config";
-  // mathjax_config.innerHTML = "\
-  //   MathJax = {\
-  //   tex: {\
-  //     inlineMath: [['$', '$'], ['\\(', '\\)']]\
-  //   },\
-  //   svg: {\
-  //     fontCache: 'global'\
-  //   }\
-  // };";
-  // editorDoc.head.appendChild(mathjax_config);
-  // let mathjax_src = document.createElement("script");
-  // mathjax_src.id = "mcmodder-mathjax";
-  // mathjax_src.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-mml-svg.js";
-  // editorDoc.head.appendChild(mathjax_src);
-  // let html2canvas_src = document.createElement("script");
-  // html2canvas_src.id = "mcmodder-canvg";
-  // html2canvas_src.src = "https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.3.2/html2canvas.min.js";
-  // editorDoc.head.appendChild(html2canvas_src);
-  // setTimeout(function () {
-  //   $($(".edui-editor-toolbarboxinner").get(0).appendChild(document.createElement("button"))).attr("class", "btn btn-outline-dark btn-sm").html("转化为 LaTeX").click(function () {
-  //     let w = $("#ueditor_0").get(0).contentWindow;
-  //     w.MathJax.typeset();
-  //     $("mjx-container", w.document).each(function () {
-  //       w.html2canvas(this).then(canvas => {
-  //         const img = w.document.createElement("img");
-  //         img.src = canvas.toDataURL("image/png");
-  //         w.document.body.appendChild(img);
-  //       })
-  //     })
-  //   });
-  // }, 2e3);
-  // }
 
   private readonly swalObserver = new MutationObserver((mutationList) => {
     for (const mutation of mutationList) {
@@ -400,25 +361,9 @@ export class EditorInit extends Init {
                 .addClass("badge mcmodder-editor-link")
                 .click(() => link.run());
             });
-          if (/*/正文介绍中含有疑似.+的/.test(warningContent)*/ true) {
-            $(c)
-              .find("b")
-              .each((_, b) => {
-                b.textContent.split(", ").forEach((text) => {
-                  const link = new EditorAlertTextLink(
-                    this.getEditor(),
-                    [],
-                    (c) => EditorAlertLink.replaceText(c, text),
-                    text,
-                  );
-                  link.modifier(c as HTMLElement);
-                  $(c)
-                    .find("a:not(.mcmodder-editor-link)")
-                    .addClass("badge mcmodder-editor-link")
-                    .click(() => link.run());
-                });
-              });
-          }
+          // 原条件「/正文介绍中含有疑似.+的/.test(warningContent)」已停用：对所有
+          // 警告条目的 <b> 序列统一做链接化（恒真条件改为直调，消除常量条件）
+          this.linkifyWarningBold(c);
         });
 
         if (
@@ -434,9 +379,28 @@ export class EditorInit extends Init {
     }
   });
 
-  run() {
-    // new AdvancedUEditor(document.getElementsByTagName("IFRAME").item(0));
+  /** 警告条目里的 <b> 序列（逗号分隔文本）逐段包上「正文链接化」徽章按钮 */
+  private linkifyWarningBold(c: Element) {
+    $(c)
+      .find("b")
+      .each((_, b) => {
+        b.textContent.split(", ").forEach((text) => {
+          const link = new EditorAlertTextLink(
+            this.getEditor(),
+            [],
+            (cc) => EditorAlertLink.replaceText(cc, text),
+            text,
+          );
+          link.modifier(c as HTMLElement);
+          $(c)
+            .find("a:not(.mcmodder-editor-link)")
+            .addClass("badge mcmodder-editor-link")
+            .click(() => link.run());
+        });
+      });
+  }
 
+  run() {
     this.init();
     let commonNav = $(".common-nav > ul");
     if (commonNav && commonNav.children().length > 4) {
@@ -445,7 +409,7 @@ export class EditorInit extends Init {
       if (commonNav.children().eq(8).length) this.itemName = commonNav.children().eq(8).text();
     }
     // 完全去掉动画（`unset` / `none`）会让弹窗无法滚动，因此仍保留 0.01s 动画。
-    // 移植自上游 26e779e（上游实测结论，本仓库无登录态无法复现）。
+    // 移植自上游（上游实测结论，本仓库无登录态无法复现）。
     Utils.addStyle(".swal2-show {animation: swal2-show .01s; -webkit-animation: swal2-show .01s}");
 
     if ($(".edit-tools").length) {
@@ -458,13 +422,6 @@ export class EditorInit extends Init {
           .text("改动说明: " + desc)
           .appendTo(".edit-user-alert");
       }
-
-      // 其他一堆并进 AdvancedUEditor 的小玩意儿
-
-      // LaTeX 编辑器
-      // if (this.configs.get("latexEditor")) {
-      //   this.runLatex();
-      // }
     }
 
     this.swalObserver.observe(document.body, { childList: true });

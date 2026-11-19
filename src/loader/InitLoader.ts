@@ -23,7 +23,7 @@ import { ToolsPageInit } from "../init/ToolsPageInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
 import { VersionListInit } from "../init/VersionListInit";
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 
 export class InitLoader {
   static run(parent: Mcmodder, list: Init[]) {

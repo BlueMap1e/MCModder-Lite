@@ -42,27 +42,6 @@ export interface ConfigResourceInteractorProps<
   dataParser?: DataParser<TData>;
 }
 
-export interface JsonFrameProps {
-  id: string;
-  parent: import("../Mcmodder").Mcmodder;
-}
-
-export interface GenericJsonFrameProps<T extends TableAcceptable>
-  extends JsonFrameProps, TableProps<T> {
-  configName: KeysOfType<Required<AppStorage>, Record<string, object[]>>;
-  allowedKeys: string[];
-  opts?: {
-    gmStorageRepo?: () => GMStorageRepository<T>;
-    idbRepo?: () => import("../jsonframe/repository/IDBRepository").IDBRepository<T>;
-    parseText?: (text: string) => {
-      success: number;
-      fail: number;
-      result: T[];
-    };
-    more?: () => void;
-  };
-}
-
 export interface InputProps<T> {
   title: string;
   value: T;
@@ -133,12 +112,6 @@ export interface PopoverExpose<
   /** 弹出框的根节点（尚未挂载时为 `undefined`），用于区分「本组件的」与「其它组件的」弹出框 */
   getPopoverElement: () => HTMLElement | undefined;
 }
-
-/** 带候选列表的文本输入：props 同时充当 `InputListOption`，直接交给 `InputListPopoverController` */
-export interface DropdownTextInputProps extends InputProps<string>, InputListOption {}
-
-/** 一段文本的命中区间集合；区间均为左闭右开，彼此可能相交或相邻（`MatchedText` 会自行合并） */
-export type MatchedRanges = ([number, number] | undefined)[];
 
 /** 配置项的检索命中区间（设置中心搜索用），区间均相对于对应字段的纯文本 */
 export interface ConfigMatchRanges {

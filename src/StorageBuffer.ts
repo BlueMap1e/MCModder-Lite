@@ -1,6 +1,6 @@
 import { GM_addValueChangeListener, GM_getValue } from "$";
 import { shallowRef, type ShallowRef } from "vue";
-import { Mcmodder } from "./Mcmodder";
+import type { Mcmodder } from "./Mcmodder";
 
 type DefaultProvider<T extends keyof AppStorage> = () => AppStorage[T];
 

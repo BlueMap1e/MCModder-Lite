@@ -1,4 +1,4 @@
-import { CenterInit } from "../CenterInit";
+import type { CenterInit } from "../CenterInit";
 
 export abstract class CenterBaseInit {
   center: CenterInit;

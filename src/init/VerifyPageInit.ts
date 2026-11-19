@@ -10,7 +10,6 @@ export class VerifyPageInit extends Init {
   }
   run() {
     // 排版调整
-    // if (this.configs.get("mcmodderUI")) {
     const p = $(".verify-list-frame .list-row-limit p").first();
     const d = p
       .text()
@@ -21,10 +20,8 @@ export class VerifyPageInit extends Init {
       createApp(VerifyRowList, {
         data: d,
       }).mount(p.get(0));
-    // }
 
     if ($("p.empty").length) return;
-    // if ($("#mcmodder-verify-search").length) return;
 
     // 紧凑式待审列表
     if (this.configs.getSettings("compactedVerifylist")) {

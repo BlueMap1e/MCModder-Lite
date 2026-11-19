@@ -100,7 +100,7 @@ export default defineConfig([
     },
   },
   {
-    // 类型感知 lint（2026-11-17 跑量后收编的精选子集）：只收真 bug 探测器，不带
+    // 类型感知 lint（跑量后收编的精选子集）：只收真 bug 探测器，不带
     // no-unsafe-* / no-explicit-any 噪音族——宿主 globals 本就豁免，全量实测 778 条
     // 里 87% 是它，收编即噪音洪水。刻意不 re-set no-unused-vars，保留上方块里
     // `_` 前缀豁免。代价：projectService 令 lint 7.2s → 10.3s（类型器成本为主）。
@@ -138,8 +138,6 @@ export default defineConfig([
       "src/Mcmod.d.ts", // MCMOD
       "src/ueditor/AdvancedUEditor.ts", // UEditor
       "src/ueditor/UEditor.ts", // 依旧 UEditor
-      "src/vue/mount.ts", // Vue
-      "src/vue/composables/useConfig.ts", // 依旧 Vue
       "src/config/ConfigRepository.ts", // TS 自身限制，难以避免 any
     ],
     rules: {
@@ -147,10 +145,10 @@ export default defineConfig([
     },
   },
   {
-    files: ["src/Mcmodder.ts", "src/init/EditorInit.ts"],
+    files: ["src/Mcmodder.ts"],
     rules: {
       "@typescript-eslint/no-explicit-any": "off",
-      "no-constant-condition": "off", // mcmodderSettings.mcmodderUI = true
+      "no-constant-condition": "off",
     },
   },
   prettierConfig,

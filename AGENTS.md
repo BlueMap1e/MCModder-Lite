@@ -198,7 +198,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
     no `await` (AppRepository implementations), use a scoped disable with the interface
     rationale, as in `src/jsonframe/repository/`.
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
-    ECharts (`echarts`, only read by the class-page radar fix). Use page globals.
+    ECharts (`echarts`, read for night-mode re-theming on class/center/play-server pages).
+    Use page globals.
   - **Shared code must stay jQuery-1.7-compatible**: host pages ship different jQuery
     versions (measured: homepage 1.8.2, `/tools/cbcreator/` 1.7.2, list pages 2.1.0). Any
     API newer than 1.7 blows up only on some hosts.
@@ -231,11 +232,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   - `ensureTrailingParagraph()` must return whether it changed the DOM, must be idempotent,
     and must **not** rebuild the trailing paragraph's `innerHTML` (UEditor bookmarks/caret
     live there). Add a `<br>`, strip `nowrap` declarations, leave other nodes alone.
-- **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), register it with an
-  `add*Config` call in `src/loader/ConfigLoader.ts` (id, title, description, default, optional
-  `visible`), and reuse the matching control in `src/vue/components/input/`. Add the reader in
-  the same change. Internal keys may live in `Settings` without a panel row (precedent:
-  `markdownIt`, `lastRequestTime`) — they still need a reader.
+- **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), add one declarative
+  entry to the `settings` array in `src/loader/ConfigLoader.ts` (id, title, description, type,
+  default, optional `visible`), and reuse the matching control in `src/vue/components/input/`.
+  Add the reader in the same change. Internal keys may live in `Settings` without a panel row
+  (precedent: `markdownIt`, `lastRequestTime`) — they still need a reader.
 - **Persisted state** -> `ConfigRepository` (`getSettings`/`setSettings`, reactive
   `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid, `*Class` per
   classID). Prefer it over raw `GM_*Value` calls for keys it covers.

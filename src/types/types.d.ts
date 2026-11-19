@@ -232,7 +232,7 @@ interface Settings {
   autolinkStyleSpace: boolean;
   preferredAutolinkStyle: 1 | 2;
   preferredDragPos: Record<string, number>;
-  /** 封面高斯模糊半径，按封面宽度的百分比计（模组编辑页工具，移植自上游 #127） */
+  /** 封面高斯模糊半径，按封面宽度的百分比计（模组编辑页工具，移植自上游 issue 127） */
   coverGaussianBlurRadiusPercent: number;
   /** 主题样式包：预设 id 或 custom（自定义细调模式） */
   themePreset: import("../config/themePresets").ThemePresetId;
@@ -983,13 +983,6 @@ interface McmodItemEditorInnerData {
    * > 适用于“物品/方块”的资料，在 1.12 及以下版本物品的 metadata，通常用来区分同类方块 (例如不同颜色的染色玻璃)，重要字段，不确定不要改。
    */
   metadata?: string;
-}
-
-interface McmodItemEditorData {
-  action: "item_add" | "item_edit";
-  "edit-id": string;
-  "class-id": string;
-  "item-data": McmodItemEditorInnerData;
 }
 
 interface McmodClassEditorInnerData {
