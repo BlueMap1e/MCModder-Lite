@@ -24,7 +24,12 @@ Refer to upstream issues as 「上游 issue N」 plain text, no `#` marker.
 branch pushes, rollbacks, no permission needed. Anything landing in Charcoal-Black spaces
 (push, PR, comment) happens only on the user's explicit per-action instruction — prepare
 branches, diffs and body drafts locally, then hand over; general intent ("deliver today")
-is not authorization.
+is not authorization. **Endorsement gate**: a PR the user cannot personally vouch
+for must not be built beyond a branch and a short summary — confirm the user is
+willing to sign the diff before assembling full packages; if they cannot read the
+diff well enough (upstream legacy code, diverged surfaces), the PR stays unopened
+and the materials go dormant (2026-11-20: the #128 fix package was built and
+validated in full, then the user declined to open the PR on exactly these grounds).
 
 ## Commands
 
