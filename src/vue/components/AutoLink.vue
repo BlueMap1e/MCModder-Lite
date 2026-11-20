@@ -202,7 +202,7 @@ const itemRepository = computed<ItemRepository<number | string>>(() => {
   const repo = configs.value.getSettings("itemRepository")
     ? new ItemIDBRepository()
     : new ItemGMStorageRepository(configs.value);
-  repo.init();
+  void repo.init();
   return repo;
 });
 

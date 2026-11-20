@@ -1,4 +1,4 @@
-import { TabEditInit } from "../init/TabEditInit";
+import type { TabEditInit } from "../init/TabEditInit";
 import { Utils } from "../Utils";
 import { RecipeDisplay } from "./RecipeDisplay";
 

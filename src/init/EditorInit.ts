@@ -151,6 +151,8 @@ export class EditorInit extends Init {
   itemName = "";
   links: EditorAlertLink[] = [];
 
+  // canRun 恒 false：本类不被 InitLoader 调度，而是由 Mcmodder.editorLoad 直接
+  // 实例化并调用 run()（与 GeneralEditInit 同属编辑器装配路径）
   canRun() {
     return false;
   }

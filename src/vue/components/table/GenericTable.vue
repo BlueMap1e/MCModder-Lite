@@ -423,7 +423,7 @@ function onScroll() {
   // }
 
   // 保存行高以便实现虚拟列表
-  nextTick(() => {
+  void nextTick(() => {
     const newRowHeight =
       $(getTbody()).find(`[data-index=${newRows.l}]`).get(0)?.getBoundingClientRect()?.height ??
       TableUtils.ROW_HEIGHT_DEFAULT;
@@ -434,7 +434,7 @@ function onScroll() {
       renderingRows.value.l = newRows.l;
       renderingRows.value.r = newRows.r;
     }
-    nextTick(() => {
+    void nextTick(() => {
       Utils.updateAllTooltip();
     });
   });
@@ -579,7 +579,7 @@ function refreshAll() {
   completeLoading();
   renderingRows.value = { l: -1, r: -1 };
   emit("refresh");
-  nextTick(() => {
+  void nextTick(() => {
     onScroll();
   });
 }
@@ -982,7 +982,7 @@ function onDblclick(index: number, key: keyof T) {
     execute(new EditCommand(ctx, index, key, info.final as T[typeof key]));
     onInputFocusout();
   });
-  nextTick(() => {
+  void nextTick(() => {
     $(inputContainer.value![0]).children("input").focus();
   });
 }

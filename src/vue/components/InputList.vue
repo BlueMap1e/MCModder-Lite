@@ -277,7 +277,7 @@ watch(
     if (!selectable.value || !length) {
       return;
     }
-    nextTick(() => {
+    void nextTick(() => {
       popoverRef.value?.onPopoverHeightChange();
       triggerRef(popoverRef);
     });

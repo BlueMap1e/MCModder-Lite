@@ -135,7 +135,7 @@ const opt = computed(() => {
     case "keybind":
       return {};
   }
-  throw new Error("这 InputType 有力气");
+  throw new Error("未支持的设置控件类型（InputType），请检查 ConfigLoader 的 type 字段");
 });
 const range = computed(() => opt.value.range);
 const finiteRange = computed(() => opt.value.finiteRange);

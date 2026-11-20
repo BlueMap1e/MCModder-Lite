@@ -36,10 +36,17 @@ export default defineConfig([
     // TS 规则放在 vue 配置之前：vue 的 flat 配置要负责外层 parser，后写的才生效
     extends: [...tseslint.configs.recommended, vue.configs["flat/recommended"]],
     languageOptions: {
-      // <script lang="ts"> 交给 TS 解析器，模板则由 vue-eslint-parser 处理
-      parserOptions: { parser: tseslint.parser },
+      // <script lang="ts"> 交给 TS 解析器，模板则由 vue-eslint-parser 处理；
+      // projectService 让类型感知规则（no-floating-promises）在 .vue 上生效——
+      // .ts 侧同款规则早已在线，这是最后一个盲区
+      parserOptions: {
+        parser: tseslint.parser,
+        projectService: true,
+        extraFileExtensions: [".vue"],
+      },
     },
     rules: {
+      "@typescript-eslint/no-floating-promises": "error",
       "vue/multi-word-component-names": [
         "error",
         {
@@ -56,6 +63,15 @@ export default defineConfig([
           caughtErrorsIgnorePattern: "^_",
         },
       ],
+    },
+  },
+  {
+    // GenericTable 的 props 与 <script setup> 内部键存在历史性的同名重叠
+    //（editConfigs / columnOptions），消除需要改组件接口面、波及全部调用方——
+    // 既有结构的标记，非新代码的豁免。须排在 vue recommended 块之后才不被覆盖
+    files: ["src/vue/components/table/GenericTable.vue"],
+    rules: {
+      "vue/no-dupe-keys": "off",
     },
   },
   {

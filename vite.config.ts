@@ -74,7 +74,6 @@ const userscriptMeta = {
     "GM_openInTab",
     "GM_setValue",
     "GM_getValue",
-    "GM_deleteValue",
     "GM_addValueChangeListener",
     "GM_xmlhttpRequest",
   ],

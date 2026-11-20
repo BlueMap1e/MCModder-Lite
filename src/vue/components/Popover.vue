@@ -162,7 +162,7 @@ function onPopoverVisibilityChange(state: boolean) {
 }
 
 function onPopoverHeightChange() {
-  nextTick(() => {
+  void nextTick(() => {
     const measured = listRef.value!.getBoundingClientRect();
     listHeight.value = measured.height;
     listWidth.value = measured.width;
@@ -187,7 +187,7 @@ watch(
     if (newValue) {
       classHidden.value = false;
       classFaded.value = true;
-      nextTick(() => {
+      void nextTick(() => {
         updatePos();
         // 没有锚点时 updatePos 会提前返回，这里显式强制一次布局
         void listRef.value?.offsetHeight;

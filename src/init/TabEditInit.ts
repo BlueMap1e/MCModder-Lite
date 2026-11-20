@@ -935,6 +935,8 @@ export class TabEditInit extends Init {
     // GTCEu 编辑提示
     if (this.modID === 5343) {
       const gtceuAlert = $(".tab-ul > p.text-danger");
+      // 固定常量串的原地替换（站点自身文案 → 加下划线包装），无外部输入参与，
+      // 串行 re-parse 是 deliberate 简化
       gtceuAlert.html(
         gtceuAlert.html().replace(
           "使用 GTCEu 中对应的材料",

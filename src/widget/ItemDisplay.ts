@@ -52,10 +52,6 @@ export class ItemDisplay {
     });
   }
 
-  getHTML() {
-    return this.instance.prop("outerHTML") as string;
-  }
-
   private refreshItem() {
     const item = this.flattenedList[this.displaying];
     let url;

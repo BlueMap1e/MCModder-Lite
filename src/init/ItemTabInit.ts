@@ -1,6 +1,8 @@
 import { Init } from "./Init";
 
 export class ItemTabInit extends Init {
+  // canRun 恒 false：本类不被 InitLoader 调度，而是被 ItemPageInit / OredictPageInit
+  // 直接实例化后调用 run()（run 当前主体处于注释态，保留类壳供复用）
   canRun() {
     return false;
   }

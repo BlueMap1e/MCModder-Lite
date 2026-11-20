@@ -1170,7 +1170,7 @@ export class Values {
     { guiID: "minecraft:smoking", mcmodID: 923 },
     { guiID: "minecraft:campfire_smoking", mcmodID: 1083 },
     { guiID: "minecraft:stonecutting", mcmodID: 421 },
-    { guiID: "minecraft:smithing", mcmodID: 1222 }, // TODO 1.19- 使用 ID=404 的 GUI
+    { guiID: "minecraft:smithing", mcmodID: 1222 }, // 1.19- 版本段该 GUI 的 mcmodID 是 404
     { guiID: "minecraft:brewing", mcmodID: 282 },
   ];
 
