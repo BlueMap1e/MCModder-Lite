@@ -292,11 +292,15 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - Add a `## [x.y.z] - YYYY-MM-DD` section to `CHANGELOG.md` for the version being released
   (the section title must match `package.json` exactly); the release job extracts that
   section into the GitHub release notes — a mismatched title means empty notes.
-- CI (`.github/workflows/build.yaml`) builds every push and runs both smokes. Publishing is
-  restricted to `main` and waits for build + both smokes; the tag is created at the pushed
-  commit (`--target`), and `release.cjs` refuses to publish unless the first `## [...]`
-  heading in `CHANGELOG.md` equals `package.json`'s version. `npm run pack` enforces the
-  same check.
+- CI (`.github/workflows/build.yaml`): push triggers only when code/build paths change
+  (`src/**`, `scripts/**`, configs, workflows — docs-only pushes skip CI entirely; the
+  smokes hit the real site and their failures are non-deterministic under site-side rate
+  limiting, so they must not run on every push). A weekly cron (Mon 05:00 UTC+8) runs both
+  smokes as a site-compatibility sentry, and `workflow_dispatch` allows manual full runs.
+  Publishing is restricted to `main` **push events** (scheduled/manual runs never release)
+  and waits for build + both smokes; the tag is created at the pushed commit (`--target`),
+  and `release.cjs` refuses to publish unless the first `## [...]` heading in
+  `CHANGELOG.md` equals `package.json`'s version. `npm run pack` enforces the same check.
 - The literal `[release]` anywhere in a push's head commit message triggers the release job.
   Later commits touching a released version must avoid that literal — `release.cjs` skips
   when the tag already exists, but keeping it out of messages keeps CI history clean.

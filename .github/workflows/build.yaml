@@ -1,6 +1,32 @@
 name: Build
 
-on: [push]
+# 触发语义（2026-11-21 设计，理由在案）：
+# - push 只在触碰代码/构建相关路径时触发——本仓库的 smoke 是真站端到端测试，失败
+#   是非确定性的（数据中心 IP 会被 mcmod.cn 限流/断连），每次 push 必跑会让
+#   docs/注释类提交也撞限流，产生纯假红（2026-11-20 三连红实证：三 attempt 失败点
+#   互不相同且全在导航/等待层，与代码零因果）。真回归的拦截由 verify + build
+#   （确定性、快）承担。
+# - schedule 每周跑一次全量 smoke：站点兼容性监控哨（本仓库无单元测试，smoke 是
+#   唯一的自动化行为验证；它的正确频率 = 站点改版频率，不是提交频率）。
+# - workflow_dispatch 手动全量（Actions 页面可点），不发版。
+on:
+  push:
+    paths:
+      - "src/**"
+      - "scripts/**"
+      - "public/**"
+      - "package.json"
+      - "package-lock.json"
+      - "vite.config.ts"
+      - "eslint.config.ts"
+      - "tsconfig.json"
+      - "tsconfig.node.json"
+      - "prettier.config.ts"
+      - "lint-staged.config.ts"
+      - ".github/workflows/**"
+  workflow_dispatch:
+  schedule:
+    - cron: "0 21 * * 0" # 每周一 UTC 21:00（北京周一 05:00）
 
 jobs:
   build:
@@ -91,8 +117,9 @@ jobs:
   release:
     runs-on: ubuntu-latest
     needs: [build, smoke-public, smoke-security]
-    # 只在 main 上发版：任意分支的 [release] 提交都不该创建 release / 打 tag
-    if: github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
+    # 只在 main 的 push 上发版：schedule/workflow_dispatch 触发的监控哨 run 不发版
+    #（head_commit 为 null，条件显式排除）；任意分支的 [release] 提交都不该创建 release / 打 tag
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main' && contains(github.event.head_commit.message, '[release]')
     permissions:
       contents: write
     steps:
