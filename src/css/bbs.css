@@ -1200,6 +1200,15 @@ html.dark body#nv_forum .pls .xlc li a.buddy {
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='5.5' cy='4.5' r='3'/><path d='M1.5 14 V11.5 C1.5 9.3 3.5 8.5 5.5 8.5 C7.5 8.5 9.5 9.3 9.5 11.5 V14'/><path d='M10.5 7 H15.5'/><path d='M13 4.5 V9.5'/></svg>");
 }
 
+/* 帖子功能条（回复/点评/评分，post_act）：站点原生布局中 .bm.post_act 框为 30px
+   定高，而实际内容 .bm_c 高 48px 且上溢约 19px——原生无图标时不可见，图标显示后
+   其 border-top 恰好穿过图标中部（「万箭穿心」）。夜间去掉该穿心线，保留顶部分隔
+   线（post_new 的 border-bottom）与底界线（post_act 的 border-bottom），图标行
+   夹于两条结构线间呈一体化。 */
+html.dark body#nv_forum .post_act {
+  border-top: none;
+}
+
 html.dark body#nv_forum #thread_subject,
 html.dark body#nv_forum #thread_subject a,
 html.dark body#nv_forum h1.ts span#thread_subject a,
