@@ -1178,8 +1178,8 @@ html.dark body#nv_forum .pls .xlc li {
 
 html.dark body#nv_forum .pls .xlc li,
 html.dark body#nv_forum .pls .xlc li a {
-  width: 20px;
-  height: 20px;
+  width: 24px;
+  height: 24px;
   filter: none;
   will-change: auto;
   transform: none;
@@ -1203,10 +1203,12 @@ html.dark body#nv_forum .pls .xlc li a.buddy {
 /* 帖子功能条（回复/点评/评分，post_act）：站点原生布局中 .bm.post_act 框为 30px
    定高，而实际内容 .bm_c 高 48px 且上溢约 19px——原生无图标时不可见，图标显示后
    其 border-top 恰好穿过图标中部（「万箭穿心」）。夜间去掉该穿心线，保留顶部分隔
-   线（post_new 的 border-bottom）与底界线（post_act 的 border-bottom），图标行
-   夹于两条结构线间呈一体化。 */
-html.dark body#nv_forum .post_act {
+   线与底界线一并去除：功能条区域背景全同色，「发表主题」teal 大按钮自身即视觉
+   锚点，分隔线只是噪音——整块呈一体化。 */
+html.dark body#nv_forum .post_act,
+html.dark body#nv_forum .post_new {
   border-top: none;
+  border-bottom: none;
 }
 
 html.dark body#nv_forum #thread_subject,
