@@ -66,15 +66,6 @@ export default defineConfig([
     },
   },
   {
-    // GenericTable 的 props 与 <script setup> 内部键存在历史性的同名重叠
-    //（editConfigs / columnOptions），消除需要改组件接口面、波及全部调用方——
-    // 既有结构的标记，非新代码的豁免。须排在 vue recommended 块之后才不被覆盖
-    files: ["src/vue/components/table/GenericTable.vue"],
-    rules: {
-      "vue/no-dupe-keys": "off",
-    },
-  },
-  {
     files: ["src/**/*.{ts,vue}"],
     rules: {
       /**

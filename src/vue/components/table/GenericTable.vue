@@ -19,7 +19,7 @@
     </div>
     <table class="mcmodder-table">
       <thead>
-        <th v-for="(option, index) in columnOptions" :key="index" v-html="option.name" />
+        <th v-for="(option, index) in normalizedColumnOptions" :key="index" v-html="option.name" />
       </thead>
       <tbody>
         <tr class="mcmodder-table-margin-top" :style="{ height: cssMarginTopHeight + 'px' }" />
@@ -37,7 +37,7 @@
           @pointerenter="rowOnPointerenter(index)"
         >
           <td
-            v-for="key in Object.keys(columnOptions)"
+            v-for="key in Object.keys(normalizedColumnOptions)"
             :key="key"
             :data-key="key"
             :class="{
@@ -98,7 +98,7 @@
  *   存入 `currentData`（`shallowRef`）：`content` 是原始数据、`selected` 是选中标记、`edited`
  *   是尚未保存的单元格改动。
  *
- * - **展示层**：`columnOptions` 的键即展示列，表头取 `name`，单元格由 `renderUnit` + 该列的
+ * - **展示层**：`normalizedColumnOptions` 的键即展示列，表头取 `name`，单元格由 `renderUnit` + 该列的
  *   `displayRule` 渲染成 HTML。**展示列与数据字段并不一定一一对应**：一个展示列可以是对多个
  *   字段综合加工后的结果（如 `DISPLAYRULE_LINK_CENTER_WITH_NAME` 以 `"id,名称"` 一列同时展示
  *   两个字段），这种「纯展示列」只有展示语义、无法反解回某个字段，因此**一定不能双击编辑**。
@@ -106,7 +106,7 @@
  * - **渲染层**：表格体用虚拟滚动只渲染可视行（该实现存在已知问题，后续会替换为 VueUse，本文件
  *   不展开注释）。
  *
- * - **编辑层**：`editConfigs` 声明哪些列可编辑及控件形态。双击可编辑单元格时按 `TableInputOption`
+ * - **编辑层**：`props.editConfigs` 声明哪些列可编辑及控件形态。双击可编辑单元格时按 `TableInputOption`
  *   装配 NUMBER/TEXT 输入控件，提交后经 `EditCommand` 写入 `edited`；
  *   `saveAll` 才把 `edited` 合并回 `content`。所有改动走「命令 / 撤销」模式（`Command` 子类），
  *   由 `execute`/`undo`/`redo` 在历史栈上回放。
@@ -172,14 +172,14 @@ const cssMarginBottomHeight = ref(0);
 
 const contextMenu = useTemplateRef("contextMenu");
 
-/** 是否处于可编辑模式：由 `editConfigsInitializer` 是否有值决定（未传 `editConfigs` 时整表只读） */
+/** 是否处于可编辑模式：由 `editConfigsInitializer` 是否有值决定（未传 `props.editConfigs` 时整表只读） */
 const editable = ref(false);
 /** `editConfigs` props 的副本；被 watch 监听以触发编辑配置归一化 */
 const editConfigsInitializer: ShallowRef<EditOptionsInitializer<T> | undefined> = shallowRef(
   props.editConfigs,
 );
 /** 归一化后的编辑配置（键 = 数据字段）：缺失/空值视为只读，其余按 `InputType` 装配控件与默认值 */
-const editConfigs = shallowRef<EditConfigs<T>>();
+const normalizedEditConfigs = shallowRef<EditConfigs<T>>();
 /** 是否存在尚未 `saveAll` 的整行级改动（增/删/粘贴行等） */
 const unsaved = ref(false);
 /** 当前选中的行数（由 `selectRow` 维护，供右键菜单判断「删除/复制所有选中行」） */
@@ -218,7 +218,7 @@ const columnOptionsConstructor: Partial<ColumnOptions<T>> = {};
 Object.entries(props.columnOptions).forEach(([key, value]) => {
   columnOptionsConstructor[key] = TableUtils.parseColumnOptionsInitializer(value);
 });
-const columnOptions = columnOptionsConstructor as ColumnOptions<T>;
+const normalizedColumnOptions = columnOptionsConstructor as ColumnOptions<T>;
 
 /**
  * 绑定全局事件（挂载时调用一次）：
@@ -559,7 +559,7 @@ function getUnitElement(index: number, key: string) {
  */
 function renderUnit(data: TableRowData<T>, key: string) {
   const rawContent = data.edited?.[key] ?? data.content[key];
-  const displayRule = columnOptions[key].displayRule;
+  const displayRule = normalizedColumnOptions[key].displayRule;
   const hasDisplayRule = !!displayRule && displayRule.length >= 2;
   let content;
   if (!hasDisplayRule && (rawContent === undefined || rawContent === null)) {
@@ -633,8 +633,8 @@ function switchDisplayState() {
 
 /**
  * 编辑配置的归一化 watch（immediate）：监听 `editConfigsInitializer`，把每字段的
- * `EditOptionInitializer` 解析为 `TableInputOption` 存入 `editConfigs`。
- * 未传 `editConfigs`（undefined）时整表 `editable = false`（只读模式）。
+ * `EditOptionInitializer` 解析为 `TableInputOption` 存入 `normalizedEditConfigs`。
+ * 未传 `normalizedEditConfigs`（undefined）时整表 `editable = false`（只读模式）。
  */
 watch(
   () => editConfigsInitializer.value,
@@ -642,7 +642,7 @@ watch(
     // edit config init
     if (editConfigsInitializer.value === undefined) {
       editable.value = false;
-      editConfigs.value = {} as EditConfigs<T>;
+      normalizedEditConfigs.value = {} as EditConfigs<T>;
       return;
     }
     editable.value = true;
@@ -650,7 +650,7 @@ watch(
     Object.entries(editConfigsInitializer.value).forEach(([key, value]) => {
       result[key as keyof T] = McmodderEditableTable.parseEditConfigInitializer(value);
     });
-    editConfigs.value = result as unknown as EditConfigs<T>; // doge
+    normalizedEditConfigs.value = result as unknown as EditConfigs<T>; // doge
   },
   {
     immediate: true,
@@ -791,12 +791,12 @@ function insertRowWithDataMap(dataMap: TableDataMap<T>) {
   insertRow(key, dataMap[key]);
 }
 
-/** 生成一行默认数据：把每个非可选（`optional` 为假）字段的默认值从 `editConfigs` 摘出来 */
+/** 生成一行默认数据：把每个非可选（`optional` 为假）字段的默认值从 `normalizedEditConfigs` 摘出来 */
 function createDefaultRowData() {
   const result: Partial<T> = {};
-  (Object.keys(editConfigs.value!) as (keyof EditConfigs<T>)[]).forEach((key) => {
-    const editConfig = editConfigs.value![key];
-    if (!editConfig.optional) (result[key] as unknown) = editConfigs.value![key].value;
+  (Object.keys(normalizedEditConfigs.value!) as (keyof EditConfigs<T>)[]).forEach((key) => {
+    const editConfig = normalizedEditConfigs.value![key];
+    if (!editConfig.optional) (result[key] as unknown) = normalizedEditConfigs.value![key].value;
   });
   return result as T;
 }
@@ -951,17 +951,17 @@ function getEditedValue() {
 
 /**
  * 双击单元格进入编辑态：
- * 1. 该展示列不在 `editConfigs` 中、或标记只读 → 不可编辑，直接返回（**这正是「展示列与
+ * 1. 该展示列不在 `normalizedEditConfigs` 中、或标记只读 → 不可编辑，直接返回（**这正是「展示列与
  *    数据字段不一定对应」的体现——没有编辑配置 / 只读的展示列无法双击编辑**）；
  * 2. 记录编辑中的行列，取当前生效值（未保存编辑优先，缺失时回退该输入类型的默认值）；
  * 3. 装配输入控件（NUMBER/TEXT），键入成功后用 `EditCommand` 写入 `edited`；
  * 4. 下一帧聚焦输入框。
  */
 function onDblclick(index: number, key: keyof T) {
-  if (!editConfigs.value!.hasOwnProperty(key)) {
+  if (!normalizedEditConfigs.value!.hasOwnProperty(key)) {
     return;
   }
-  if (editConfigs.value![key as keyof EditConfigs<T>]?.readonly) {
+  if (normalizedEditConfigs.value![key as keyof EditConfigs<T>]?.readonly) {
     return;
   }
   editingIndex.value = index;
@@ -971,12 +971,12 @@ function onDblclick(index: number, key: keyof T) {
   const value = inputData.edited?.hasOwnProperty(key)
     ? inputData.edited[key]
     : inputData.content[key];
-  if (!editConfigs.value!.hasOwnProperty(key)) {
+  if (!normalizedEditConfigs.value!.hasOwnProperty(key)) {
     throw new Error("Unexpected data key.");
   }
 
   const typedKey = key as keyof EditConfigs<T>;
-  const editConfig = editConfigs.value![typedKey] as TableInputOption;
+  const editConfig = normalizedEditConfigs.value![typedKey] as TableInputOption;
   const nonNullValue = value ?? editConfig.value;
   computeInputNode(typedKey, nonNullValue, editConfig, (info) => {
     execute(new EditCommand(ctx, index, key, info.final as T[typeof key]));
@@ -1007,7 +1007,7 @@ function computeInputNode(
   inputData: TableInputOption,
   onSuccessfulChange: InputSuccessfulChangeCallBack<unknown>,
 ) {
-  const displayName = inputData.customName || columnOptions[key].name || String(key);
+  const displayName = inputData.customName || normalizedColumnOptions[key].name || String(key);
   if (inputData.type === "number") {
     inputNodeData.value = {
       type: inputData.type,
