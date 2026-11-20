@@ -420,11 +420,9 @@ html.dark .modinfo .block .text {
   color: var(--mcmodder-color-text);
 }
 
-html.dark #fastpostmessage {
-  background-color: var(--mcmodder-color-background-dark2);
-  color: var(--mcmodder-color-text);
-  border: 1px solid var(--mcmodder-color-background-dark3);
-}
+/* 原含 #fastpostmessage 专规则（bg/color/border 三样），已删：三样声明均被
+   通用输入框规则与下方 #f_pst 块逐字覆盖（CDP getMatchedStyles 对照），而其
+   ID 特异性 border 简写会压过 .tedt 容器形态规则、造出双框（thread-24239） */
 
 html.dark .fpd {
   background-color: var(--mcmodder-color-background-dark2);
@@ -462,6 +460,18 @@ html.dark textarea.pt {
 html.dark input[type="text"]:focus,
 html.dark textarea:focus {
   border-color: var(--mcmodder-color-accent);
+}
+
+/* .tedt 简编辑器容器（快速回复等）：站点原生形态 = 容器承载单线轮廓
+   （.tedt 自带 1px 边框，.tedt .pt 写死 border:none），但上方通用输入框规则
+   （html.dark textarea.pt，特异性 0,2,1）压过站点 .tedt .pt（0,2,0），给容器内
+   textarea 加回 1px 边框 + 圆角，与容器线叠成双框（thread-24239 用户报告）。
+   恢复站点原生单线：容器内 textarea 去边框，圆角一并归零（容器直角 + 内外
+   同底色，圆角本不可见，留着徒增发丝级瑕疵）。聚焦反馈不加：站点原生连
+   outline 都杀掉，focus-within 挂容器会被工具栏按钮抢焦点后常亮 */
+html.dark .tedt .pt {
+  border: none;
+  border-radius: 0;
 }
 
 html.dark .pn {
