@@ -27,7 +27,11 @@ export class AutoCheckinScheduleRequest extends ScheduleRequestType {
 
   /** 执行签到（异步主体，收口说明见 run） */
   private async checkin(list: ScheduleRequestUtils) {
+    // 排下期在前（调度自续期约定），登录守卫在其后：未登录时静默跳过本次 POST
+    //（上游反馈帖 13 楼：未登录签到会被站点重定向到登录页，反复骚扰），保留排期，
+    // 登录后次日自动恢复
     list.create(Utils.getStartTime(new Date()), "autoCheckin", this.parent.currentUID);
+    if (!this.parent.currentUID) return;
     const resp = await this.parent.utils.createRequest(
       {
         url: "https://center.mcmod.cn/action/doUserCheckIn/",
