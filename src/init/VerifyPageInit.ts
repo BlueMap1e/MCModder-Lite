@@ -5,6 +5,8 @@ import { Init } from "./Init";
 import VerifyRowList from "../vue/components/VerifyRowList.vue";
 
 export class VerifyPageInit extends Init {
+  // canRun 恒 false：本类不被 InitLoader 调度，而是被 VerifyHistoryInit 按页面
+  // 分支（自动展开完成 / 直接访问）多次实例化并调用 run()，run 需保持可重入
   canRun() {
     return false;
   }
@@ -71,7 +73,7 @@ export class VerifyPageInit extends Init {
               const c = e.textContent.split(": "),
                 h = e.outerHTML.replaceAll(c[0] + ": ", "");
               if (c[0] === PublicLangData.verify_list.verifynum)
-                verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${c[0]}: ${c[1]}">(${parseInt(c[1])})</p>`;
+                verifyState[0] += `&nbsp;<p data-toggle="tooltip" data-original-title="${Utils.escapeHTML(c[0])}: ${Utils.escapeHTML(c[1])}">(${parseInt(c[1])})</p>`;
               else if (c[0] === PublicLangData.verify_list.verifyuser) verifyState[1] = h;
               else if (c[0] === PublicLangData.verify_list.time.verifytime) verifyState[2] = h;
               else if (c[0] === PublicLangData.verify_list.reason) verifyState[4] = h;
@@ -295,7 +297,15 @@ export class VerifyPageInit extends Init {
                 "催审",
               )
               .then((resp) => {
-                const state = JSON.parse(resp.responseText).state;
+                let state: number | undefined;
+                try {
+                  state = JSON.parse(resp.responseText).state;
+                } catch {
+                  // 响应非 JSON（拦截页/错误页）：本项按失败处理，继续后续项，按钮不卡死
+                  console.error(
+                    "[MCModder-Lite] 催审响应不是有效 JSON (len=" + resp.responseText.length + ")",
+                  );
+                }
                 if (state === 0) {
                   t++;
                   $(urgeList[index]).html("催审成功").attr("class", "ml-1 text-muted");

@@ -205,8 +205,12 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
     } else if (typeof jQuery === "undefined" && document.body != null) {
       // 已被封禁
       if ((document.body.textContent ?? "").includes("您已被系统封禁")) {
-        document.body.innerHTML +=
-          '若遇封IP，请在向作者反馈时发送下列内容，并告知具体封禁时间（精确到秒）以及被封禁时已打开的百科页面数量。下列内容可能包含敏感信息，可考虑私信发送。<textarea id="mcmodder-log-export" style="min-height: 800px; min-width: 100%;">';
+        // insertAdjacentHTML 只解析新增片段：innerHTML += 会把整个 body 重新序列化
+        // 再解析一遍（大页面无谓开销 + 既有节点状态丢失）
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          '若遇封IP，请在向作者反馈时发送下列内容，并告知具体封禁时间（精确到秒）以及被封禁时已打开的百科页面数量。下列内容可能包含敏感信息，可考虑私信发送。<textarea id="mcmodder-log-export" style="min-height: 800px; min-width: 100%;">',
+        );
         (document.getElementById("mcmodder-log-export") as HTMLTextAreaElement).value =
           GM_getValue("mcmodderSettings") +
           "\n" +
@@ -219,10 +223,13 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
         window.location.href.startsWith("https://admin.mcmod.cn/") &&
         document.body.innerHTML === '{"state":107}'
       ) {
-        document.body.innerHTML += `
+        document.body.insertAdjacentHTML(
+          "beforeend",
+          `
           <br><a target="_blank" href="https://www.mcmod.cn/login/">登录 (主网址)</a>
           <br><a target="_blank" href="https://www1.mcmod.cn/login/">登录 (备用网址)</a>
-        `;
+        `,
+        );
       }
       splashStyle.textContent = `body { animation: mcmodder-fadein .3s ease forwards; } @keyframes mcmodder-fadein { from { opacity: 0; } to { opacity: 1; } }`;
       setTimeout(() => splashStyle.remove(), 300);

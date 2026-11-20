@@ -1,6 +1,7 @@
 import { Utils } from "../Utils";
 import { Init } from "./Init";
 import { VerifyPageInit } from "./VerifyPageInit";
+import { sanitizeHTML } from "../vue/composables/useSanitizedHTML";
 
 export class VerifyHistoryInit extends Init {
   private stopExpand = false;
@@ -39,11 +40,16 @@ export class VerifyHistoryInit extends Init {
               return;
             }
             // 不依赖油猴的 responseXML（不同实现/版本对 HTML 响应是否填充行为不一），
-            // 统一用 responseText 自行解析，确定性执行
+            // 统一用 responseText 自行解析，确定性执行。搬运的行是远程页面片段（含
+            // 提交者可控的附言文本），逐行过 DOMPurify 白名单再进本文档
             const d = $(new DOMParser().parseFromString(resp.responseText, "text/html"));
             d.find(".verify-list-list-table tbody")
               .children()
-              .appendTo(".verify-list-list-table tbody");
+              .each((_, tr) => {
+                $(sanitizeHTML((tr as HTMLElement).outerHTML)).appendTo(
+                  ".verify-list-list-table tbody",
+                );
+              });
             Utils.commonMsg(`成功加载第 ${id} / ${maxPage} 页~`);
             if (id < maxPage && !this.stopExpand) setTimeout(() => getHistoryPage(++id), 1e3);
             else new VerifyPageInit(this.parent).run();

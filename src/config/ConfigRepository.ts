@@ -99,7 +99,13 @@ export class ConfigRepository {
     else {
       const raw = GM_getValue(item);
       if (raw === undefined) return undefined;
-      data = JSON.parse(raw) as AppStorage[T];
+      // 存储值损坏（JSON 解析失败）时按「键不存在」回退为 undefined，让调用方
+      // 走各自的默认值路径，而不是抛异常炸掉整条启动链
+      try {
+        data = JSON.parse(raw) as AppStorage[T];
+      } catch {
+        return undefined;
+      }
     }
     if (data === undefined) return undefined;
     return data as Required<AppStorage>[T];
@@ -448,9 +454,13 @@ export class ConfigRepository {
       GM_setValue(storageKey, "{}");
       raw = "{}";
     }
-    const record = JSON.parse(raw) as Record<string, string>;
-    const result = JSON.parse(record[id] ?? "{}") as T;
-    return result;
+    // 存储值损坏时回退为空记录（读取端自愈；写入端会在下次保存时重建该键）
+    try {
+      const record = JSON.parse(raw) as Record<string, string>;
+      return JSON.parse(record[id] ?? "{}") as T;
+    } catch {
+      return {} as T;
+    }
   }
 
   /**
@@ -482,8 +492,16 @@ export class ConfigRepository {
     K extends KeysOfType<Required<AppStorage>, Record<string, string>>,
     P extends keyof T,
   >(storageKey: K, key: P, value: T[P], id: number) {
-    const profiles = JSON.parse(GM_getValue(storageKey) || "{}");
-    const profile = JSON.parse(profiles[id] || "{}");
+    let profiles: Record<string, string>;
+    let profile: Partial<T>;
+    try {
+      profiles = JSON.parse(GM_getValue(storageKey) || "{}");
+      profile = JSON.parse(profiles[id] || "{}");
+    } catch {
+      // 既有值损坏：从空记录重建该键（读取端已自愈为空，旧数据不可信）
+      profiles = {};
+      profile = {};
+    }
     profile[key] = value;
     profiles[id] = JSON.stringify(profile);
     GM_setValue(storageKey, JSON.stringify(profiles));
@@ -500,11 +518,18 @@ export class ConfigRepository {
     T extends Profile | Class,
     K extends KeysOfType<Required<AppStorage>, Record<string, string>>,
   >(storageKey: K, content: T, id: number) {
-    const profiles = JSON.parse(GM_getValue(storageKey) || "{}");
-    let profile = JSON.parse(profiles[id] || "{}");
+    let profiles: Record<string, string>;
+    let profile: Partial<T>;
+    try {
+      profiles = JSON.parse(GM_getValue(storageKey) || "{}");
+      profile = JSON.parse(profiles[id] || "{}");
+    } catch {
+      // 既有值损坏：从空记录重建该键（读取端已自愈为空，旧数据不可信）
+      profiles = {};
+      profile = {};
+    }
     profile = Object.assign(profile, content);
-    profile.lastUpdated = Date.now();
-    profiles[id] = JSON.stringify(profile);
+    profiles[id] = JSON.stringify({ ...profile, lastUpdated: Date.now() });
     GM_setValue(storageKey, JSON.stringify(profiles));
   }
 

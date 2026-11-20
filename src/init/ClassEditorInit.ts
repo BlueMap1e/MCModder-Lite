@@ -65,8 +65,9 @@ export class ClassEditorInit extends Init {
               f.find("label").removeClass("text-muted");
               f.addClass("mcmodder-slim-danger").attr({
                 "data-toggle": "tooltip",
+                // data-html=true 时 tooltip 按 HTML 渲染：插值文本先转义
                 "data-html": "true",
-                "data-original-title": `${loaderName} 自身并不支持 ${version}！这可能由先前的编辑者疏忽所致，强烈建议取消勾选此版本。<br>如果你认为这个提示是错误的，请向 Mcmodder 作者反馈！`,
+                "data-original-title": `${loaderName} 自身并不支持 ${Utils.escapeHTML(version)}！这可能由先前的编辑者疏忽所致，强烈建议取消勾选此版本。<br>如果你认为这个提示是错误的，请向 Mcmodder 作者反馈！`,
               });
             } else f.hide();
           } else {

@@ -14,6 +14,7 @@ import { ClassEditRules } from "../../editrule/ClassEditRules.ts";
 import { ItemEditRules } from "../../editrule/ItemEditRules.ts";
 import { TabEditRules } from "../../editrule/TabEditRules.ts";
 import VerifyTimeline from "../../vue/components/VerifyTimeline.vue";
+import { sanitizeHTML } from "../../vue/composables/useSanitizedHTML";
 
 type ParsedOpinion = [number, number, number, number];
 
@@ -252,7 +253,12 @@ export class AdminVerifyInit extends AdminBaseInit {
         if (!data) {
           return;
         }
-        const id = Number(JSON.parse(data).verifyID);
+        let id: number;
+        try {
+          id = Number(JSON.parse(data).verifyID);
+        } catch {
+          return;
+        }
         this.markEntryAsViewed(id);
         this.getEntry(id).addClass("mcmodder-verify-commented");
       })
@@ -1226,9 +1232,13 @@ export class AdminVerifyInit extends AdminBaseInit {
    * 下次打开同待审项时，自动读取并重新填充在附言输入框内。
    */
   private cacheMessage() {
-    const verifyId = Number(
-      JSON.parse($("#verify-pass-btn, #assistant-pass-btn").attr("data-data")).verifyID,
-    );
+    const dataData = $("#verify-pass-btn, #assistant-pass-btn").attr("data-data");
+    let verifyId: number;
+    try {
+      verifyId = Number(JSON.parse(dataData).verifyID);
+    } catch {
+      return; // 站点按钮上的 JSON 属性异常：跳过附言暂存，不影响本页其余功能
+    }
     $("#verify-reason, #assistant-reason")
       .val(this.lastRefundText[verifyId] ?? "")
       .focusout((e) => {
@@ -1298,7 +1308,20 @@ export class AdminVerifyInit extends AdminBaseInit {
       },
       "更新待审列表",
     );
-    const state = JSON.parse(resp.responseText)?.state;
+    // 远程响应按不可信内容处理：JSON 解析失败与字段缺失都收口为「更新失败」，
+    // html 片段过 DOMPurify 白名单后再进文档
+    let parsed: { state?: number; html?: string };
+    try {
+      parsed = JSON.parse(resp.responseText);
+    } catch {
+      Utils.commonMsg(
+        "待审列表自动更新失败，请检查登录状态和网络环境，或是检查控制台报错...",
+        false,
+      );
+      console.error("返回内容不是有效 JSON (len=" + resp.responseText.length + ")");
+      return;
+    }
+    const state = parsed?.state;
     if (state === undefined || state > 0) {
       Utils.commonMsg(
         "待审列表自动更新失败，请检查登录状态和网络环境，或是检查控制台报错...",
@@ -1307,8 +1330,7 @@ export class AdminVerifyInit extends AdminBaseInit {
       console.error("返回状态异常: ", resp);
       return;
     }
-    const html = $(JSON.parse(resp.responseText).html);
-    return html;
+    return parsed.html ? $(sanitizeHTML(parsed.html)) : undefined;
   }
 
   private static readonly opinionMapKey = {

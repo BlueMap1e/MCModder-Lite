@@ -3,6 +3,8 @@ import { InputListPopoverController } from "../widget/popover/InputListPopoverCo
 import { Init } from "./Init";
 
 export class GeneralEditInit extends Init {
+  // canRun 恒 false：本类不被 InitLoader 调度，而是由 Mcmodder.editorLoad 在编辑器
+  // 就绪后直接实例化并调用 run()（编辑器创建时机不归 InitLoader 门控）
   canRun() {
     return false;
   }
@@ -78,7 +80,7 @@ export class GeneralEditInit extends Init {
       .hide()
       .each((_, e) => {
         $(
-          `<textarea id=${"mcmodder-textarea-" + $(e).attr("data-multi-id")} class="form-control" placeholder="${$(e).attr("placeholder")}"></textarea>`,
+          `<textarea id=${"mcmodder-textarea-" + $(e).attr("data-multi-id")} class="form-control" placeholder="${Utils.escapeHTML(String($(e).attr("placeholder") ?? ""))}"></textarea>`,
         )
           .insertBefore($(e).parent())
           .val($(e).val())

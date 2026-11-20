@@ -497,12 +497,14 @@ export class Utils {
     return `https://center.mcmod.cn/${id}/`;
   }
 
-  /** 生成新窗口打开的目标 `<a>` 元素，文本缺省为 URL 本身 */
+  /** 生成新窗口打开的目标 `<a>` 元素，文本缺省为 URL 本身；URL 过白名单，不合规格返回空集 */
   static URLToAnchor(url: string, text?: string) {
+    const safe = Utils.safeURL(url);
+    if (!safe) return $();
     return $("<a>")
       .attr({
         target: "_blank",
-        href: url,
+        href: safe,
       })
       .text(text ?? url);
   }

@@ -47,7 +47,10 @@ export class AdminStyleInit extends AdminBaseInit {
               const t = (c: string) =>
                 $(c)
                   .val()
-                  .replace(/<!--[\s\S]*?-->/g, "");
+                  .replace(/<!--[\s\S]*?-->/g, "")
+                  // 预览注入走 style 元素：值里的字面 style 结束标签会提前终止样式表，
+                  // 并把余文当 HTML 注入文档——CSS 中该序列本就不合法，剥除无损
+                  .replaceAll(/<\/style/gi, "");
               const titleStyle = t("#itemlist-head-th");
               const categoryStyle = t("#itemlist-body-th");
               const itemListStyle = t("#itemlist-body-td");

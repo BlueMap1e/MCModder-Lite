@@ -331,9 +331,11 @@ const columnOptions = {
   options: [
     "操作",
     (_, row) => {
-      // 已匹配：给「编辑日志」入口，而不是无事可做
-      if (row.editLink)
-        return `<a href="${Utils.escapeHTML(row.editLink)}" target="_blank">编辑日志</a>`;
+      // 已匹配：给「编辑日志」入口，而不是无事可做（站点锚点 href 过 URL 白名单）
+      if (row.editLink) {
+        const safe = Utils.safeURL(row.editLink);
+        return safe ? `<a href="${Utils.escapeHTML(safe)}" target="_blank">编辑日志</a>` : "";
+      }
       if (!row.displayName || !row.releaseTime) return "";
       // 文件名 / 版本号来自 CurseForge / Modrinth，进 URL 查询串前必须编码
       const mcver = encodeURIComponent(String(row.gameVersions ?? ""));
@@ -447,7 +449,7 @@ const modules: Record<PlatformId, PlatformModule> = { cf: cfModule, mr: mrModule
 /** CF 文件列表：分页拉取（1s 间隔），保留站点人机验证的重试与引导。
  * 失败收口不变量：外层 promise 必须 settle（resolve 或 reject）——内部链一旦死亡
  * （.then 无 .catch / 解析抛错无人接），caller 的 catch/finally 永不执行，
- * querying 永久卡死，面板表现为「无限转圈」（上游 issue #128 的症状）。 */
+ * querying 永久卡死，面板表现为「无限转圈」（上游 issue 128 的症状）。 */
 function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
   return new Promise((resolve, reject) => {
     let fileList: NormalizedRow[] = [];
@@ -476,7 +478,7 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
               );
               setTimeout(() => work(0), captchaAttemptInterval);
             } else {
-              swal
+              void swal
                 .fire({
                   title: "验证失败",
                   text: "请手动进入 CurseForge 验证页面，并于验证成功后重试。",

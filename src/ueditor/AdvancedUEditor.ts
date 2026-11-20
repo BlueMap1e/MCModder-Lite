@@ -1376,7 +1376,13 @@ export class AdvancedUEditor extends UEditor {
       editor.selection.getRange().select();
       const b = editor.selection.getText();
       return b
-        ? (editor.execCommand("insertHtml", `<span class="uknowtoomuch">${b}</span>`, true), void 0)
+        ? (editor.execCommand(
+            "insertHtml",
+            // 选区文本按纯文本包进 span：不转义会让粘贴内容里的标签序列被解析成真实元素
+            `<span class="uknowtoomuch">${Utils.escapeHTML(b)}</span>`,
+            true,
+          ),
+          void 0)
         : (Utils.commonMsg(PublicLangData["warning"]["inform"][164], false), void 0);
     };
   }

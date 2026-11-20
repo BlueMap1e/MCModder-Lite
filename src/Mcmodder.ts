@@ -347,8 +347,16 @@ export class Mcmodder {
           const rightTableSource = doc.find(".item-data .item-info-table").first();
           const rightTable = $(sanitizeHTML(rightTableSource.prop("outerHTML") ?? ""));
           rightTable.removeClass("righttable").insertBefore(previewFrame);
-          const showImg = (c: Element) =>
-            (c.outerHTML = c.outerHTML.replaceAll("data-src=", "src="));
+          const showImg = (c: Element) => {
+            // data-src 是站点图床的懒加载属性，值来自远端页面：写 src 前过 URL 白名单，
+            // 不合规格时保留 data-src 原样（图片不加载，与未激活形态一致）
+            const ds = c.getAttribute("data-src");
+            if (!ds) return;
+            const safe = Utils.safeURL(ds);
+            if (!safe) return;
+            c.setAttribute("src", safe);
+            c.removeAttribute("data-src");
+          };
           rightTable.find("img").each((_, img) => {
             showImg(img);
           });
@@ -364,7 +372,6 @@ export class Mcmodder {
           if (this.configRepository.getSettings("hoverImage")) {
             previewFrame.find("img").each((_, img) => {
               showImg(img);
-              $(img).attr("src", $(img).attr("data-src"));
             });
           }
           rightTable.find("tr").last().remove();
@@ -715,19 +722,20 @@ export class Mcmodder {
 
     if (this.configRepository.getSettings("tableLeftAlign")) {
       // StyleLoader CSS
-      const f = (e: Element) => {
-        const c = $(e).next();
-        if (c.attr("class") === "figcaption")
-          c.css("width", e.getBoundingClientRect().width + "px");
-      };
+      // 先读齐再统一写：写 width 会使后续元素的 getBoundingClientRect 失效
+      //（布局抖动），逐元素读写交错会让每张图按「前一张已改宽后」的布局取值
+      const pending: Array<[JQuery, number]> = [];
       $(".common-text .figure .lazy").each((_, _e) => {
         const e = _e as HTMLImageElement;
+        const c = $(e).next();
+        if (c.attr("class") !== "figcaption") return;
         if (e.complete) {
-          f(e);
+          pending.push([c, e.getBoundingClientRect().width]);
         } else {
-          e.onload = () => f(e);
+          e.onload = () => c.css("width", e.getBoundingClientRect().width + "px");
         }
       });
+      for (const [c, width] of pending) c.css("width", width + "px");
     } else Utils.addStyle(".common-text .figure {align-items: center;}");
     $(
       ".mold, .progress-list, .class-item-type li, .post-block, .tag li, .mcver li a, .tools-list li a, .edit-tools span, .comment-row, .comment-channel-list li a, .class-relation-list .relation li, .btn, .mcmodder-gui-alert, .edit-tools > span, .center-sub-menu a, .center-content.admin-list a, .center-card-block.badges, .center-card-border, .modlist-block, .common-center .maintext .item-give, .common-center .post-row .postname .tool li a",
@@ -766,12 +774,18 @@ export class Mcmodder {
       $(".header-user .header-layer-block li a").each((_, _c) => {
         const c = $(_c);
         const text = c.text();
+        // href 与文本来自站点导航 DOM：URL 过白名单、文本转义后再重建节点；
+        // 不合规格的 href 降级为无链接项（点击无效但不执行任意协议）
+        const href = c.prop("href");
+        const safeHref = href ? Utils.safeURL(href) : undefined;
         c.replaceWith(
           `<a${
-            c.text() === "退出登录"
+            text === "退出登录"
               ? ` id="common-logout-btn"`
-              : ` href="${c.prop("href")}" target="_blank"`
-          }><i class="${(Values.iconMap as any)[text]}"/><span>${text}</span><i class="fa fa-chevron-right" /></a>`,
+              : safeHref
+                ? ` href="${Utils.escapeHTML(safeHref)}" target="_blank"`
+                : ""
+          }><i class="${(Values.iconMap as any)[text]}"/><span>${Utils.escapeHTML(text)}</span><i class="fa fa-chevron-right" /></a>`,
         );
       });
     }

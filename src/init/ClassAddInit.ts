@@ -1,5 +1,6 @@
 import { Utils } from "../Utils";
 import { Init } from "./Init";
+import { sanitizeHTML } from "../vue/composables/useSanitizedHTML";
 
 export class ClassAddInit extends Init {
   canRun() {
@@ -25,8 +26,11 @@ export class ClassAddInit extends Init {
     );
     if (!resp.responseXML) return;
     const doc = $(resp.responseXML);
+    // 远端 class/add 页片段（含其他编辑者正在填写的模组名）过白名单再写入
     $("div.common-rowlist-block:nth-child(2) > div:nth-child(2)").html(
-      doc.find("div.common-rowlist-block:nth-child(2) > div:nth-child(2)").html(),
+      sanitizeHTML(
+        doc.find("div.common-rowlist-block:nth-child(2) > div:nth-child(2)").html() ?? "",
+      ),
     );
     $("#mcmodder-crash-protector").html("[刷新]");
     Utils.commonMsg("刷新成功！");

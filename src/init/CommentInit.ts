@@ -186,7 +186,7 @@ export class CommentInit extends Init {
       const h = commentContent.clientHeight;
       if (h > expandHeight && h < 3e2 && expandHeight < 3e2) {
         $(
-          `<a class="fold text-muted"><i class="fas fa-chevron-down"></i>${PublicLangData.comment.fold.down}</a>`,
+          `<a class="fold text-muted"><i class="fas fa-chevron-down"></i>${Utils.escapeHTML(String(PublicLangData.comment.fold.down))}</a>`,
         ).appendTo(target);
         target.insertBefore(
           target.find("a.fold.text-muted").get(0) /*, target.find("ul.comment-tools").get(0) */,
@@ -291,8 +291,11 @@ export class CommentInit extends Init {
 
   run() {
     if (this.configs.getSettings("commentExpandHeight")) {
-      const commentHeight = this.configs.getSettings("commentExpandHeight") || "300";
-      Utils.addStyle(`.comment-row-text {max-height: ${commentHeight}px;}`);
+      // 设置值经配置导入进入，必须是有限正数才拼进样式串（addStyle 内部按 HTML
+      // 解析，字符串形式的值可能携带标签序列）
+      const height = Number(this.configs.getSettings("commentExpandHeight"));
+      if (Number.isFinite(height) && height > 0)
+        Utils.addStyle(`.comment-row-text {max-height: ${height}px;}`);
     }
     const onBoardHost =
       this.parent.href.includes("center.mcmod.cn") || this.parent.href.includes("/author/");

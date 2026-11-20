@@ -218,9 +218,15 @@ export function addUploadFileButton(ueditor: UEditor) {
       return;
     }
     if (rejected) Utils.commonMsg("文件已上传~");
+    // 站点接口返回的链接按不可信 URL 处理：过白名单再进 href
+    const safeLink = Utils.safeURL(link);
+    if (!safeLink) {
+      Utils.commonMsg("文件上传失败，返回的链接无效...", false);
+      return;
+    }
     editor.execCommand(
       "insertHtml",
-      `<a href="${Utils.escapeHTML(link)}" target="_blank">${Utils.escapeHTML(link)}</a>&nbsp;`,
+      `<a href="${Utils.escapeHTML(safeLink)}" target="_blank">${Utils.escapeHTML(safeLink)}</a>&nbsp;`,
     );
   }
 }

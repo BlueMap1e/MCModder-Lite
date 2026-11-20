@@ -91,11 +91,13 @@ export class RankInit extends Init {
     const total1 = this.work(ranklists.eq(0).addClass("edit-byte"));
     const total2 = this.work(ranklists.eq(1).addClass("edit-num"));
     if (total1.value || total2.value) {
+      // 时间段文本来自站点 DOM，转义后再拼进提示条
+      const period = Utils.escapeHTML($(".rank-search-area .badge-secondary").first().text());
       $("<span>")
         .appendTo(".rank-list-frame")
         .attr("class", "mcmodder-golden-alert")
         .html(
-          `全体百科用户在 ${$(".rank-search-area .badge-secondary").first().text()} 累计贡献了` +
+          `全体百科用户在 ${period} 累计贡献了` +
             (total2.value
               ? `约 <span class="mcmodder-common-dark">${Math.round((total2.value * 100) / total2.rate).toLocaleString()}</span> 次`
               : "") +
