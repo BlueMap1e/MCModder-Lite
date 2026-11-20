@@ -153,6 +153,17 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - `uploadFileButton` rides on the site's undocumented UEditor endpoints (`uploadfile` /
   `listfile`); if the site changes them the button fails silently. It is off by default, and
   `Values.ueditorFileAccept` must list every extension the setting description promises.
+- **Night-mode icon fixes on bbs use CSS mask + inline data-URI SVG, never fonts or
+  filters.** The bbs domain has no FontAwesome font sheet (probe-verified), and GIF/PNG
+  sprites are 1-bit hard transparency — their anti-aliasing pixels turn into jaggies on
+  dark backgrounds, so filters/scale cannot fix them. Pattern: `::before` carries the
+  icon (`mask: url("data:image/svg+xml;utf8,...") center / contain no-repeat` +
+  `background-color: currentColor`), so color follows the night text variable and text
+  content is untouched. Keep every hand-drawn SVG on a unified bounding box — unequal
+  viewBox margins read as misalignment. `minifyRawCss` string protection keeps data URIs
+  intact (verified). Do not reach for flex on containers that also hold non-item children
+  (a username `p` becomes a squeezed flex item — `text-align: center` + `inline-block`
+  is the safe centering there).
 - Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Utils` /
   `Values`, per-page CSS or bundle splitting. Dead-file scanning lives in the e2e
   workspace as `dead-files2.mjs`; trust a "DEAD" verdict only after grepping the symbol
