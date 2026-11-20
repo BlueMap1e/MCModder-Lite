@@ -119,7 +119,6 @@ interface AppStorage {
   modExpansions_v2?: Record<string, number[]>;
   modDependences_v2?: Record<string, number[]>;
   scheduleRequestList?: ScheduleRequestList;
-  mcmodderInteracts?: Record<string, unknown>;
   rankData?: Record<string, /* { user: number, value: number }[] */ string>;
   guiBound?: RecipeJsonFrameGuiBound[];
   classData?: Record<string, string>;

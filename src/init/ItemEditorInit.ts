@@ -145,15 +145,5 @@ export class ItemEditorInit extends Init {
           if (e instanceof TypeError) Utils.commonMsg(e.toString(), false);
         }
       });
-
-    // 联动
-    const params = new URLSearchParams(window.location.search);
-    if (params.has("i")) {
-      const interactID = params.get("i");
-      const data = this.parent.utils.getInteract(interactID) as string;
-      if (data) {
-        jsonUploader.val(data).change();
-      }
-    }
   }
 }

@@ -264,14 +264,6 @@ export class Utils {
     return this.hasAdminAccess(permission);
   }
 
-  /** 按 id 取出交互数据并立即清除该条目；id 为空时返回 undefined */
-  getInteract(id: string | null) {
-    if (id === null || id === undefined) return undefined;
-    const result = this.configs.get("mcmodderInteracts", id);
-    this.configs.set("mcmodderInteracts", id, null);
-    return result;
-  }
-
   /** 将形如 `rgb(r,g,b)` 的字符串转换为 `#rrggbb` */
   // ─── 格式化与名称解析（含 Base64 互转）───
   static rgbToHex(s: string) {
