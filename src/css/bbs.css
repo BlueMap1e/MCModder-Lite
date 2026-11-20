@@ -1163,7 +1163,12 @@ html.dark body#nv_forum .pls .imicn a {
 html.dark body#nv_forum .pls .xlc {
   /* 与居中的头像/用户名中心对齐。不可用 flex：xlc 的子元素含用户名 p，flex 会把
      它排成 item 导致名字竖排成单字列（真页实测）；text-align center + li 改
-     inline-block 是无副作用的居中（float 失效由 inline-block 接管横排） */
+     inline-block 是无副作用的居中（float 失效由 inline-block 接管横排）。
+     站点规则把 xlc 钉死 width:110px 靠左——窄于 .pls 列宽时容器自身偏左 10px，
+     内容再居中也是偏的：撑满列宽并 margin auto 归中（真页实测偏移 55 vs 65 修正）。 */
+  width: auto;
+  margin-left: auto;
+  margin-right: auto;
   text-align: center;
 }
 html.dark body#nv_forum .pls .xlc li {
