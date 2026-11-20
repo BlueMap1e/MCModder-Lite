@@ -1091,6 +1091,11 @@ html.dark body#nv_forum #f_pst .hm {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text-dark1);
   border-color: var(--mcmodder-color-background-dark3);
+  /* 站点给 #f_pst .area 写死 inset 0 1px 3px #f2f2f2 浅色内阴影（日间凹槽质感），
+     夜间深底上整圈泛亮、叠在 dark3 边框内侧读作僵硬的双线亮框（thread-24239
+     用户报告；探针取证 tedt 边框已换 dark3，唯一亮源即此阴影）。清零后边框
+     归于单线，与其他输入框观感一致 */
+  box-shadow: none;
 }
 
 html.dark body#nv_forum #postlist td.pls.hps,
