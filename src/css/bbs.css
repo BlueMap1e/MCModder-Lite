@@ -1179,6 +1179,49 @@ html.dark body#nv_forum .pls .xlc li + li {
   margin-left: 8px;
 }
 
+/* 串个门 / 发消息 / 加好友：竖排对齐 + 内联图标（反馈帖 thread-24239 互操作按钮组）。
+   上方还原文字后的横排挤压式换行（li + li margin）不对齐且观感简陋；此处改为竖排
+   三行 flex，并以 CSS mask 内联手绘 SVG 为每项标注图标（串个门=房屋 / 发消息=信封 /
+   加为好友=人形加号）——零外链零字体依赖（bbs 域无 FontAwesome 字体表，实测探针
+   确认），background-color: currentColor 使图标色跟随夜间文字色。仅夜间；日间站点
+   雪碧图外观维持原裁定不动。 */
+html.dark body#nv_forum .pls .xlc {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 4px;
+  margin-top: 6px;
+}
+
+html.dark body#nv_forum .pls .xlc li + li {
+  margin-left: 0;
+}
+
+html.dark body#nv_forum .pls .xlc a::before {
+  content: "";
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  margin-right: 5px;
+  vertical-align: -1.5px;
+  background-color: currentColor;
+  mask-position: center;
+  mask-size: contain;
+  mask-repeat: no-repeat;
+}
+
+html.dark body#nv_forum .pls .xlc a.callon::before {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><path d='M2 7.5 L8 2.5 L14 7.5'/><path d='M3.5 6.5 V13 H12.5 V6.5'/></svg>");
+}
+
+html.dark body#nv_forum .pls .xlc a.pm2::before {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><rect x='1.5' y='3' width='13' height='10' rx='1.5'/><path d='M2 4 L8 8.5 L14 4'/></svg>");
+}
+
+html.dark body#nv_forum .pls .xlc a.buddy::before {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><circle cx='6' cy='5' r='2.5'/><path d='M2 13.5 V11.5 C2 9.8 3.8 9 6 9 C8.2 9 10 9.8 10 11.5 V13.5'/><path d='M12.5 5 V11'/><path d='M9.5 8 H15.5'/></svg>");
+}
+
 html.dark body#nv_forum #thread_subject,
 html.dark body#nv_forum #thread_subject a,
 html.dark body#nv_forum h1.ts span#thread_subject a,
