@@ -1153,73 +1153,35 @@ html.dark body#nv_forum .pls .imicn a {
 
 /* 串个门 / 发消息 / 加好友按钮：站点雪碧图 static/style/bg.png 实际仅 50x99，
    而站点 CSS 定位 -1px -420px 越界回绕，贴出白色渐变碎片——日夜间都呈无意义
-   灰方块（探针像素取证），文字又被 text-indent:-11988px 隐藏，图标已不存在。
-   夜间还原文字标签（宽度自适应、跟随文字色）；日间站点原生外观不动。 */
+   灰方块（探针像素取证），文字又被 text-indent:-999em 隐藏，图标已不存在。
+   夜间处理 = 恢复站点原生的 20x20 图标块形态（float 横排、文字由 text-indent
+   继续隐藏、title 属性提供 hover 提示），破损雪碧图背景换为 CSS mask 内联手绘
+   SVG：串个门=房屋 / 发消息=信封 / 加为好友=人形加号——零外链零字体依赖（bbs
+   域无 FontAwesome 字体表，探针实测确认），mask 挖形 + background 色跟随夜间
+   文字色。三图标统一图形外接框（x 1.5~14.5），保证三格视觉左缘一致。仅夜间；
+   日间站点雪碧图外观维持原裁定不动。 */
 html.dark body#nv_forum .pls .xlc li,
-html.dark body#nv_forum .pls .xlc a {
-  width: auto;
-  height: auto;
-}
-
-html.dark body#nv_forum .pls .xlc a {
-  background-image: none;
-  background-color: transparent;
-  border-color: transparent;
-  text-indent: 0;
-  font-size: 12px;
-  line-height: 20px;
-  white-space: nowrap;
-  color: var(--mcmodder-color-text-dark1);
+html.dark body#nv_forum .pls .xlc li a {
+  width: 20px;
+  height: 20px;
   filter: none;
   will-change: auto;
   transform: none;
 }
 
-html.dark body#nv_forum .pls .xlc li + li {
-  margin-left: 8px;
+html.dark body#nv_forum .pls .xlc li a {
+  background-image: none;
+  background-color: var(--mcmodder-color-text-dark1);
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><path d='M1.5 7.5 L8 1.5 L14.5 7.5'/><path d='M3 6.5 V14 H13 V6.5'/></svg>")
+    center / contain no-repeat;
 }
 
-/* 串个门 / 发消息 / 加好友：竖排对齐 + 内联图标（反馈帖 thread-24239 互操作按钮组）。
-   上方还原文字后的横排挤压式换行（li + li margin）不对齐且观感简陋；此处改为竖排
-   三行 flex，并以 CSS mask 内联手绘 SVG 为每项标注图标（串个门=房屋 / 发消息=信封 /
-   加为好友=人形加号）——零外链零字体依赖（bbs 域无 FontAwesome 字体表，实测探针
-   确认），background-color: currentColor 使图标色跟随夜间文字色。仅夜间；日间站点
-   雪碧图外观维持原裁定不动。 */
-html.dark body#nv_forum .pls .xlc {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 4px;
-  margin-top: 6px;
+html.dark body#nv_forum .pls .xlc li a.pm2 {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><rect x='1.5' y='3.5' width='13' height='9.5' rx='1.5'/><path d='M2 4.5 L8 9 L14 4.5'/></svg>");
 }
 
-html.dark body#nv_forum .pls .xlc li + li {
-  margin-left: 0;
-}
-
-html.dark body#nv_forum .pls .xlc a::before {
-  content: "";
-  display: inline-block;
-  width: 12px;
-  height: 12px;
-  margin-right: 5px;
-  vertical-align: -1.5px;
-  background-color: currentColor;
-  mask-position: center;
-  mask-size: contain;
-  mask-repeat: no-repeat;
-}
-
-html.dark body#nv_forum .pls .xlc a.callon::before {
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><path d='M2 7.5 L8 2.5 L14 7.5'/><path d='M3.5 6.5 V13 H12.5 V6.5'/></svg>");
-}
-
-html.dark body#nv_forum .pls .xlc a.pm2::before {
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><rect x='1.5' y='3' width='13' height='10' rx='1.5'/><path d='M2 4 L8 8.5 L14 4'/></svg>");
-}
-
-html.dark body#nv_forum .pls .xlc a.buddy::before {
-  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5'><circle cx='6' cy='5' r='2.5'/><path d='M2 13.5 V11.5 C2 9.8 3.8 9 6 9 C8.2 9 10 9.8 10 11.5 V13.5'/><path d='M12.5 5 V11'/><path d='M9.5 8 H15.5'/></svg>");
+html.dark body#nv_forum .pls .xlc li a.buddy {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.5' stroke-linecap='round' stroke-linejoin='round'><circle cx='5.5' cy='4.5' r='3'/><path d='M1.5 14 V11.5 C1.5 9.3 3.5 8.5 5.5 8.5 C7.5 8.5 9.5 9.3 9.5 11.5 V14'/><path d='M10.5 7 H15.5'/><path d='M13 4.5 V9.5'/></svg>");
 }
 
 html.dark body#nv_forum #thread_subject,
