@@ -22,6 +22,29 @@ export interface ThemeColorSet {
  * 全局工具类：承载无状态的静态工具函数，以及依赖 `Mcmodder` 实例上下文的辅助方法。
  * 静态方法多为纯函数或宿主 DOM 操作；实例方法通过 `parent`/`configs` 访问全局上下文与配置。
  */
+/**
+ * # 分区目录
+ *
+ * 文件按域分段，分段标记为 `// ─── … ───`，编辑器搜索 ─── 可逐区跳转；行号为撰写时
+ * 快照，仅作位置感参考，定位请以下列方法名为锚。
+ *
+ * - 环境与登录（~35）：isMac / isMobileClient / toQzoneLogin
+ * - 消息与弹窗（~61）：commonMsg / createModal
+ * - 通用判定（~108）：clamp / versionCompare / validateVersion* / simpleDeepCopy /
+ *   isEditableTarget / has*Access 等基础判定
+ * - 格式化与名称解析（~250-428）：rgbToHex / getFormattedTime|Number / 类名与物品名
+ *   构造解析 / blob2Base64 族
+ * - URL 构造与锚点（~429-533）：highlight / abstract*FromURL / get*URL / URLToAnchor /
+ *   textToAnchor
+ * - 色彩空间换算（~534-748）：colorToRGB / RGBToHSL / HSLToRGB / set* 系列
+ * - 键位处理（~749-849）：键组合 / keyToString / keyToHTML / isKeyMatch
+ * - 转义与 URL 白名单（~850-902）：randStr / escapeHTML / safeURL
+ * - 请求日志与限速（~903-966）：queueRequestLog / flushRequestLogs / notifyRequestError
+ * - linkify 与 DOM 注入（~967-1098）：linkifyTextNodes / debounce / throttle /
+ *   animationThrottle / addStyle / addScript
+ * - 日期时间与杂项（~1099-尾）：getStartTime / getFormattedDate|Size /
+ *   clearContextFormatter / addClickCopyEvent / updateAllTooltip / parseClassDocument
+ */
 export class Utils {
   private readonly parent: Mcmodder;
   readonly configs: ConfigRepository;
@@ -34,6 +57,7 @@ export class Utils {
 
   private static m_isMac: boolean | undefined;
   /** 判断当前是否为 macOS（结果缓存，避免重复读取 UA） */
+  // ─── 环境与登录 ───
   static isMac() {
     return (this.m_isMac ??= navigator.userAgent.includes("Macintosh"));
   }
@@ -58,6 +82,7 @@ export class Utils {
   }
 
   /** 弹出统一样式的消息提示（优先使用百科的 `common_msg`，否则回退到 `swal`） */
+  // ─── 消息与弹窗 ───
   static commonMsg(message: string, isok: boolean = true, title: string = "") {
     const defaultTitle = isok ? "提示" : "错误";
     if (typeof common_msg === "function") {
@@ -105,6 +130,7 @@ export class Utils {
   }
 
   /** 从配置中读取主/副主题色，返回 `{ tc1, tc2 }` */
+  // ─── 通用判定：数值 / 版本 / 对象 / DOM / 权限 ───
   static getThemeColors = (configs: ConfigRepository): ThemeColorSet => {
     return {
       tc1: configs.getSettings("themeColor1")!,
@@ -247,6 +273,7 @@ export class Utils {
   }
 
   /** 将形如 `rgb(r,g,b)` 的字符串转换为 `#rrggbb` */
+  // ─── 格式化与名称解析（含 Base64 互转）───
   static rgbToHex(s: string) {
     return (
       "#" +
@@ -426,6 +453,7 @@ export class Utils {
    * @param timeout 高亮持续毫秒数；`0`（默认）表示不自动移除。
    * @param scrollIntoView 是否先将节点平滑滚动到视口中央。
    */
+  // ─── URL 构造与锚点 ───
   static highlight(jQueryNode: JQuery, color = "gold", timeout = 0, scrollIntoView = false) {
     const validColor = ["gold", "pink", "aqua", "greenyellow"];
     if (!validColor.includes(color)) {
@@ -531,6 +559,7 @@ export class Utils {
   }
 
   /** 将 `#rrggbb`/`#rrggbbaa`/`#rgb`/`#rgba` 颜色字符串解析为 RGB/RGBA 对象，格式错误抛出异常 */
+  // ─── 色彩空间换算 ───
   static colorToRGB(color: string): RGB | RGBA {
     const colorFormatError = new Error("颜色代码的格式不正确。");
     const colorParseError = new Error("颜色代码解析失败。");
@@ -746,6 +775,7 @@ export class Utils {
   }
 
   /** 生成跨平台 Ctrl 组合键：macOS 用 metaKey，其余用 ctrlKey */
+  // ─── 键位处理 ───
   static getXplatCtrlCombinationKey(keyCode: number | string | Key): Key {
     if (typeof keyCode === "string") {
       keyCode = keyCode.toUpperCase().charCodeAt(0);
@@ -847,6 +877,7 @@ export class Utils {
   }
 
   /** 生成指定长度的随机字符串（字母数字+下划线） */
+  // ─── 转义与 URL 白名单 ───
   static randStr(l = 32) {
     const t = "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789_";
     const n = t.length;
@@ -903,6 +934,7 @@ export class Utils {
   private static readonly textURLPattern = /https?:\/\/[^\s"'<>]+/g;
 
   /** 请求失败提示的去抖间隔（毫秒） */
+  // ─── 请求日志与限速 ───
   private static lastRequestErrorAt = 0;
 
   /** 发包排期游标：独立 GM 键，避免每次请求都改写整份设置 */
@@ -964,6 +996,7 @@ export class Utils {
    *
    * @returns 转换出的链接数量
    */
+  // ─── linkify / 防抖节流 / DOM 注入 ───
   static linkifyTextNodes(root: Node | JQuery): number {
     const node: Node | undefined =
       root && typeof (root as JQuery).get === "function" ? (root as JQuery).get(0) : (root as Node);
@@ -1096,6 +1129,7 @@ export class Utils {
   }
 
   /** 获取 UTC-8 时区下 0 点的毫秒时间戳，`num` 为相对天数偏移（正数向后，负数向前） */
+  // ─── 日期时间与杂项 ───
   static getStartTime(d: number | Date, num = 1) {
     const time = typeof d === "number" ? d : d.getTime();
     // UTC-8 为固定偏移（无夏令时），先将时间平移到 UTC-8 的本地坐标再按整天取整

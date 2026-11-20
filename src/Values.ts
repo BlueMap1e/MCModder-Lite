@@ -1,7 +1,26 @@
 import { GM_getValue, GM_info, GM_openInTab } from "$";
 import defaultVerifyReasons from "./assets/json/input/VerifyReason.json";
 
+/**
+ * # 分区目录
+ *
+ * 文件按域分段，分段标记为 `// ─── … ───`，编辑器搜索 ─── 可逐区跳转；行号为撰写时
+ * 快照，仅作位置感参考。
+ *
+ * - 菜单命令（~5）：menuCommands
+ * - 站点与环境（~97）：hostname / commentJump / assets / 请求上限 / errorMessage
+ * - UEditor 与界面资源（~226）：iconMap / ueButton1|2 / ueditor* / supportedImageSuffix
+ * - 加载器与版本（~355）：loaderID / loaderSupportVersions
+ * - 模组资料域映射（~554）：authorPositionMap / licenseTypeMap / classCategories /
+ *   licenseName / siteMap（含各 reversed）
+ * - MC 版本与模组属性枚举（~813）：mcVersionMap / modEnvironmentModeMap /
+ *   modPlatformMap / modRelationTypeMap / modSourceMap / modStatusMap
+ * - 搜索与物品类型（~941）：searchOption / nonItemTypeList / itemDefaultTypeList /
+ *   itemCustomTypeList
+ * - 默认模板（~1166）：defaultGuiBound / defaultTemplateList
+ */
 export class Values {
+  // ─── 菜单命令 ───
   static readonly menuCommands = {
     settings: function () {
       GM_openInTab("https://center.mcmod.cn/#/setting/", { active: true });
@@ -94,6 +113,7 @@ export class Values {
     ) as ArrayToMap<T, K>;
   }
 
+  // ─── 站点与环境 ───
   static readonly hostname = window.location.href.startsWith("https://www1.mcmod.cn/")
     ? "https://www1.mcmod.cn"
     : "https://www.mcmod.cn";
@@ -223,6 +243,7 @@ export class Values {
     return typeof PublicLangData != "undefined" ? PublicLangData.warning.inform : {};
   }
 
+  // ─── UEditor 与界面资源 ───
   static readonly iconMap = {
     后台管理: "fa fa-university",
     文件管理: "fa fa-upload",
@@ -352,6 +373,7 @@ export class Values {
   ];
   static readonly supportedImageSuffix = ["png", "jpg", "jpeg", "gif", "bmp", "svg", "webp"];
 
+  // ─── 加载器与版本 ───
   static readonly loaderID = {
     Forge: "1",
     Fabric: "2",
@@ -551,6 +573,7 @@ export class Values {
     "5": [">=1.13"],
   } as const;
 
+  // ─── 模组资料域映射 ───
   static readonly authorPositionMap = {
     owner: "所有者",
     programmer: "程序",
@@ -810,6 +833,7 @@ export class Values {
     other: "其他",
   };
 
+  // ─── MC 版本与模组属性枚举 ───
   static readonly mcVersionMap = {
     "1": "远古版本",
     "2": "1.2.5",
@@ -938,6 +962,7 @@ export class Values {
 
   static readonly reversedModStatusMap = this.reverseMap(this.modStatusMap);
 
+  // ─── 搜索与物品类型 ───
   static readonly searchOption = [
     { reg: /^添加模组/, label: "添加模组", exclude: "中的" },
     { reg: /^添加整合包/, label: "添加整合包", exclude: "中的" },
@@ -1163,6 +1188,7 @@ export class Values {
     },
   ];
 
+  // ─── 默认模板 ───
   static readonly defaultGuiBound: RecipeJsonFrameGuiBound[] = [
     { guiID: "minecraft:crafting", mcmodID: 1 },
     { guiID: "minecraft:smelting", mcmodID: 2 },
