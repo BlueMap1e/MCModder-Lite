@@ -142,37 +142,59 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
           } catch (e) {}
         }
       } catch (e) {}
-      const cleanBbsElements = () => {
-        syncEditorIframes();
-        const els = document.querySelectorAll(
-          ".tl .ts th, .tl .ts td, #separatorline th, #separatorline td",
-        );
-        els.forEach((el) => {
-          (el as HTMLElement).style.setProperty(
+      // 白底清扫的两条规则，作用于单个子树：
+      // ② 表头/分隔线单元格强制深底；③ 清除站点内联白底（夜间模式下站方模板
+      // 自带的 inline 白底 CSS 管不到，只能就地清）。self 检查先行：新增节点
+      // 本身就可能就是目标元素，querySelectorAll 只覆盖后代。
+      const processSubtree = (within: Element) => {
+        if (within.matches(".tl .ts th, .tl .ts td, #separatorline th, #separatorline td")) {
+          (within as HTMLElement).style.setProperty(
             "background",
             "var(--mcmodder-color-background-dark1)",
             "important",
           );
-        });
-        document
-          .querySelectorAll(
+        }
+        within
+          .querySelectorAll(".tl .ts th, .tl .ts td, #separatorline th, #separatorline td")
+          .forEach((el) => {
+            (el as HTMLElement).style.setProperty(
+              "background",
+              "var(--mcmodder-color-background-dark1)",
+              "important",
+            );
+          });
+        const whites = (
+          within.matches(
             'tr[style*="background"], td[style*="background"], div[style*="background"], span[style*="background"], table[style*="background"]',
           )
-          .forEach((el) => {
-            const bg =
-              (el as HTMLElement).style.background || (el as HTMLElement).style.backgroundColor;
-            if (
-              bg &&
-              (bg.includes("#fff") ||
-                bg.includes("rgb(255, 255, 255)") ||
-                bg.includes("#FFF") ||
-                bg.includes("FFFFFF") ||
-                bg.includes("255,255,255"))
-            ) {
-              (el as HTMLElement).style.background = "";
-              (el as HTMLElement).style.backgroundColor = "";
-            }
-          });
+            ? [within]
+            : []
+        ).concat(
+          Array.from(
+            within.querySelectorAll(
+              'tr[style*="background"], td[style*="background"], div[style*="background"], span[style*="background"], table[style*="background"]',
+            ),
+          ),
+        );
+        whites.forEach((el) => {
+          const style = (el as HTMLElement).style;
+          const bg = style.background || style.backgroundColor;
+          if (
+            bg &&
+            (bg.includes("#fff") ||
+              bg.includes("rgb(255, 255, 255)") ||
+              bg.includes("#FFF") ||
+              bg.includes("FFFFFF") ||
+              bg.includes("255,255,255"))
+          ) {
+            style.background = "";
+            style.backgroundColor = "";
+          }
+        });
+      };
+      const cleanBbsElements = () => {
+        syncEditorIframes();
+        processSubtree(document.body);
       };
       // Discuz 高级发帖的富文本编辑器在 iframe（#e_iframe）里：注入/移除夜间配色
       // 由 initBbsDarkMode 作用域上的 syncEditorIframes 统一处理（夜间感知、双向幂等）
@@ -180,7 +202,20 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
       setTimeout(cleanBbsElements, 100);
       setTimeout(cleanBbsElements, 500);
       setTimeout(cleanBbsElements, 1000);
-      const observer = new MutationObserver(cleanBbsElements);
+      // 观察者回调按「新增子树」局部处理，不再全文档重扫：childList 观察者本就
+      // 不触发属性变更，既有节点被站点改白从来不在覆盖面内；而任何新出现的目标
+      // 必经某个 addedNodes 进入文档——局部处理覆盖面与全文档扫描等价，成本从
+      // O(全文档)/每批变更 降为 O(新增内容)（全仓观察者纪律：无界回调 + 全文档
+      // 扫描是反模式，此处是最后一个实例）
+      const observer = new MutationObserver((mutationList) => {
+        syncEditorIframes();
+        for (const mutation of mutationList) {
+          for (const node of mutation.addedNodes) {
+            // text 节点没有 matches/querySelectorAll，直接跳过
+            if (node.nodeType === Node.ELEMENT_NODE) processSubtree(node as Element);
+          }
+        }
+      });
       observer.observe(document.body || document.documentElement, {
         childList: true,
         subtree: true,
