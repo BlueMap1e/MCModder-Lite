@@ -55,15 +55,42 @@
         </p>
         <p v-if="currentImage">
           <abbr title="数字越大，这张图越常被抽到；选中多张时，修改会一并应用。">出现频率:</abbr>
-          <input
-            type="number"
-            min="1"
-            max="10"
-            class="form-control"
-            :value="currentImage.weight ?? 1"
-            @focus="onWeightFocus"
-            @change="onWeightChange"
-          />
+          <span class="mcmodder-bg-pool-weight">
+            <input
+              ref="weightInputRef"
+              type="number"
+              min="1"
+              max="10"
+              class="form-control"
+              :value="currentImage.weight ?? 1"
+              @focus="onWeightFocus"
+              @change="onWeightChange"
+            />
+            <!-- 自绘步进钮：原生 number spinner 无样式化通道且跨浏览器形态不一
+                 （Chrome 双箭头 / Firefox 灰豆），藏原生、统一用主题化按钮 -->
+            <span class="mcmodder-bg-pool-weight-spinners">
+              <button
+                type="button"
+                tabindex="-1"
+                class="mcmodder-bg-pool-spin"
+                title="提高出现频率"
+                aria-label="提高出现频率"
+                @click="stepWeight(1)"
+              >
+                <span class="mcmodder-bg-pool-spin-arrow mcmodder-bg-pool-spin-up" />
+              </button>
+              <button
+                type="button"
+                tabindex="-1"
+                class="mcmodder-bg-pool-spin"
+                title="降低出现频率"
+                aria-label="降低出现频率"
+                @click="stepWeight(-1)"
+              >
+                <span class="mcmodder-bg-pool-spin-arrow mcmodder-bg-pool-spin-down" />
+              </button>
+            </span>
+          </span>
           倍
         </p>
       </template>
@@ -99,6 +126,7 @@ const props = defineProps<InputProps<number> & { id: string }>();
 const rootRef = useTemplateRef("rootRef");
 const imageListRef = useTemplateRef("imageListRef");
 const filenameInputRef = useTemplateRef("filenameInputRef");
+const weightInputRef = useTemplateRef<HTMLInputElement>("weightInputRef");
 const images = ref<BackgroundImageRow[]>([]);
 const repository = new BackgroundRepository();
 
@@ -269,7 +297,11 @@ function onWeightFocus() {
 }
 
 function onWeightChange(event: Event) {
-  const input = event.target as HTMLInputElement;
+  applyWeightInput(event.target as HTMLInputElement);
+}
+
+/** 应用权重输入框的当前值；多选批量目标与非法值回显规则同上游实现 */
+function applyWeightInput(input: HTMLInputElement) {
   const weight = Number(input.value);
   const current = currentImage.value?.weight ?? 1;
   if (!Number.isFinite(weight) || weight < 1) {
@@ -294,6 +326,21 @@ function onWeightChange(event: Event) {
   refresh();
   // 权重会被仓储夹到 1-10；输入框回显最终值，而不是用户刚敲的原始数字
   input.value = String(currentImage.value?.weight ?? 1);
+}
+
+/**
+ * 步进钮（±1）：优先以输入框里未提交的手输值为基准（焦点在输入框、未失焦就点钮时，
+ * change 先于 click 触发会先把 typed 值落库，此处读到的是已同步状态），再走同一权重
+ * 管线，仓储负责夹取 1-10。
+ */
+function stepWeight(delta: 1 | -1) {
+  const input = weightInputRef.value;
+  if (!input || currentImage.value === undefined) return;
+  const typed = Number(input.value);
+  const base =
+    Number.isFinite(typed) && typed >= 1 ? Math.round(typed) : (currentImage.value.weight ?? 1);
+  input.value = String(Utils.clamp(base + delta, 1, 10));
+  applyWeightInput(input);
 }
 
 defineExpose<InputControlRef<number>>({
@@ -351,5 +398,70 @@ defineExpose<InputControlRef<number>>({
 
 .mcmodder-bg-pool-editfilename:hover {
   color: var(--mcmodder-color-accent-dark2) !important;
+}
+
+/* 出现频率步进钮：原生 number spinner 无样式化通道且跨浏览器形态不一
+   （Chrome 双箭头 / Firefox 灰豆），藏原生、统一用主题化按钮 */
+
+.mcmodder-bg-pool-weight {
+  display: inline-flex;
+  align-items: stretch;
+  gap: 3px;
+  vertical-align: middle;
+}
+
+.mcmodder-bg-pool-weight .form-control {
+  width: 56px;
+  /* Firefox：仅支持 -moz-appearance: textfield 隐藏 spinner；Chrome 走 appearance */
+  appearance: textfield;
+  -moz-appearance: textfield;
+}
+
+.mcmodder-bg-pool-weight .form-control::-webkit-outer-spin-button,
+.mcmodder-bg-pool-weight .form-control::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.mcmodder-bg-pool-weight-spinners {
+  display: inline-flex;
+  flex-direction: column;
+  justify-content: center;
+  gap: 2px;
+}
+
+.mcmodder-bg-pool-spin {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 16px;
+  height: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--mcmodder-color-text-dark2);
+  cursor: var(--mcmodder-cursor-hand);
+}
+
+.mcmodder-bg-pool-spin:hover {
+  color: var(--mcmodder-color-primary);
+}
+
+.mcmodder-bg-pool-spin:active {
+  color: var(--mcmodder-color-primary-dark1);
+}
+
+.mcmodder-bg-pool-spin-arrow {
+  width: 8px;
+  height: 5px;
+  background: currentColor;
+}
+
+.mcmodder-bg-pool-spin-up {
+  clip-path: polygon(50% 0, 100% 100%, 0 100%);
+}
+
+.mcmodder-bg-pool-spin-down {
+  clip-path: polygon(0 0, 100% 0, 50% 100%);
 }
 </style>
