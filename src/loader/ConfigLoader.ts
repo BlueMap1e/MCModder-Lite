@@ -112,13 +112,22 @@ export const settings = [
             id: "nightModePreference",
             title: "夜间模式偏好",
             description:
-              "「跟随系统」时夜间模式随浏览器深浅色偏好自动开关；「日间」「夜间」则固定使用对应外观。页面右上角的夜间模式按钮同样可以在三种状态间切换。",
+              "页面右上角的夜间模式按钮同样可以在三种状态间切换。三种状态的行为差异见各选项的说明。",
             type: "dropdownMenu",
             value: 0,
             range: {
-              0: "跟随系统",
-              1: "日间",
-              2: "夜间",
+              0: {
+                text: "跟随系统",
+                desc: "随浏览器深浅色偏好自动开关夜间模式",
+              },
+              1: {
+                text: "日间",
+                desc: "固定使用日间外观",
+              },
+              2: {
+                text: "夜间",
+                desc: "固定使用夜间外观",
+              },
             },
           },
           {
@@ -612,7 +621,7 @@ export const settings = [
             id: "commentJumpRequestLimit",
             title: "短评跳转查找请求上限",
             description:
-              "通过 #comment-<id> 链接跨页跳转短评时，二分查找目标页最多发出的请求数。超过上限仍未定位则停止查找。",
+              "通过 #comment-${id} 链接跨页跳转短评时，二分查找目标页最多发出的请求数。超过上限仍未定位则停止查找。",
             type: "number",
             value: 12,
             range: [1, null],

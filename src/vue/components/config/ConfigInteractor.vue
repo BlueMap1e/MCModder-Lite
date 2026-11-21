@@ -129,7 +129,12 @@ const opt = computed(() => {
       return { finiteRange: data.range as InputValueFiniteNumericRange };
     case "dropdownMenu": {
       const valueSet = { ...data.range } as InputValueSet;
-      valueSet[data.value as number] += " (默认)";
+      const defaultValue = data.value as number;
+      if (typeof valueSet[defaultValue] === "string") {
+        valueSet[defaultValue] += " (默认)";
+      } else {
+        valueSet[defaultValue].text += " (默认)";
+      }
       return { valueSet };
     }
     case "keybind":
