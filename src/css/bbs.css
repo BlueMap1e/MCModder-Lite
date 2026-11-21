@@ -543,6 +543,35 @@ html.dark .p_pop a.a {
   color: var(--mcmodder-color-accent) !important;
 }
 
+/* 帖内头像 hover 用户资料卡（showauthor 显隐的服务端渲染卡片，#userinfo<uid>）：
+   类名是 .p-pop（连字符）——与上方 .p_pop（下划线）下拉弹层家族是两个类，下拉
+   夜间化时漏掉了这族（thread-24239 用户报告）。站点 .p-pop 写死白底 #fff +
+   .i 灰字 #999，夜间白块刺眼。适配为抬升面板：dark1 底 + dark3 描边 + 同款
+   阴影；资料分层——标签（dt）降为次级灰，数值（dd）提亮到正文色，用户名等
+   链接交由全站链接夜间规则 */
+html.dark .p-pop {
+  background-color: var(--mcmodder-color-background-dark1);
+  border: 1px solid var(--mcmodder-color-background-dark3);
+  box-shadow: 0 4px 6px -1px var(--mcmodder-color-bbs-shadow);
+}
+
+html.dark .p-pop .i {
+  color: var(--mcmodder-color-text-dark1);
+}
+
+html.dark .p-pop .i dt {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+html.dark .p-pop .i dd {
+  color: var(--mcmodder-color-text);
+}
+
+/* 头像外圈：站点 1px #f0f0f0 近白描边，深底上刺眼 */
+html.dark .p-pop .m img {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+
 /* 编辑器其余弹层：.p_pop 家族已夜间化，漏网的三族仍是站点原生白底——
    .p_pof（链接/图片/附件弹层，点 Url / 图片 / 附件按钮唤起，全屏编辑器
    与浮窗共用同一套 Discuz 弹层）、.sllt（表情选择面板）、#draftlist_menu
