@@ -58,8 +58,7 @@ function classify(circulars, root) {
 
 if (process.argv.includes("--selftest")) {
   // 历史真环样本：Utils.ts ⇄ ConfigRepository.ts（双向值导入，0de6f2a 已解开）。
-  // 合成夹具复现其形态：A→B 类型边 + B→A 值边，分类器必须判真环并以 1 退出；
-  // 纯类型环样本必须判无害。全程用临时目录，不触碰 src。
+  // 合成夹具复现其形态：A→B 类型边 + B→A 值边，验证边分类器，不触碰 src。
   const fixture = mkdtempSync(path.join(tmpdir(), "cycle-fixture-"));
   mkdirSync(path.join(fixture, "src", "config"), { recursive: true });
   writeFileSync(
@@ -70,23 +69,14 @@ if (process.argv.includes("--selftest")) {
     path.join(fixture, "src", "config", "ConfigRepository.ts"),
     'import { Utils } from "../Utils";\nexport class ConfigRepository {}\n',
   );
-  const probeCycle = [
-    ["src/Utils.ts", "src/config/ConfigRepository.ts"],
-    ["src/config/ConfigRepository.ts", "src/Utils.ts"],
-    ["src/a.ts", "src/b.ts"],
-  ];
-  // 夹具根下 a/b 不存在 → 按保守规则判真边；前两条走真实源码读取
-  const fakeRoot = fixture;
-  const edge1 = isTypeEdge("src/Utils.ts", "src/config/ConfigRepository.ts", fakeRoot);
-  const edge2 = isTypeEdge("src/config/ConfigRepository.ts", "src/Utils.ts", fakeRoot);
+  const typeEdge = isTypeEdge("src/Utils.ts", "src/config/ConfigRepository.ts", fixture);
+  const valueEdge = isTypeEdge("src/config/ConfigRepository.ts", "src/Utils.ts", fixture);
   rmSync(fixture, { recursive: true, force: true });
-  if (edge1 !== true || edge2 !== false) {
-    console.error(`selftest FAIL：边分类错误（type edge=${edge1}, value edge=${edge2}）`);
+  if (typeEdge !== true || valueEdge !== false) {
+    console.error(`selftest FAIL：边分类错误（type edge=${typeEdge}, value edge=${valueEdge}）`);
     process.exit(1);
   }
-  const real = probeCycle.length > 0 ? classify([probeCycle[0]], fixture) : null;
-  void real;
-  console.log("selftest PASS：类型边/值边分类正确，真环路径可用");
+  console.log("selftest PASS：类型边/值边分类正确");
   process.exit(0);
 }
 
