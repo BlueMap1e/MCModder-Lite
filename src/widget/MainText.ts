@@ -1,6 +1,7 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
 import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
+import type { WebFetchUtils } from "../WebFetchUtils";
 import { Values } from "../Values";
 
 type LinkMarkReplaceRule = {
@@ -11,12 +12,12 @@ type LinkMarkReplaceRule = {
 
 export class MainText {
   private readonly configs: ConfigRepository;
-  private readonly utils: Utils;
+  private readonly web: WebFetchUtils;
   private readonly container: JQuery;
 
   constructor(parent: Mcmodder, container: Node | JQuery) {
     this.configs = parent.configRepository;
-    this.utils = parent.utils;
+    this.web = parent.web;
     this.container = $(container);
 
     if (this.configs.getSettings("linkCheck")) {
@@ -122,7 +123,7 @@ export class MainText {
 
   private singleImageLocalizedCheck(img: HTMLImageElement) {
     const src = img.dataset.src ?? img.src;
-    this.utils
+    this.web
       .createRequest({ url: src, method: "HEAD" }, "图像本地化检测：探测图片体积与类型")
       .then((resp) => {
         const container = $(img).parent();

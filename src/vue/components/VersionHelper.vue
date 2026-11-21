@@ -120,7 +120,7 @@ const table = useTemplateRef("table");
  *  设置只决定初始平台，面板内切换仅本会话有效，不回写设置 */
 const PLATFORM_BY_SETTING: Record<number, PlatformId> = { 0: "cf", 1: "mr", 2: "gh" };
 const active = ref<PlatformId>(
-  PLATFORM_BY_SETTING[Number(parent.utils.configs.getSettings("versionHelperPlatform"))] ?? "cf",
+  PLATFORM_BY_SETTING[Number(parent.configRepository.getSettings("versionHelperPlatform"))] ?? "cf",
 );
 const queryText = ref("");
 const statusText = ref("");
@@ -379,7 +379,7 @@ const cfModule: PlatformModule = {
     }
     setStatus("正在解析 CF 数字项目 ID…");
     try {
-      const resp = await parent.utils.createRequest(
+      const resp = await parent.web.createRequest(
         { url: `https://api.cfwidget.com${path}`, method: "GET" },
         "解析 CF 数字项目 ID",
       );
@@ -461,7 +461,7 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
       reject(error instanceof Error ? error : new Error(String(error)));
     };
     const work = (index: number): void => {
-      parent.utils
+      parent.web
         .createRequest(
           {
             url: `https://www.curseforge.com/api/v1/mods/${cfid}/files?pageIndex=${index}&pageSize=50&sort=dateCreated&sortDescending=true&removeAlphas=false`,
@@ -544,7 +544,7 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
 
 /** MR 版本列表：单次请求，slug / 项目 ID 皆可作查询键 */
 async function fetchMRList(mrid: string): Promise<NormalizedRow[]> {
-  const resp = await parent.utils.createRequest(
+  const resp = await parent.web.createRequest(
     {
       url: `https://api.modrinth.com/v2/project/${mrid}/version`,
       method: "GET",
@@ -588,7 +588,7 @@ function readGHQuota(resp: { responseHeaders?: string }) {
 /** GitHub Releases：公开仓库匿名可用（限额 60 次/小时，按 IP 计），单页 100 条覆盖绝大多数仓库。
  *  Releases 没有 MC 版本维度，匹配时仅按模组版本（tag）比对 */
 async function fetchGHReleases(repo: string): Promise<NormalizedRow[]> {
-  const resp = await parent.utils.createRequest(
+  const resp = await parent.web.createRequest(
     {
       url: `https://api.github.com/repos/${repo}/releases?per_page=100`,
       method: "GET",
@@ -691,7 +691,7 @@ async function onFetchID() {
       setStatus(`已从资料页获得 ${ghRepo}，点击「查询」拉取 Releases`);
       return;
     }
-    const resp = await parent.utils.createRequest(
+    const resp = await parent.web.createRequest(
       {
         url: `${parent.hostname}/class/edit/${document.location.href.split("/class/version/")[1]?.split(".html")[0]}/`,
         method: "GET",
@@ -734,7 +734,7 @@ async function onFetchID() {
 async function fetchGhRepoFromWiki(): Promise<string | null> {
   const classId = document.location.href.split("/class/version/")[1] ?? "";
   if (!classId) return null;
-  const resp = await parent.utils.createRequest(
+  const resp = await parent.web.createRequest(
     { url: `${parent.hostname}/class/${classId}`, method: "GET" },
     "从资料页获取 GitHub 链接",
   );

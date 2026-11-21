@@ -102,7 +102,7 @@ export function addUploadFileButton(ueditor: UEditor) {
   /** 列出服务端已有的附件（按修改时间倒序）；接口异常返回 null，调用方据此放弃差分 */
   async function listFiles() {
     try {
-      const resp = await ueditor.parent.utils.createRequest(
+      const resp = await ueditor.parent.web.createRequest(
         { url: `${origin}${Values.ueditorActionUrl}${LIST_FILE_ACTION}`, method: "GET" },
         "列出附件",
       );
@@ -133,7 +133,7 @@ export function addUploadFileButton(ueditor: UEditor) {
 
   /** 整份取回附件内容用于比对 */
   async function downloadBytes(url: string) {
-    const resp = await ueditor.parent.utils.createRequest(
+    const resp = await ueditor.parent.web.createRequest(
       { url, method: "GET", responseType: "arraybuffer" },
       "比对附件内容",
     );
@@ -172,7 +172,7 @@ export function addUploadFileButton(ueditor: UEditor) {
     try {
       const form = new FormData();
       form.append("upfile", file, file.name);
-      const resp = await ueditor.parent.utils.createRequest(
+      const resp = await ueditor.parent.web.createRequest(
         {
           url: `${origin}${Values.ueditorActionUrl}${UPLOAD_FILE_ACTION}`,
           method: "POST",

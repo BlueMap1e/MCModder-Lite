@@ -32,7 +32,7 @@ export class AutoCheckinScheduleRequest extends ScheduleRequestType {
     // 登录后次日自动恢复
     list.create(Utils.getStartTime(new Date()), "autoCheckin", this.parent.currentUID);
     if (!this.parent.currentUID) return;
-    const resp = await this.parent.utils.createRequest(
+    const resp = await this.parent.web.createRequest(
       {
         url: "https://center.mcmod.cn/action/doUserCheckIn/",
         method: "POST",

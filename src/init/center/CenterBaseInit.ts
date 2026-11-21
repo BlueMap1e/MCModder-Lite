@@ -9,9 +9,6 @@ export abstract class CenterBaseInit {
   get parent() {
     return this.center.parent;
   }
-  get utils() {
-    return this.parent.utils;
-  }
   get configs() {
     return this.parent.configRepository;
   }

@@ -206,7 +206,7 @@ export class ClassPageInit extends Init {
     const classEname = classData.englishName;
     const classAbbr = classData.abbr;
     const modFullName = Utils.getClassFullName(className, classEname, classAbbr) || "";
-    this.parent.utils.updateClassNameIDMap(modFullName, classID);
+    this.configs.updateClassNameIDMap(modFullName, classID);
 
     if (this.configs.getSettings("fastCopyName")) {
       Utils.addClickCopyEvent(nameNode, this.pageTypeName + "主要名称", className);
@@ -225,7 +225,7 @@ export class ClassPageInit extends Init {
           const href = (a as HTMLAnchorElement).href;
           const id = Utils.abstractLastFromURL(href, "class");
           const name = a.textContent;
-          if (id && name) this.parent.utils.updateClassNameIDMap(name, id);
+          if (id && name) this.configs.updateClassNameIDMap(name, id);
 
           const title = target.find("span[data-toggle=tooltip]:first-child").text();
           if (title.includes("前置Mod")) {
@@ -533,7 +533,7 @@ export class ClassPageInit extends Init {
           button.addClass("disabled");
           button.find("span").text("努力加载中...");
           button.find("i").attr("class", "fa fa-pulse fa-spinner");
-          void this.parent.utils
+          void this.parent.web
             .createRequest(
               {
                 url: `${this.parent.hostname}/${this.isClassPage ? "class" : "modpack"}/edit/${classID}/`,

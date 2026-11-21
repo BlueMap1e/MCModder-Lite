@@ -11,6 +11,7 @@ import { AdvancedUEditor } from "./ueditor/AdvancedUEditor";
 import { UEditor } from "./ueditor/UEditor";
 import { Utils, type ThemeColorSet } from "./Utils";
 import { Values } from "./Values";
+import { WebFetchUtils } from "./WebFetchUtils";
 import { Init } from "./init/Init";
 import { InitLoader } from "./loader/InitLoader";
 import { GeneralEditInit } from "./init/GeneralEditInit";
@@ -26,7 +27,8 @@ interface ScreenAttachedFrameData {
 }
 
 export class Mcmodder {
-  utils: Utils;
+  /** 网络访问层（限速请求、请求日志、yxd_token 重试），见 `WebFetchUtils` */
+  web: WebFetchUtils;
   configRepository: ConfigRepository;
   currentUID: number;
   currentUsername: string;
@@ -82,8 +84,8 @@ export class Mcmodder {
     this.storageBuffer = new StorageBuffer(this);
     StorageBufferLoader.run(this.storageBuffer);
 
-    this.utils = new Utils(this);
-    this.configRepository = this.utils.configs;
+    this.configRepository = new ConfigRepository(this);
+    this.web = new WebFetchUtils(this.configRepository);
 
     // 计划任务调度器：注册全部定时任务（目前仅自动签到），按最近到期时间挂单次
     // setTimeout，到点由 check 重排。
@@ -108,7 +110,10 @@ export class Mcmodder {
     ) {
       this.configRepository.setSettings("keybindFastLink", { altKey: true, key: "X", keyCode: 88 });
     }
-    this.styleColors = Utils.getThemeColors(this.configRepository);
+    this.styleColors = {
+      tc1: this.configRepository.getSettings("themeColor1")!,
+      tc2: this.configRepository.getSettings("themeColor2")!,
+    };
 
     InitLoader.run(this, this.initList);
 
@@ -274,7 +279,7 @@ export class Mcmodder {
           }
           let resp;
           try {
-            resp = await this.utils.createRequest(
+            resp = await this.web.createRequest(
               {
                 url: target.href,
                 method: "GET",
@@ -921,7 +926,7 @@ export class Mcmodder {
       setInterval(
         () => {
           // 轮询失败已由 createRequest 内部通知用户；这里显式 void 掉链式 Promise
-          void this.utils
+          void this.web
             .createRequest(
               {
                 url: `${this.hostname}/frame/CommonHeader/`,

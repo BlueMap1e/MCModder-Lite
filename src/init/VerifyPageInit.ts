@@ -278,7 +278,7 @@ export class VerifyPageInit extends Init {
           let t = 0,
             index = 0;
           const doUrge = (id: number) => {
-            void this.parent.utils
+            void this.parent.web
               .createRequest(
                 {
                   url: `${this.parent.hostname}/action/edit/doUrge/`,

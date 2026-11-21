@@ -90,7 +90,7 @@ export class VersionEditInit extends Init {
         try {
           let resp, data;
           if (source === 1) {
-            resp = await this.parent.utils.createRequest(
+            resp = await this.parent.web.createRequest(
               {
                 url: `https://www.curseforge.com/api/v1/mods/${id}/files/${fileid}/change-log`,
                 method: "GET",
@@ -101,7 +101,7 @@ export class VersionEditInit extends Init {
             // 日志正文来自 CurseForge（模组作者可控），进编辑器前按白名单清洗
             if (data) data = sanitizeHTML(String(data));
           } else if (source === 2) {
-            resp = await this.parent.utils.createRequest(
+            resp = await this.parent.web.createRequest(
               {
                 url: `https://api.modrinth.com/v2/version/${fileid}`,
                 method: "GET",
@@ -112,7 +112,7 @@ export class VersionEditInit extends Init {
           } else if (source === 3) {
             // GitHub Releases：正文是 Markdown，与 MR 同走 MD 编辑器
             const [owner, repo] = String(param.get("ghrepo")).split("/");
-            resp = await this.parent.utils.createRequest(
+            resp = await this.parent.web.createRequest(
               {
                 url: `https://api.github.com/repos/${owner}/${repo}/releases/tags/${param.get("ghtag")}`,
                 method: "GET",

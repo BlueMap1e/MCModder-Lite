@@ -1,16 +1,4 @@
-import {
-  GM_addValueChangeListener,
-  GM_cookie,
-  GM_getValue,
-  GM_setValue,
-  GM_xmlhttpRequest,
-  type GmResponseEvent,
-  type GmResponseType,
-  type GmXmlhttpRequestOption,
-} from "$";
 import { AnimationFrameScheduler } from "./AnimationFrameScheduler";
-import { ConfigRepository } from "./config/ConfigRepository";
-import type { Mcmodder } from "./Mcmodder";
 import { Values } from "./Values";
 
 export interface ThemeColorSet {
@@ -19,8 +7,10 @@ export interface ThemeColorSet {
 }
 
 /**
- * 全局工具类：承载无状态的静态工具函数，以及依赖 `Mcmodder` 实例上下文的辅助方法。
- * 静态方法多为纯函数或宿主 DOM 操作；实例方法通过 `parent`/`configs` 访问全局上下文与配置。
+ * 全局工具类：只承载不依赖任何上下文的静态纯函数（DOM 操作、格式化、色彩换算、URL
+ * 处理、键位判定等）。不持有实例状态（仅进程级 UA 缓存），禁止实例化或注入 `Mcmodder`
+ * 引用——需要配置 / GM 存储的辅助方法归 `ConfigRepository`，需要发请求的归
+ * `WebFetchUtils`（`Mcmodder.web`）。
  */
 /**
  * # 分区目录
@@ -28,33 +18,23 @@ export interface ThemeColorSet {
  * 文件按域分段，分段标记为 `// ─── … ───`，编辑器搜索 ─── 可逐区跳转；行号为撰写时
  * 快照，仅作位置感参考，定位请以下列方法名为锚。
  *
- * - 环境与登录（~35）：isMac / isMobileClient / toQzoneLogin
- * - 消息与弹窗（~61）：commonMsg / createModal
- * - 通用判定（~108）：clamp / versionCompare / validateVersion* / simpleDeepCopy /
+ * - 环境与登录（~45）：isMac / isMobileClient / toQzoneLogin
+ * - 消息与弹窗（~70）：commonMsg / createModal
+ * - 通用判定（~115）：clamp / versionCompare / validateVersion* / simpleDeepCopy /
  *   isEditableTarget / has*Access 等基础判定
- * - 格式化与名称解析（~250-428）：rgbToHex / getFormattedTime|Number / 类名与物品名
+ * - 格式化与名称解析（~250-430）：rgbToHex / getFormattedTime|Number / 类名与物品名
  *   构造解析 / blob2Base64 族
- * - URL 构造与锚点（~429-533）：highlight / abstract*FromURL / get*URL / URLToAnchor /
+ * - URL 构造与锚点（~430-540）：highlight / abstract*FromURL / get*URL / URLToAnchor /
  *   textToAnchor
- * - 色彩空间换算（~534-748）：colorToRGB / RGBToHSL / HSLToRGB / set* 系列
- * - 键位处理（~749-849）：键组合 / keyToString / keyToHTML / isKeyMatch
- * - 转义与 URL 白名单（~850-902）：randStr / escapeHTML / safeURL
- * - 请求日志与限速（~903-966）：queueRequestLog / flushRequestLogs / notifyRequestError
- * - linkify 与 DOM 注入（~967-1098）：linkifyTextNodes / debounce / throttle /
+ * - 色彩空间换算（~540-750）：colorToRGB / RGBToHSL / HSLToRGB / set* 系列
+ * - 键位处理（~750-850）：键组合 / keyToString / keyToHTML / isKeyMatch
+ * - 转义与 URL 白名单（~850-910）：randStr / escapeHTML / safeURL
+ * - linkify 与 DOM 注入（~910-1050）：linkifyTextNodes / debounce / throttle /
  *   animationThrottle / addStyle / addScript
- * - 日期时间与杂项（~1099-尾）：getStartTime / getFormattedDate|Size /
+ * - 日期时间与杂项（~1050-尾）：getStartTime / getFormattedDate|Size /
  *   clearContextFormatter / addClickCopyEvent / updateAllTooltip / parseClassDocument
  */
 export class Utils {
-  private readonly parent: Mcmodder;
-  readonly configs: ConfigRepository;
-
-  /** @param parent 全局上下文 `Mcmodder` 实例 */
-  constructor(parent: Mcmodder) {
-    this.parent = parent;
-    this.configs = new ConfigRepository(parent);
-  }
-
   private static m_isMac: boolean | undefined;
   /** 判断当前是否为 macOS（结果缓存，避免重复读取 UA） */
   // ─── 环境与登录 ───
@@ -129,15 +109,7 @@ export class Utils {
     });
   }
 
-  /** 从配置中读取主/副主题色，返回 `{ tc1, tc2 }` */
   // ─── 通用判定：数值 / 版本 / 对象 / DOM / 权限 ───
-  static getThemeColors = (configs: ConfigRepository): ThemeColorSet => {
-    return {
-      tc1: configs.getSettings("themeColor1")!,
-      tc2: configs.getSettings("themeColor2")!,
-    };
-  };
-
   /** 将 `value` 限制在 `[min, max]` 区间内 */
   static clamp(value: number, min = 0, max = 1) {
     if (value < min) return min;
@@ -859,15 +831,6 @@ export class Utils {
     return true;
   }
 
-  /** 判断按键 `b` 是否与配置中名为 `a` 的快捷键匹配 */
-  isKeyMatchConfig(a: KeysOfType<Settings, Key>, b: Key) {
-    const config = this.configs.getSettings(a);
-    if (config === undefined) {
-      return false;
-    }
-    return Utils.isKeyMatch(config, b);
-  }
-
   /** 生成指定长度的随机字符串（字母数字+下划线） */
   // ─── 转义与 URL 白名单 ───
   static randStr(l = 32) {
@@ -924,61 +887,6 @@ export class Utils {
 
   /** 文本节点里的 URL 匹配规则（不跨越空白与 HTML 定界符） */
   private static readonly textURLPattern = /https?:\/\/[^\s"'<>]+/g;
-
-  /** 请求失败提示的去抖间隔（毫秒） */
-  // ─── 请求日志与限速 ───
-  private static lastRequestErrorAt = 0;
-
-  /** 发包排期游标：独立 GM 键，避免每次请求都改写整份设置 */
-  private static requestCursor = 0;
-  private static requestCursorLoaded = false;
-
-  /** 请求日志先攒在内存，2 秒或页面隐藏时再落盘，避免每个请求都读改写整份日志 */
-  private static pendingRequestLogs: string[] = [];
-  private static requestLogFlushTimer?: ReturnType<typeof setTimeout>;
-  private static requestLogFlushBound = false;
-
-  /** 排队一条请求日志；达到阈值立即落盘，否则最多每 2 秒写一次 */
-  private static queueRequestLog(content: string) {
-    Utils.pendingRequestLogs.push(content);
-    if (!Utils.requestLogFlushBound) {
-      Utils.requestLogFlushBound = true;
-      window.addEventListener("pagehide", () => Utils.flushRequestLogs());
-      document.addEventListener("visibilitychange", () => {
-        if (document.visibilityState === "hidden") Utils.flushRequestLogs();
-      });
-    }
-    if (Utils.pendingRequestLogs.length >= 32) {
-      Utils.flushRequestLogs();
-      return;
-    }
-    if (!Utils.requestLogFlushTimer) {
-      Utils.requestLogFlushTimer = window.setTimeout(() => Utils.flushRequestLogs(), 2000);
-    }
-  }
-
-  /** 把内存里的请求日志合并进持久化日志，并裁掉超出上限的旧记录 */
-  private static flushRequestLogs() {
-    if (Utils.requestLogFlushTimer) {
-      window.clearTimeout(Utils.requestLogFlushTimer);
-      Utils.requestLogFlushTimer = undefined;
-    }
-    if (!Utils.pendingRequestLogs.length) return;
-    const pending = Utils.pendingRequestLogs.splice(0);
-    const logs = GM_getValue("mcmodderLogger")?.split(";").filter(Boolean) || [];
-    logs.push(...pending);
-    const max = Values.MAX_REQUEST_COUNT / 10;
-    if (logs.length > max) logs.splice(0, logs.length - max);
-    GM_setValue("mcmodderLogger", logs.join(";"));
-  }
-
-  /** 请求失败统一提示：多个并发请求同时失败时只提示一次，避免刷屏 */
-  private static notifyRequestError(reason: string) {
-    const now = Date.now();
-    if (now - Utils.lastRequestErrorAt < 5000) return;
-    Utils.lastRequestErrorAt = now;
-    Utils.commonMsg(`${reason}（详见控制台）`, false);
-  }
 
   /**
    * 把元素**文本节点**里的 URL 就地转成 `<a>`，不改动任何标签与属性。
@@ -1168,206 +1076,6 @@ export class Utils {
     else return f(size / 1073741824) + " GiB";
   };
 
-  /**
-   * 计算并记录本次请求的调度时间戳（按 `minimumRequestInterval` 限速；队列过长时返回 null）
-   *
-   * @returns 排定的发包时刻；返回 null 表示队列已超出上限，本次请求**不应**被发出，
-   *   调用方必须据此放弃派发（见 {@link createRequest}）。
-   */
-  updateRequestTime() {
-    const minimumRequestInterval = Math.max(
-      this.configs.getSettings("minimumRequestInterval")!,
-      500,
-    );
-    const now = Date.now();
-    if (!Utils.requestCursorLoaded) {
-      Utils.requestCursorLoaded = true;
-      // 新键优先；旧版游标存在 settings 里，只读一次作为迁移回退
-      const stored = Number(GM_getValue("mcmodderRequestCursor", 0)) || 0;
-      const legacy = Number(this.configs.getSettings("lastRequestTime")) || 0;
-      Utils.requestCursor = stored || legacy || now;
-      // 跨标签页只同步这个小键，不再回灌整份设置
-      GM_addValueChangeListener("mcmodderRequestCursor", (_key, _oldValue, value) => {
-        const next = Number(value) || 0;
-        if (next > Utils.requestCursor) Utils.requestCursor = next;
-      });
-    }
-    let lastRequestTime = Utils.requestCursor || now;
-    // 持久化的游标可能因旧版本数据、云端同步覆盖等而异常领先当前时间；此时照着它排期会把
-    // 整条发包队列堵死，故直接丢弃、以当前时间重新起算
-    if (lastRequestTime > now + minimumRequestInterval * Values.REQUEST_SCHEDULE_MAX_DRIFT_FACTOR) {
-      console.warn("已排定时刻异常领先当前时间，发包排期将重新起算。");
-      lastRequestTime = now;
-    }
-    if (lastRequestTime > now + minimumRequestInterval * Values.MAX_REQUEST_COUNT) {
-      console.warn("已入队的请求数量超限，新的请求被忽略。");
-      return null;
-    }
-    if (now > lastRequestTime) lastRequestTime = now;
-    Utils.requestCursor = lastRequestTime + minimumRequestInterval;
-    // 只写独立的游标键，避免每次请求都改写整份设置、覆盖其他标签页刚改的配置
-    GM_setValue("mcmodderRequestCursor", Utils.requestCursor);
-    return lastRequestTime;
-  }
-
-  /**
-   * 发送限速请求的全局入口：
-   * 按 `updateRequestTime` 排定延迟后发出，记录日志；遇到 `yxd_token` 校验响应时写入 cookie 并自动重发。
-   *
-   * 允许同时传入本次请求的用途说明（`message`），会随请求日志一并保存，便于排查请求目的。
-   * 原则上所有网络请求都应当有附加信息，便于在监控中理解请求目的。
-   *
-   * @warning 队列超出 {@link Values.MAX_REQUEST_COUNT} 上限时，本请求直接以失败告终、**不会发包**
-   *   （此前是把旧的队满哨兵值 `-1` 交给 `setTimeout`，负延迟被当作 0 处理，反而使限速彻底失效）。
-   *   对本就无法降级重试的调用方而言失败与「不关心结果」无异；但计划任务与队列必须让失败
-   *   可见地冒泡，否则会留下一条已排期、实则永远不会落地的待办。
-   *
-   * @param config 请求配置
-   * @param message 本次请求的用途说明，会写入请求日志
-   * @param silent 历史参数：旧版「网络请求监控」已移除，当前无实际效果；保留以兼容既有调用方
-   * @param log 为 false 时不写请求日志；含认证 key 等敏感数据的内部请求应关闭
-   */
-  createRequest<R extends GmResponseType = "text">(
-    config: GmXmlhttpRequestOption<R, unknown>,
-    message?: string,
-    silent = false,
-    log = true,
-    retry = false,
-  ): Promise<GmResponseEvent<R, unknown>> {
-    const lastRequestTime = this.updateRequestTime(),
-      now = Date.now();
-    if (lastRequestTime === null) {
-      const errorMsg = "排队的请求已超出上限，本次请求被丢弃。";
-      Utils.commonMsg(errorMsg + "（详见控制台）", false);
-      return Promise.reject(new Error(errorMsg));
-    }
-    return new Promise((resolve, reject) => {
-      let settled = false;
-      const succeed = (resp: GmResponseEvent<R, unknown>) => {
-        if (settled) return;
-        settled = true;
-        resolve(resp);
-      };
-      const fail = (reason: string) => {
-        if (settled) return;
-        settled = true;
-        console.warn(`[MCModder-Lite] 请求失败：${reason}`, config.url);
-        Utils.notifyRequestError(reason);
-        reject(new Error(reason));
-      };
-      setTimeout(() => {
-        config.onload = (resp) => {
-          if (settled) return;
-          // 二进制响应（`responseType: "arraybuffer"` 等）下 responseText 未必是字符串，不能直接 trim
-          const str = typeof resp.responseText === "string" ? resp.responseText.trim() : "";
-          const yxdTokenList =
-            str.startsWith("<script>") && str.endsWith("</script>")
-              ? str.match(/'yxd_token=[0-9a-f]+'/)
-              : null;
-          if (!yxdTokenList) {
-            // 普通响应，或形如 <script> 但并非 token 校验：交回调用方
-            succeed(resp);
-            return;
-          }
-          // 未授予 cookie 权限（部分管理器 / Firefox）时无法写入 token，直接交回原响应
-          if (typeof GM_cookie === "undefined" || typeof GM_cookie.set !== "function") {
-            succeed(resp);
-            return;
-          }
-          const url = new URL(resp.finalUrl);
-          const hostname = url.hostname;
-          // 只允许百科域：避免把 token 写到第三方（CurseForge / Modrinth）域
-          if (hostname !== "mcmod.cn" && !hostname.endsWith(".mcmod.cn")) {
-            console.warn(`[MCModder-Lite] 忽略非百科域的 yxd_token：${hostname}`);
-            succeed(resp);
-            return;
-          }
-          if (retry) {
-            // 已重试过一次仍是 token 响应：交回调用方，避免无限递归
-            succeed(resp);
-            return;
-          }
-          const pathname = url.pathname;
-          const index = pathname.lastIndexOf("/");
-          const path = index > 0 ? pathname.slice(0, index) : "/";
-          const yxdToken = yxdTokenList[0].slice(11, -1);
-          const resend = () =>
-            this.createRequest(config, message, silent, log, true).then(succeed, (error: unknown) =>
-              fail(error instanceof Error ? error.message : String(error)),
-            );
-          GM_cookie.set(
-            {
-              name: "yxd_token",
-              value: yxdToken,
-              domain: hostname,
-              path: path || "/",
-              secure: true,
-              // token 由 <script> 挑战载荷下发、经客户端 document.cookie 落地——结构上
-              // 不可能带 HttpOnly，非 HttpOnly 即站点原生形态。设 true 反而会使浏览器
-              // 静默忽略站点自身的同名 document.cookie 刷新写入，故刻意保持 false
-              //（2026-11-18 取证查结：站点 JS 与 Set-Cookie 均无此名，勿收紧）
-              httpOnly: false,
-            },
-            (err) => {
-              if (err) {
-                console.warn("Failed to set `yxd_token!`", err);
-                // 写入失败也要交回响应，避免调用方永久挂起
-                succeed(resp);
-                return;
-              }
-              // 回读校验：确认写入真的落地。部分管理器不实现 list，或策略不同导致
-              // 读不到，此时只记录、不阻断重试——避免把用户永久卡在 token 响应页。
-              const list = (
-                GM_cookie as unknown as {
-                  list?: (
-                    details: { name?: string; domain?: string },
-                    cb: (
-                      cookies: Array<{ name: string; value: string }> | null,
-                      err?: unknown,
-                    ) => void,
-                  ) => void;
-                }
-              ).list;
-              if (typeof list !== "function") {
-                void resend();
-                return;
-              }
-              list.call(
-                GM_cookie,
-                { name: "yxd_token", domain: hostname },
-                (cookies, listError) => {
-                  const stored =
-                    !listError &&
-                    Array.isArray(cookies) &&
-                    cookies.some((c) => c.name === "yxd_token" && c.value === yxdToken);
-                  if (!stored) {
-                    console.warn("[MCModder-Lite] yxd_token 写入后回读不一致，继续重试");
-                  }
-                  void resend();
-                },
-              );
-            },
-          );
-        };
-        config.onerror = () => fail("网络请求失败（请检查网络、代理或站点封禁）");
-        config.ontimeout = () => fail("网络请求超时");
-        config.onabort = () => fail("网络请求已取消");
-        if (!config.timeout) config.timeout = 30000;
-        if (log) {
-          let content = `A${lastRequestTime}:${config.url}`;
-          if (message) content += ` (${message})`;
-          // 只记录请求体大小，绝不记录内容（可能含编辑正文 / 搜索词）
-          if (config.data) {
-            const bodySize = typeof config.data === "string" ? config.data.length : "non-string";
-            content += ` [body:${bodySize}]`;
-          }
-          Utils.queueRequestLog(content);
-        }
-        GM_xmlhttpRequest(config);
-      }, lastRequestTime - now);
-    });
-  }
-
   /** 清除正文中的百科格式化占位符（如 `[h1=]`） */
   static clearContextFormatter(e: string) {
     e = " " + e;
@@ -1435,56 +1143,6 @@ export class Utils {
       void navigator.clipboard.writeText(text.toString());
       Utils.commonMsg(`${typeName}已成功复制到剪贴板~ (${text})`);
     });
-  }
-
-  /** 同时更新「名称→ID」与「ID→名称」两个映射表 */
-  updateClassNameIDMap(className: string, classID: string) {
-    const classNameIDMap = this.configs.getAll("classNameIDMap") ?? {};
-    const idClassNameMap = this.configs.getAll("idClassNameMap") ?? {};
-    classNameIDMap[className] = classID;
-    idClassNameMap[classID] = className;
-    this.configs.setAll("classNameIDMap", classNameIDMap);
-    this.configs.setAll("idClassNameMap", idClassNameMap);
-  }
-
-  /** 由模组 ID 查询其名称 */
-  getClassNameByClassID(classID: string | number) {
-    const idClassNameMap = this.configs.getAll("idClassNameMap") ?? {};
-    return idClassNameMap[classID.toString()];
-  }
-
-  /** 由模组名称查询其 ID */
-  getClassIDByClassName(className: string) {
-    const classNameIDMap = this.configs.getAll("classNameIDMap") ?? {};
-    return classNameIDMap[className];
-  }
-
-  /** 按模组 ID 与物品类型 ID/文本查找对应的物品类型数据 */
-  getItemTypeData(classID: number | undefined, itemType: number | string | undefined) {
-    const matchedTypeList = this.parent.itemTypeList?.filter(
-      (entry) =>
-        (entry.classID === classID || entry.classID === 0) &&
-        ((entry.typeID || 1) === (itemType || 1) || entry.text === itemType),
-    );
-    return matchedTypeList?.length ? matchedTypeList[0] : undefined;
-  }
-
-  /** 生成物品类型的图标 HTML（按 `classID`+`itemType` 查找，或直接传入 `ItemType`） */
-  getItemTypeHTML(
-    ...args:
-      [classID: number | undefined, itemType: number | undefined] | [itemType: ItemType | undefined]
-  ) {
-    let itemType;
-    if (args.length === 1) {
-      itemType = args[0];
-    } else {
-      itemType = this.getItemTypeData(args[0], args[1]);
-    }
-    if (!itemType) return $(`<i class="fa fa-question-circle-o text-danger"></i>`);
-    const iconFont = $(`<span class="iconfont icon">`).css("color", itemType.color);
-    if (itemType.classID === 0) iconFont.html(itemType.icon);
-    else iconFont.html(`<i class="fa ${itemType.icon}"></i>`);
-    return iconFont;
   }
 
   /** 刷新页面上所有 `data-toggle="tooltip"` 元素的 tooltip */
