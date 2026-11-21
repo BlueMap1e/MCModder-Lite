@@ -280,6 +280,10 @@ type InputType =
   | "dropdownTextMenu"
   | "themepack"
   | "backgroundPool"
+  // 「radioGroup」当前无配置项使用（轮换方式已改 dropdownMenu，渲染分支与组件已删），
+  // 但类型痕迹必须保留：删除会打破 ConfigLoader `satisfies SettingsCategory[]` 的
+  // 环形类型推导（ConfigParamsBase 泛型约束 ⇄ typeof settings 自引用），ConfigLoader
+  // 后半段 visible 回调的 ctx 全部退化为隐式 any（2026-11-22 实证，勿再删）
   | "radioGroup";
 
 type Permission = "banned" | "none" | "editor" | "developer" | "manager" | "admin";
@@ -393,7 +397,7 @@ interface BackgroundPoolConfigParams extends ConfigParamsBase<
   type: "backgroundPool";
 }
 
-/** 单选按钮组式的枚举值选择器（选项少、需平铺可见时用） */
+/** 单选按钮组式的枚举值选择器（选项少、需平铺可见时用；无使用方，保留理由见 InputType 内注释） */
 interface RadioGroupConfigParams extends ConfigParamsBase<
   KeysOfType<Required<Settings>, number>,
   number,

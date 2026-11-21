@@ -222,6 +222,7 @@ export class BackgroundPool {
   static readMode(configs: ConfigRepository): BackgroundRotateMode {
     const value = configs.getSettings("backgroundPoolRotateMode");
     const valid = value === 1 || value === 2 || value === 3 || value === 4;
+    // Lite 类型语境下此处断言冗余（上游 68b4276 加的 cast 被本地 lint 判 unnecessary）
     return valid ? value : 0;
   }
 }

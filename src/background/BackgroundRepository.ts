@@ -1,4 +1,5 @@
 import { GM_getValue, GM_setValue } from "$";
+import { Utils } from "../Utils";
 
 /** 一条本地背景图记录 */
 export interface BackgroundImageRow {
@@ -29,12 +30,19 @@ const STORAGE_KEY = "mcmodderBackgroundPool";
  * 脚本级的全局存储，所有域名共享，因此图片必须存在这里。
  *
  * # 体积控制
- * GM storage 有配额，所以图片在写入前会先经 canvas 压缩：最长边
- * {@link MAX_EDGE} 像素、JPEG 质量 {@link JPEG_QUALITY}，压缩后单张仍超过
- * {@link MAX_BYTES} 时逐级降质量。每个 slot 最多 {@link MAX_COUNT} 张。
+ * 单张原图超过 {@link MAX_FILE_BYTES} 直接拒绝，避免解码超大文件；通过后先经 canvas
+ * 压缩：最长边 {@link MAX_EDGE} 像素、JPEG 质量 {@link JPEG_QUALITY}，压缩后单张
+ * data URL 仍超过 {@link MAX_BYTES} 时逐级降质量。每个 slot 最多 {@link MAX_COUNT} 张。
  */
 export class BackgroundRepository {
-  /** 压缩后单张 base64 长度上限（约 1.2MB 图片） */
+  /**
+   * 单张原图（用户选中的文件）的体积上限。
+   *
+   * 与 {@link MAX_BYTES} 不是一回事：这个限制的是压缩前的文件大小，只用来挡掉解码开销
+   * 过大的文件，实际能不能存下由压缩后的结果决定。
+   */
+  static readonly MAX_FILE_BYTES = 8 * 1024 * 1024;
+  /** 压缩后单张 data URL 的长度上限（含 base64 膨胀，约合 0.9MB 二进制图片） */
   static readonly MAX_BYTES = 1.2 * 1024 * 1024;
   /** 每个 slot 的图片数量上限 */
   static readonly MAX_COUNT = 20;
@@ -77,62 +85,111 @@ export class BackgroundRepository {
   }
 
   /**
-   * 追加一张图片（内部先压缩）。
+   * 添加一张图片（内部先压缩）。
    *
+   * @param index 插入位置（0 起）；缺省时追加到末尾。
    * @returns 写库后的完整记录（含自增 id）。
-   * @throws 当该 slot 已达 {@link MAX_COUNT}、或压缩后仍超出 {@link MAX_BYTES} 时抛出。
+   * @throws 当该 slot 已达 {@link MAX_COUNT}、原图超过 {@link MAX_FILE_BYTES}、
+   * 或压缩后仍超出 {@link MAX_BYTES} 时抛出。
    */
-  async add(slot: "day" | "night", name: string, file: File): Promise<BackgroundImageRow> {
-    const data = this.readAll();
-    if (data[slot].length >= BackgroundRepository.MAX_COUNT) {
+  async add(
+    slot: "day" | "night",
+    name: string,
+    file: File,
+    index?: number,
+  ): Promise<BackgroundImageRow> {
+    if (this.readAll()[slot].length >= BackgroundRepository.MAX_COUNT) {
       throw new Error(
-        `最多只能添加 ${BackgroundRepository.MAX_COUNT} 张${slot === "day" ? "白天" : "夜间"}背景`,
+        `最多只能添加 ${BackgroundRepository.MAX_COUNT.toLocaleString()} 张${slot === "day" ? "白天" : "夜间"}背景...`,
+      );
+    }
+    // 压缩前先挡掉过大的文件：原图体积和压缩后的结果没有必然关系，别拿它当存储上限
+    if (file.size > BackgroundRepository.MAX_FILE_BYTES) {
+      throw new Error(
+        `原图有 ${Utils.getFormattedSize(file.size)}，超过 ${Utils.getFormattedSize(BackgroundRepository.MAX_FILE_BYTES)} 上限...`,
       );
     }
     const dataUrl = await BackgroundRepository.compress(file, slot);
     if (dataUrl.length > BackgroundRepository.MAX_BYTES) {
       throw new Error(
-        `压缩后仍有 ${Math.round(dataUrl.length / 1024)}KB，超过上限 ${Math.round(BackgroundRepository.MAX_BYTES / 1024)}KB`,
+        `压缩后仍有 ${Utils.getFormattedSize(dataUrl.length)}，超过 ${Utils.getFormattedSize(BackgroundRepository.MAX_BYTES)} 上限...`,
+      );
+    }
+    // 压缩是异步的，期间别的标签页可能已经改过库，落盘前重新读一次
+    const data = this.readAll();
+    if (data[slot].length >= BackgroundRepository.MAX_COUNT) {
+      throw new Error(
+        `最多只能添加 ${BackgroundRepository.MAX_COUNT.toLocaleString()} 张${slot === "day" ? "白天" : "夜间"}背景...`,
       );
     }
     const existing = data[slot].sort((a, b) => a.order - b.order);
+    const insertAt = index === undefined ? existing.length : Utils.clamp(index, 0, existing.length);
     const nextId =
       [...data.day, ...data.night].reduce((max, row) => Math.max(max, row.id ?? 0), 0) + 1;
-    const order = existing.length === 0 ? 0 : existing[existing.length - 1].order + 1;
     const row: BackgroundImageRow = {
       id: nextId,
       slot,
       name,
       dataUrl,
-      order,
+      order: insertAt,
       addedAt: Date.now(),
       weight: 1,
     };
-    data[slot] = [...existing, row];
+    existing.splice(insertAt, 0, row);
+    data[slot] = existing.map((item, order) => ({ ...item, order }));
     this.writeAll(data);
-    return row;
+    return data[slot][insertAt];
   }
 
-  /** 按 id 删除 */
-  remove(id: number): void {
+  /**
+   * 重命名一张图片（只按 id 找，白天 / 夜间都会查）。
+   *
+   * 首尾空白会被去掉；去掉后为空的名字视为无效。`name` 只用于展示，
+   * 不影响轮换结果，因此调用方改完名后按需 `BackgroundPool.reload` 刷新缓存即可。
+   *
+   * @returns 更新后的记录；找不到该 id 或名字为空时返回 `null`
+   * （名字没有变化时不写库，但仍返回记录）。
+   */
+  rename(id: number, name: string): BackgroundImageRow | null {
+    const trimmed = Utils.regulateFileName(name.trim());
+    if (trimmed.length === 0) return null;
     const data = this.readAll();
-    data.day = data.day.filter((row) => row.id !== id);
-    data.night = data.night.filter((row) => row.id !== id);
-    this.writeAll(data);
-  }
-
-  /** 设置某张图的权重（1-10，超范围自动夹取） */
-  setWeight(id: number, weight: number): void {
-    const data = this.readAll();
-    const clamped = Math.max(1, Math.min(10, Math.round(weight)));
     for (const slot of ["day", "night"] as const) {
-      const row = data[slot].find((r) => r.id === id);
-      if (row) {
-        row.weight = clamped;
+      const row = data[slot].find((item) => item.id === id);
+      if (row === undefined) continue;
+      if (row.name !== trimmed) {
+        row.name = trimmed;
         this.writeAll(data);
-        return;
+      }
+      return row;
+    }
+    return null;
+  }
+
+  /** 按 id 删除；可以一次删多张，只写一次库 */
+  remove(ids: number | number[]): void {
+    const doomed = new Set(Array.isArray(ids) ? ids : [ids]);
+    const data = this.readAll();
+    data.day = data.day.filter((row) => row.id === undefined || !doomed.has(row.id));
+    data.night = data.night.filter((row) => row.id === undefined || !doomed.has(row.id));
+    this.writeAll(data);
+  }
+
+  /** 设置若干张图的权重（1-10，超范围自动夹取）；一次只写一次库 */
+  setWeight(ids: number | number[], weight: number): void {
+    const targets = new Set(Array.isArray(ids) ? ids : [ids]);
+    const data = this.readAll();
+    const clamped = Utils.clamp(Math.round(weight), 1, 10);
+    let changed = false;
+    for (const slot of ["day", "night"] as const) {
+      for (const row of data[slot]) {
+        if (row.id !== undefined && targets.has(row.id)) {
+          row.weight = clamped;
+          changed = true;
+        }
       }
     }
+    if (changed) this.writeAll(data);
   }
 
   /** 清空某个 slot */
@@ -148,7 +205,7 @@ export class BackgroundRepository {
     const rows = data[slot].sort((a, b) => a.order - b.order);
     const from = rows.findIndex((row) => row.id === id);
     if (from < 0) return;
-    const clamped = Math.max(0, Math.min(rows.length - 1, targetIndex));
+    const clamped = Utils.clamp(targetIndex, 0, rows.length - 1);
     if (from === clamped) return;
     const [moved] = rows.splice(from, 1);
     rows.splice(clamped, 0, moved);

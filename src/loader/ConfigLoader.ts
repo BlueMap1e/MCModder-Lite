@@ -1,4 +1,14 @@
+import { BackgroundRepository } from "../background/BackgroundRepository";
 import { Utils } from "../Utils";
+
+/**
+ * 本地背景图池的限制说明。
+ *
+ * 数值直接取自 {@link BackgroundRepository}，避免文案和实际限制脱节。
+ */
+const backgroundPoolLimitText =
+  `单张原图不超过 ${Utils.getFormattedSize(BackgroundRepository.MAX_FILE_BYTES)}` +
+  `（保存前会自动压缩，压缩后仍过大的会被跳过），最多 ${BackgroundRepository.MAX_COUNT.toLocaleString()} 张。`;
 
 export const settings = [
   {
@@ -60,41 +70,59 @@ export const settings = [
           {
             id: "backgroundPoolDay",
             title: "白天本地背景",
-            description:
-              "从本机选择一张或多张图片作为白天背景。添加后每次打开页面会从中挑一张，优先于上面填写的 URL。单张不超过 8MB，最多 50 张。",
+            description: `从本机选择一张或多张图片作为白天背景。此配置将优先于在“默认背景”与“默认夜间背景”配置项中填写的 URL。${backgroundPoolLimitText}`,
             type: "backgroundPool",
             value: 0,
           },
           {
             id: "backgroundPoolNight",
             title: "夜间本地背景",
-            description:
-              "从本机选择一张或多张图片作为夜间背景，与白天分开设置。夜间模式下优先使用这里的图片。单张不超过 8MB，最多 50 张。",
+            description: `从本机选择一张或多张图片作为夜间背景，此配置将优先于在“默认背景”与“默认夜间背景”配置项中填写的 URL，且夜间模式下将优先使用这里的图片。${backgroundPoolLimitText}`,
             type: "backgroundPool",
             value: 0,
           },
           {
             id: "backgroundPoolRotateMode",
             title: "本地背景轮换方式",
-            description:
-              "多张本地背景时的取图方式。<b>随机</b>：每次加载抽一张，尽量不与上次相同（避免突兀）；<b>完全随机</b>：按权重纯随机，允许连续重复 —— 想让「出现频率」真正起效就用这个；<b>顺序循环</b>：按列表依次取，到底回开头；<b>洗牌轮完重洗</b>：一轮内每张只出一次，轮完重新洗牌；<b>每天固定</b>：一天之内固定一张，跨天换一张且不重复。",
-            type: "radioGroup",
+            description: "多张本地背景时的取图方式。",
+            type: "dropdownMenu",
             value: 0,
             range: {
-              0: "随机",
-              1: "完全随机",
-              2: "顺序循环",
-              3: "洗牌轮完重洗",
-              4: "每天固定",
+              0: {
+                text: "随机",
+                desc: "每次抽取时尽可能不与上次相同",
+              },
+              1: {
+                text: "完全随机",
+                desc: "完全按照权重分配抽取概率，可能连续重复",
+              },
+              2: {
+                text: "顺序循环",
+                desc: "按列表正序循环轮播",
+              },
+              3: {
+                text: "洗牌轮完重洗",
+                desc: "每轮每张只抽取一次，轮完重新洗牌",
+              },
+              4: {
+                text: "每天固定",
+                desc: "只在跨天时重新抽取",
+              },
             },
+            visible: (ctx) =>
+              (ctx.configs.getSettings("backgroundPoolDay") ?? 0) > 1 ||
+              (ctx.configs.getSettings("backgroundPoolNight") ?? 0) > 1,
           },
           {
             id: "backgroundOverrideExisting",
             title: "覆盖页面自带背景",
             description:
-              "开启后，即使页面自己设置了背景（如消息中心、个人主页），也会被上面的背景替换。关闭（默认）时只替换原本没有背景的页面，保留站点与其他脚本设置的背景。",
+              "启用后，本地背景会覆盖页面已有背景，包括用户自行设置的个人页背景，以及部分模组区域下资料的背景。",
             type: "checkbox",
             value: false,
+            visible: (ctx) =>
+              (ctx.configs.getSettings("backgroundPoolDay") ?? 0) > 0 ||
+              (ctx.configs.getSettings("backgroundPoolNight") ?? 0) > 0,
           },
         ],
       },
