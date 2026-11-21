@@ -127,6 +127,15 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - **Do not bulk-delete CSS.** `base.css` (~114 KB), `mcmodderUI.css` (~34 KB) and `bbs.css`
   (~53 KB) contain legacy overrides whose deletion has broken night mode before. Remove a
   rule only with CSS-coverage evidence and before/after screenshots of every affected page.
+- **Global CSS rules are page-density multipliers.** A rule touching element classes
+  (`.btn`, `.form-control`, `.col-lg-6`, bare `input`) fires on EVERY page — the denser
+  the form area, the bigger the blast radius. Two full rounds of regressions (2026-11-21,
+  crafting-table page) came from such rules whose conflicts had been masked by the old
+  two-column layout. Discipline: (a) when adding/changing a global rule, enumerate the
+  page types it touches; (b) for single-page exemptions use compound selectors
+  (`.col-lg-6.input-group`, `:not(.btn-link)`) with a comment naming the page; (c) flipping
+  any layout default REQUIRES a full visual audit of the affected page in night mode, not
+  just structural assertions — style conflicts live outside any feature gate.
 - `ItemTabInit` is instantiated directly by `ItemPageInit` / `OredictPageInit` even though
   `canRun()` returns false — `canRun()` alone never proves a file dead.
 - Global keyboard shortcuts must return early when the event target is an `input`,
@@ -171,6 +180,13 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   at build by the `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild
   CSS minify, whose cross-position rule merging rewrites cascade order; splitting mainly
   helps low-end devices and adds loading / debugging complexity.
+  **Utils split has an upstream reference plan** (Charcoal-Black/Mcmodder dcc3692:
+  request/fetch methods move to a new `WebFetchUtils`, config-related to
+  `ConfigRepository`) — do NOT cherry-pick it (our Utils has diverged); port the
+  structure. It also resolves the one real runtime cycle dpdm found
+  (`Utils.ts ⇄ ConfigRepository.ts`, double value import). `npx dpdm src/main.ts`
+  reports the cycle list: type-only cycles (closed by `import type { Mcmodder }`
+  from every init/widget) are harmless runtime-wise and outnumber real ones ~20:1.
 
 ## Host-page constraints
 
@@ -265,6 +281,13 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - **JSON storage layer** -> `src/jsonframe/repository/` (`ItemRepository`: GM storage vs
   Dexie/IndexedDB, switched by the `itemRepository` setting under 数据存储). It feeds the
   auto-link local search in `src/vue/components/AutoLink.vue`.
+- **Self-contained feature modules** -> own top-level `src/<name>/` directory with
+  its own storage, decision logic and a `__logic-test.cjs` runnable with plain node —
+  **never** rewrite host DOM or restyle host elements (exemplar: `src/background/`,
+  the local background pool ported from upstream ea11ab8; counter-exemplar: the
+  removed TabEditInit, whose in-place page rewrite caused two rounds of style
+  conflicts). Cross-domain data (settings in center, pages in www) must go through
+  GM storage — IndexedDB is origin-isolated.
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
 - **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
