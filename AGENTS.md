@@ -98,15 +98,16 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   site-relative paths are allowed.
 - Linkify user content with `Utils.linkifyTextNodes` (TreeWalker over text nodes); never
   `.html()` plus string replacement.
-- `Utils.createRequest` owns error / timeout / abort handling; do not dispatch
-  `GM_xmlhttpRequest` elsewhere. Request logs record URL, purpose and body size only — never
-  body content.
+- `Mcmodder.web.createRequest` (`WebFetchUtils`) owns error / timeout / abort handling; do not
+  dispatch `GM_xmlhttpRequest` elsewhere. Request logs record URL, purpose and body size only —
+  never body content.
 - The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
   switching and per-account credential storage were removed on purpose; multi-account is the
   browser's job — do not reintroduce it. `GM_cookie` is used only for `yxd_token`; the write
   is read back with `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless).
   The write is deliberately `httpOnly: false` — non-HttpOnly is the site-native shape (the
-  token lands via `document.cookie`, which cannot set HttpOnly); see the comment in `Utils.ts`.
+  token lands via `document.cookie`, which cannot set HttpOnly); see the comment in
+  `WebFetchUtils.ts`.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
@@ -173,20 +174,25 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   intact (verified). Do not reach for flex on containers that also hold non-item children
   (a username `p` becomes a squeezed flex item — `text-align: center` + `inline-block`
   is the safe centering there).
-- Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Utils` /
-  `Values`, per-page CSS or bundle splitting. Dead-file scanning lives in the e2e
+- Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Values`,
+  per-page CSS or bundle splitting. Dead-file scanning lives in the e2e
   workspace as `dead-files2.mjs`; trust a "DEAD" verdict only after grepping the symbol
   repo-wide. The shipped bundle is ~1.6 MB, and `?raw` CSS is comment/whitespace-stripped
   at build by the `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild
   CSS minify, whose cross-position rule merging rewrites cascade order; splitting mainly
   helps low-end devices and adds loading / debugging complexity.
-  **Utils split has an upstream reference plan** (Charcoal-Black/Mcmodder dcc3692:
-  request/fetch methods move to a new `WebFetchUtils`, config-related to
-  `ConfigRepository`) — do NOT cherry-pick it (our Utils has diverged); port the
-  structure. It also resolves the one real runtime cycle dpdm found
-  (`Utils.ts ⇄ ConfigRepository.ts`, double value import). `npx dpdm src/main.ts`
-  reports the cycle list: type-only cycles (closed by `import type { Mcmodder }`
-  from every init/widget) are harmless runtime-wise and outnumber real ones ~20:1.
+- **Utils split is done (2026-11-21, structure ported from upstream dcc3692, not
+  cherry-picked).** `Utils` is pure-static: no instance state, no `Mcmodder` /
+  `ConfigRepository` references, never instantiate it. Stateful request logic
+  (`createRequest` / `updateRequestTime`, rate-limit cursor, request log, `yxd_token`
+  retry) lives in `src/WebFetchUtils.ts`, constructed once as `Mcmodder.web`;
+  config/context-bound helpers (`isKeyMatchConfig`, class-name maps, item-type lookups)
+  live in `ConfigRepository`. Routing rule for new helpers: pure function -> `Utils`
+  static; needs settings / GM storage / parent context -> `ConfigRepository`; sends
+  requests -> `WebFetchUtils`. `npx dpdm src/main.ts` reports the cycle list: the one
+  real runtime cycle (`Utils.ts ⇄ ConfigRepository.ts`, double value import) is resolved;
+  remaining cycles are type-only (closed by `import type { Mcmodder }` edges from every
+  init/widget), harmless runtime-wise.
 
 ## Host-page constraints
 
@@ -196,9 +202,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   module scope. Nothing in `src/` runs under plain Node.
 - GM APIs go through the `$` alias (`import { GM_getValue } from "$"`,
   `vite-plugin-monkey/client`). Never use `localStorage`/`sessionStorage` for app data.
-- All network traffic goes through `Utils.createRequest` (rate limit via
-  `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token` retry). Never call
-  `GM_xmlhttpRequest` directly.
+- All network traffic goes through `Mcmodder.web.createRequest` (`WebFetchUtils`; rate
+  limit via `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token`
+  retry). Never call `GM_xmlhttpRequest` directly.
 - External libraries:
   - **No `@require`, no runtime remote loads**: nothing is fetched at install time or from
     the network at runtime — every third-party library is bundled at build time
@@ -269,9 +275,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   default, optional `visible`), and reuse the matching control in `src/vue/components/input/`.
   Add the reader in the same change. Internal keys may live in `Settings` without a panel row
   (precedent: `markdownIt`, `lastRequestTime`) — they still need a reader.
-- **Persisted state** -> `ConfigRepository` (`getSettings`/`setSettings`, reactive
-  `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid, `*Class` per
-  classID). Prefer it over raw `GM_*Value` calls for keys it covers.
+- **Persisted state / context-bound helpers** -> `ConfigRepository` (`getSettings`/`setSettings`,
+  reactive `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid,
+  `*Class` per classID, keybinding matching, class-name maps, item-type lookups). Prefer it
+  over raw `GM_*Value` calls for keys it covers.
+- **Network requests** -> `WebFetchUtils`: call `mcmodder.web.createRequest(...)` (rate
+  limiting, request log, `yxd_token` retry). Never dispatch `GM_xmlhttpRequest` directly.
+- **Pure static helpers** -> `Utils` (pure-static class; see the Utils-split note in
+  Maintenance notes for the routing rule).
 - **Reactive/storage-cached keys** -> register with `StorageBuffer.addCacheableItem` in
   `src/loader/StorageBufferLoader.ts`; global config-to-behavior watchers (night mode, page
   width) live in `Mcmodder.watchRef()`.
@@ -317,7 +328,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - `src/loader/*` — `ConfigLoader`, `StyleLoader`, `StorageBufferLoader`,
   `ScheduleRequestLoader`, `MenuCommandLoader`, `InitLoader`.
 - `src/config/` — `ConfigUtils` (option registration) and `ConfigRepository` (typed GM-storage
-  facade).
+  facade plus context-bound helpers: keybinding matching, class-name maps, item-type lookups).
+- `src/WebFetchUtils.ts` — stateful network layer, constructed once as `Mcmodder.web`:
+  `createRequest` / `updateRequestTime` (rate limiting, request log, `yxd_token` retry).
 - `src/StorageBuffer.ts` — GM key -> Vue `shallowRef` cache with cross-tab sync via
   `GM_addValueChangeListener`.
 - `src/types/types.d.ts` — global types: `AppStorage`, `Settings`, `Profile`, `Class`, `Item`,
