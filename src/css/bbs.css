@@ -1714,6 +1714,47 @@ html.dark .fwin .tedt .area {
   border-color: var(--mcmodder-color-background-dark3);
 }
 
+/* 发消息浮窗（showWindow('sendpm') 的 .pm 家族）：标题栏/输入框/按钮栏已被
+   上方 .fwin 通用夜间规则覆盖，漏网的是内容层——链接条 .pm_tac 与消息层
+   .pm .c 站点写死 #F2F2F2，历史区大片浅色（thread-24239 用户报告）。均为
+   dark1 平铺，与日间「链接条 = 内容层同色」的形态对齐 */
+html.dark .fwin .pm .c,
+html.dark .fwin .pm_tac {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+
+html.dark .fwin .pm_tac {
+  /* 分隔虚线：站点 dashed #CDCDCD，深底上过亮 */
+  border-bottom: 1px dashed var(--mcmodder-color-background-dark3);
+}
+
+/* 消息气泡：对方消息 .pmd（浅灰贴图底 + 四向浅色边）、自己的消息 .pmm .pmd
+   （奶油色贴图底 + 橙边，右浮）夜间均刺眼。深色化后左右浮位仍承担「谁发的」
+   区分，自己的气泡再叠站点主绿（发送按钮同源）作语义色 */
+html.dark .fwin .pmd {
+  background-color: var(--mcmodder-color-background-dark2);
+  background-image: none;
+  border-color: var(--mcmodder-color-background-dark3);
+  box-shadow: 2px 2px 4px var(--mcmodder-color-bbs-shadow);
+}
+
+html.dark .fwin .pmm .pmd {
+  background-color: var(--mcmodder-color-primary-dark2);
+  border-color: var(--mcmodder-color-primary-dark1);
+  box-shadow: -2px 2px 4px var(--mcmodder-color-bbs-shadow);
+}
+
+/* 气泡内引文：站点写死 #666，深色气泡上不可读 */
+html.dark .fwin .pmd .quote {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+/* 气泡小尾巴（.pmt）：7px 雪碧图箭头，颜色随浅色气泡设计，深色化后成为
+   悬浮色块——直接去掉（位置已表明消息方向，箭头无信息量） */
+html.dark .fwin .pmt {
+  display: none;
+}
+
 /* 帖子页脚操作栏（分享/收藏/评分…）：Discuz 用 .pob.hin{opacity:0.2} 压暗
    待悬浮才显现——日间浅底上尚可辨认，夜间深底上等于隐形。夜间恢复不透明，
    文字色本身已是柔和次要色，不突兀 */
