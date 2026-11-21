@@ -478,6 +478,60 @@ a.text-danger:hover {
 .bd-callout p {
   color: var(--mcmodder-color-button);
 }
+/* 短评态度表情夜间色板：站点 comment.frame.css 给每个表情预设日间色
+   （.comment-attitude.<type>.colourful 及 :hover），其中「震惊」#000 与
+   「怠惰」#222 在深色背景上完全隐形（2026-11-21 真机报告），另有多枚暗色系
+   对比不足。按表情语义色向夜间重映射；up/snowflake 日间色在夜间可读，保持
+   站点原色。点击后的「我的态度」态（站点移除 colourful 类）继承正文色，
+   天然可读，无需处理 */
+html.dark .comment-attitude.flushed.colourful,
+html.dark .comment-attitude.flushed.colourful:hover {
+  color: #e2e8f0;
+}
+html.dark .comment-attitude.down.colourful,
+html.dark .comment-attitude.down.colourful:hover {
+  color: #94a3b8;
+}
+html.dark .comment-attitude.meh.colourful,
+html.dark .comment-attitude.meh.colourful:hover {
+  color: #adb5bd;
+}
+html.dark .comment-attitude.cry.colourful,
+html.dark .comment-attitude.cry.colourful:hover {
+  color: #6c9be0;
+}
+html.dark .comment-attitude.heart.colourful,
+html.dark .comment-attitude.heart.colourful:hover {
+  color: #e05c7a;
+}
+html.dark .comment-attitude.heartbroken.colourful,
+html.dark .comment-attitude.heartbroken.colourful:hover {
+  color: #e06666;
+}
+html.dark .comment-attitude.angry.colourful,
+html.dark .comment-attitude.angry.colourful:hover {
+  color: #ff5c33;
+}
+html.dark .comment-attitude.grintears.colourful,
+html.dark .comment-attitude.grintears.colourful:hover {
+  color: #d4b02c;
+}
+html.dark .comment-attitude.lemon.colourful,
+html.dark .comment-attitude.lemon.colourful:hover {
+  color: #c9c04a;
+}
+html.dark .comment-attitude.tired.colourful,
+html.dark .comment-attitude.tired.colourful:hover {
+  color: #d9a441;
+}
+html.dark .comment-attitude.horsehead.colourful,
+html.dark .comment-attitude.horsehead.colourful:hover {
+  color: #c98a5e;
+}
+html.dark .comment-attitude.handshake.colourful,
+html.dark .comment-attitude.handshake.colourful:hover {
+  color: #6cc06c;
+}
 .text-muted,
 .text-muted p {
   color: var(--mcmodder-color-button) !important;
