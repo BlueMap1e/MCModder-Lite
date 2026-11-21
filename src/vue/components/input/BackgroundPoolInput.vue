@@ -68,9 +68,8 @@
         </p>
       </template>
       <template #empty>
-        <button type="button" class="btn btn-success" @click="pickFilesForEmpty">
-          添加本地图片...
-        </button>
+        <!-- 上游用 btn-success（绿），Lite 面板主题无绿色系——改普通 btn 吃皮肤主题色渐变 -->
+        <button type="button" class="btn" @click="pickFilesForEmpty">添加本地图片...</button>
       </template>
     </ImageList>
   </div>
@@ -314,6 +313,11 @@ defineExpose<InputControlRef<number>>({
   display: flex;
   flex-direction: column;
   gap: 8px;
+  /* 设置行（.setting-item）是 flex 布局，子项默认收缩到内容宽——预览区/工具条会被
+     压垮成一条窄列（2026-11-22 真机实证）。与 bootstrap .form-control 同构：
+     占满行宽，min-width:0 允许在标题旁正常收缩 */
+  width: 100%;
+  min-width: 0;
 }
 
 .mcmodder-bg-pool-imagelist {
