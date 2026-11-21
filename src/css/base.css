@@ -1152,6 +1152,10 @@ body:not(.view),
   position: relative;
   image-rendering: pixelated;
 }
+.mcmodder-verify-userfilter {
+  width: 200px;
+  display: inline-block;
+}
 .mcmodder-verify-locate {
   margin-left: var(--mcmodder-width-padding-3);
 }
