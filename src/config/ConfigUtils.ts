@@ -14,6 +14,8 @@ export class ConfigUtils {
     dropdownMenu: 0,
     dropdownTextMenu: "",
     themepack: "graphite",
+    backgroundPool: 0,
+    radioGroup: 0,
   } as const satisfies Record<InputType, unknown>;
 
   private readonly configs: ConfigRepository;

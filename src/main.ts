@@ -3,6 +3,7 @@
 // earlySplash 必须最先求值（早于 devCheck 与整包依赖），把防闪烁遮罩落在第一毫秒
 import { nightMode, splashStyle } from "./earlySplash";
 import "./devCheck";
+import { BackgroundPool } from "./background/BackgroundPool";
 import { GM_getValue, GM_addValueChangeListener } from "$";
 import { Mcmodder } from "./Mcmodder";
 import bbsCss from "./css/bbs.css?raw";
@@ -280,6 +281,8 @@ import { installBbsImageAspectFix } from "./init/BbsImageAspectFix";
       setTimeout(() => splashStyle.remove(), 300);
     } else {
       try {
+        // 本地背景池要赶在 StyleLoader 生成 CSS 之前读进内存（那里是同步流程）
+        BackgroundPool.init();
         new Mcmodder();
       } catch (error) {
         console.error("Mcmodder 启动失败：", error);

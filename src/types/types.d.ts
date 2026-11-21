@@ -149,6 +149,18 @@ interface Settings {
   autoCheckin: boolean;
   defaultBackground: string;
   defaultNightBackground: string;
+  /** 白天本地图池（仅记录数量，图片实体在 GM storage） */
+  backgroundPoolDay: number;
+  /** 夜间本地图池（仅记录数量，图片实体在 GM storage） */
+  backgroundPoolNight: number;
+  /**
+   * 轮换预设：
+   * 0=随机（不连续）、1=完全随机（可连续，权重主导）、2=顺序循环、
+   * 3=洗牌轮完重洗、4=每天固定
+   */
+  backgroundPoolRotateMode: 0 | 1 | 2 | 3 | 4;
+  /** 是否覆盖页面自带的背景（默认否：只替换原本没有背景的页面） */
+  backgroundOverrideExisting: boolean;
   backgroundAlpha: number;
   textShadowAlpha: number;
   radiusRatio: number;
@@ -186,6 +198,7 @@ interface Settings {
   uploadFileButton: boolean;
   ignoreEmptyLine: boolean;
   replyLink: boolean;
+  /** 是否启用短评跨页定位（关闭后 #comment-xxx 链接与楼层输入框都不工作） */
   missileAlert: boolean;
   missileAlertHeight: number;
   commentExpandHeight: number;
@@ -265,7 +278,9 @@ type InputType =
   | "keybind"
   | "dropdownMenu"
   | "dropdownTextMenu"
-  | "themepack";
+  | "themepack"
+  | "backgroundPool"
+  | "radioGroup";
 
 type Permission = "banned" | "none" | "editor" | "developer" | "manager" | "admin";
 
@@ -366,6 +381,27 @@ interface KeybindConfigParams extends ConfigParamsBase<
   type: "keybind";
 }
 
+/**
+ * 本地背景图池。配置值只记录图片数量（用于让设置面板感知变化），
+ * 图片实体存放在 GM storage，见 `background/BackgroundRepository.ts`。
+ */
+interface BackgroundPoolConfigParams extends ConfigParamsBase<
+  KeysOfType<Required<Settings>, number>,
+  number,
+  never
+> {
+  type: "backgroundPool";
+}
+
+/** 单选按钮组式的枚举值选择器（选项少、需平铺可见时用） */
+interface RadioGroupConfigParams extends ConfigParamsBase<
+  KeysOfType<Required<Settings>, number>,
+  number,
+  InputValueSet
+> {
+  type: "radioGroup";
+}
+
 /** 下拉菜单类配置项 */
 interface DropdownConfigParams extends ConfigParamsBase<
   KeysOfType<Required<Settings>, number>,
@@ -405,7 +441,9 @@ type ConfigParams =
   | KeybindConfigParams
   | DropdownConfigParams
   | DropdownTextConfigParams
-  | ThemePackConfigParams;
+  | ThemePackConfigParams
+  | BackgroundPoolConfigParams
+  | RadioGroupConfigParams;
 
 /** 用于决定配置项是否显示的上下文 */
 interface ConfigVisibilityContext {

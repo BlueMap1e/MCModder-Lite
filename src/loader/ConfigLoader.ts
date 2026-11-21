@@ -57,6 +57,45 @@ export const settings = [
             type: "text",
             value: "none",
           },
+          {
+            id: "backgroundPoolDay",
+            title: "白天本地背景",
+            description:
+              "从本机选择一张或多张图片作为白天背景。添加后每次打开页面会从中挑一张，优先于上面填写的 URL。单张不超过 8MB，最多 50 张。",
+            type: "backgroundPool",
+            value: 0,
+          },
+          {
+            id: "backgroundPoolNight",
+            title: "夜间本地背景",
+            description:
+              "从本机选择一张或多张图片作为夜间背景，与白天分开设置。夜间模式下优先使用这里的图片。单张不超过 8MB，最多 50 张。",
+            type: "backgroundPool",
+            value: 0,
+          },
+          {
+            id: "backgroundPoolRotateMode",
+            title: "本地背景轮换方式",
+            description:
+              "多张本地背景时的取图方式。<b>随机</b>：每次加载抽一张，尽量不与上次相同（避免突兀）；<b>完全随机</b>：按权重纯随机，允许连续重复 —— 想让「出现频率」真正起效就用这个；<b>顺序循环</b>：按列表依次取，到底回开头；<b>洗牌轮完重洗</b>：一轮内每张只出一次，轮完重新洗牌；<b>每天固定</b>：一天之内固定一张，跨天换一张且不重复。",
+            type: "radioGroup",
+            value: 0,
+            range: {
+              0: "随机",
+              1: "完全随机",
+              2: "顺序循环",
+              3: "洗牌轮完重洗",
+              4: "每天固定",
+            },
+          },
+          {
+            id: "backgroundOverrideExisting",
+            title: "覆盖页面自带背景",
+            description:
+              "开启后，即使页面自己设置了背景（如消息中心、个人主页），也会被上面的背景替换。关闭（默认）时只替换原本没有背景的页面，保留站点与其他脚本设置的背景。",
+            type: "checkbox",
+            value: false,
+          },
         ],
       },
       {

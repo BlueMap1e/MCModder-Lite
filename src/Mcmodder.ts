@@ -1,4 +1,5 @@
 import { GM_openInTab } from "$";
+import { BackgroundPool } from "./background/BackgroundPool";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { MenuCommandLoader } from "./loader/MenuCommandLoader";
 import { ScheduleRequestLoader } from "./loader/ScheduleRequestLoader";
@@ -742,9 +743,14 @@ export class Mcmodder {
     ).addClass("mcmodder-content-block");
     $(".common-nav .line").html('<i class="fa fa-chevron-right" />');
     $(".oredict-ad, .worldgen-list-ad").remove();
-    if (this.configRepository.getSettings("defaultBackground") != "none") {
+    // 是否覆盖页面自带的背景：默认否（保守），只替换原本没有背景的页面；
+    // 用户可在设置里开启，强制用脚本背景覆盖站点/其他脚本设置的背景。
+    const overrideExisting = this.configRepository.getSettings("backgroundOverrideExisting");
+    const hasLocalBackground =
+      BackgroundPool.getImages("day").length > 0 || BackgroundPool.getImages("night").length > 0;
+    if (hasLocalBackground || this.configRepository.getSettings("defaultBackground") != "none") {
       $("body")
-        .filter((_, c) => $(c).css("background-image") === "none")
+        .filter((_, c) => overrideExisting || $(c).css("background-image") === "none")
         .css({
           background: "var(--mcmodder-image-background)",
           "background-size": "cover",
