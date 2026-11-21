@@ -32,6 +32,8 @@ export class TabEditInit extends Init {
   private shapeless = false;
   private mcmodShapelessToggle?: JQuery;
   private readonly isTabAdd = window.location.href.includes("/tab/add/");
+  /** 合成表页面双栏布局（tabPageSplit，默认关 = 站点原生单栏纵向流），work() 时定值 */
+  private splitLayout = false;
 
   canRun() {
     return this.parent.href.includes("/item/tab/") && !this.parent.href.includes(".html");
@@ -319,8 +321,27 @@ export class TabEditInit extends Init {
     const guiID = this.getGuiID();
     $(".mcmodder-gui-id-display").text(guiID);
 
+    // 幂等闸（原语义保形）：提示条存留说明 guiFrame 未被站点重建，本次触发连
+    // 尾部锁定开关同步一并跳过——重复 click 会把无序锁定切回去。tabPageSplit
+    // 关闭（原生布局）时无表格无提示条，闸恒不命中，仅保留下方尾部同步
+    if (this.splitLayout && $("#mcmodder-tabedit-tip").length) return;
+    if (this.splitLayout) {
+      this.buildRecipeTable();
+    }
+
+    this.guiLockerToggle?.setCurrentValue(guiID === this.guiLocker);
+    if (this.shapeless && this.isTabAdd) {
+      this.mcmodShapelessToggle?.click();
+    }
+    this.onGuiOpen();
+  }
+
+  /** 双栏态专用：构建替换式表格行（键盘流编辑面）并改造周边提示。
+   *  重复触发由 updateTabFrame 的提示条闸挡住，此处不再自查 */
+  private buildRecipeTable() {
+    // 调用点已守卫，此处为类型收窄与运行时防御
+    if (!this.guiFrame) return;
     this.frame.find("hr").remove();
-    if ($("#mcmodder-tabedit-tip").length) return;
     $(`<span id="mcmodder-tabedit-tip" class="mcmodder-slim-dark">
       提示：巧妙运用
         <strong>Tab</strong> /
@@ -670,11 +691,6 @@ export class TabEditInit extends Init {
       childList: true,
       subtree: true,
     });
-    this.guiLockerToggle?.setCurrentValue(guiID === this.guiLocker);
-    if (this.shapeless && this.isTabAdd) {
-      this.mcmodShapelessToggle?.click();
-    }
-    this.onGuiOpen();
   }
 
   // private onInputMouseenter(e: JQueryMouseEventObject) {
@@ -779,35 +795,45 @@ export class TabEditInit extends Init {
     new GeneralEditInit(this.parent).run();
     this.guiFrame = this.frame.get(0);
     this.slotFrame = this.frame.find(".gui").get(0);
-    $("#edit-page-2").attr("class", "tab-pane active");
-    $(".swiper-container").remove();
+    // tabPageSplit（默认关 = 站点原生单栏纵向流）：布局重排全部圈进此分支；
+    // 与布局无关的功能（ID 徽章 / GUI 锁定 / 无序锁定 / GTCEu 提示 / 配方预览）
+    // 两种布局下都工作。marker class 供样式作用域与探针取证
+    this.splitLayout = this.configs.getSettings("tabPageSplit") === true;
+    if (this.splitLayout) {
+      document.documentElement.classList.add("mcmodder-tab-split");
+      // 站点 TabWidget（swiper 选项卡条）移除；扩展信息页解除隐藏、并入主流
+      $("#edit-page-2").attr("class", "tab-pane active");
+      $(".swiper-container").remove();
+    }
     if (!this.guiFrame) return;
     // this.guiObserver.observe(this.guiFrame, { childList: true, subtree: true });
 
-    const ingredientSelectFrame = $("<div>");
-    const ingredientSelectWindow = $('<div class="mcmodder-horizontal-window">').appendTo(
-      ingredientSelectFrame,
-    );
-    const tabEditHorizontalDivider = new HorizontalDraggableFrame(
-      "tabEditHorizontalDivider",
-      this.configs,
-      {},
-      $(".common-menu-area").get(0) as HTMLElement,
-      {
-        initPos: 0.5,
-        leftCollapseThreshold: 0,
-        rightCollapseThreshold: 0.7,
-        leftDraggableLimit: 0.3,
-      },
-    );
-    tabEditHorizontalDivider.bindLeft($(".common-menu-area > .tab-content"));
-    tabEditHorizontalDivider.bindRight(ingredientSelectFrame);
-    const ingredientSelector = $("#edit-page-1 > .tab-ul > .tab-li").first().children();
-    ingredientSelector.appendTo(ingredientSelectWindow);
-    this.parent.updateScreenAttachedFrame(ingredientSelectWindow.get(0) as HTMLElement);
-    setTimeout(() => {
+    if (this.splitLayout) {
+      const ingredientSelectFrame = $("<div>");
+      const ingredientSelectWindow = $('<div class="mcmodder-horizontal-window">').appendTo(
+        ingredientSelectFrame,
+      );
+      const tabEditHorizontalDivider = new HorizontalDraggableFrame(
+        "tabEditHorizontalDivider",
+        this.configs,
+        {},
+        $(".common-menu-area").get(0) as HTMLElement,
+        {
+          initPos: 0.5,
+          leftCollapseThreshold: 0,
+          rightCollapseThreshold: 0.7,
+          leftDraggableLimit: 0.3,
+        },
+      );
+      tabEditHorizontalDivider.bindLeft($(".common-menu-area > .tab-content"));
+      tabEditHorizontalDivider.bindRight(ingredientSelectFrame);
+      const ingredientSelector = $("#edit-page-1 > .tab-ul > .tab-li").first().children();
+      ingredientSelector.appendTo(ingredientSelectWindow);
       this.parent.updateScreenAttachedFrame(ingredientSelectWindow.get(0) as HTMLElement);
-    }, 1e3);
+      setTimeout(() => {
+        this.parent.updateScreenAttachedFrame(ingredientSelectWindow.get(0) as HTMLElement);
+      }, 1e3);
+    }
 
     this.modID = Number(
       $(".common-nav li:not(.line):nth-child(5) a")
@@ -864,13 +890,16 @@ export class TabEditInit extends Init {
         });
     }
 
-    // 隐藏自定义矿词/标签功能
-    $(".title")
-      .filter((_, c) => c.textContent === PublicLangData.item_tab.custom.title + ":")
-      .hide()
-      .next()
-      .hide();
-    $("hr").hide();
+    if (this.splitLayout) {
+      // 资料块整体搬入右栏后，自定义矿词/标签输入与右栏搜索重复，且右栏宽度
+      // 有限；原生布局保留站点原样。原同段的全局 $("hr").hide() 已随双栏修订
+      // 版撤销：hr 是站点表单的语义分隔线，删内容换不来呼吸感
+      $(".title")
+        .filter((_, c) => c.textContent === PublicLangData.item_tab.custom.title + ":")
+        .hide()
+        .next()
+        .hide();
+    }
 
     // 显示当前合成表 ID
     const guiIdDisplay = $(`

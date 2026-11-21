@@ -1998,8 +1998,14 @@ body .arrow {
 #item-table-item-frame .delete:hover {
   color: var(--mcmodder-color-danger-dark1);
 }
+/* 双栏修订版：表格自身与上下文恢复呼吸感（上游零 margin 挤压，用户裁决顺手
+   修复）。表格 DOM 仅双栏态创建，原生布局无匹配元素 */
+#mcmodder-item-tab-edit {
+  margin: 0.75em 0 1.25em;
+}
 #mcmodder-item-tab-edit td {
   text-wrap: nowrap;
+  padding: 3px 4px;
 }
 #mcmodder-item-tab-edit tr:first-child td {
   text-align: center;
@@ -2730,6 +2736,12 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 }
 .mcmodder-horizontal-window #item-table-item-frame {
   margin-top: 0;
+}
+/* 双栏态：扩展信息 pane（#edit-page-2）解除隐藏后与基本信息 pane 纵向堆叠，
+   恢复分段呼吸感。这条 restyle 站点原生 DOM，按仓库规则走 marker class 作用域，
+   关闭双栏时规则不生效 */
+html.mcmodder-tab-split #edit-page-2 {
+  margin-top: 1.5em;
 }
 .mcmodder-recipe-display,
 #item-table-item-frame .item-table-hover.mcmodder-recipe-display {

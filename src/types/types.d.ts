@@ -158,6 +158,8 @@ interface Settings {
   autoSaveFix: boolean;
   fastSubmitFix: boolean;
   tabSelectorInfo: boolean;
+  /** 合成表添加/编辑页面双栏布局（默认关 = 站点原生单栏纵向流） */
+  tabPageSplit: boolean;
   rememberModRelation: boolean;
   editorStats: number;
   mdEditorInlineCodeConverter: 0 | 1 | 2;
