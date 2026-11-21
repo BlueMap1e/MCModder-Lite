@@ -284,9 +284,9 @@ export const settings = [
             id: "tabSelectorInfo",
             title: "物品搜索详情",
             description:
-              "在合成表编辑界面中搜索物品时，显示每个物品的详细信息，并将属于当前模组的物品置顶。",
+              "在合成表编辑界面中搜索物品与记忆栏时，将每个条目改为大卡片详情形态（ID / 译名 / 原名）。注意：这会显著增大记忆栏与搜索结果的占用版面，与站点原生的紧凑图标形态差异较大。",
             type: "checkbox",
-            value: true,
+            value: false,
           },
           {
             id: "tabPageSplit",

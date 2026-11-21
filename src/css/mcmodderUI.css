@@ -6,7 +6,7 @@
     opacity: 1;
   }
 }
-.btn,
+.btn:not(.btn-link),
 .btn.btn-dark {
   background: linear-gradient(
     45deg,
@@ -46,7 +46,7 @@
     var(--mcmodder-color-danger-light-transparent1)
   );
 }
-.btn:not(:disabled):not(.disabled):hover,
+.btn:not(.btn-link):not(:disabled):not(.disabled):hover,
 .btn.btn-dark:not(:disabled):not(.disabled):hover,
 .btn.btn-light:not(:disabled):not(.disabled):hover {
   background-color: var(--mcmodder-color-accent-background);
@@ -315,6 +315,13 @@ body .common-nav {
 .col-lg-6 {
   padding: 0;
   display: inline-block;
+}
+/* 皮肤层把 col-lg-6 改 inline-block 的历史行为压死了 bootstrap .input-group 的
+   display:flex——合成表页两个搜索框（物品搜索 / 自定义矿词）的输入框因此塌成
+   width:1% 的左半圆空壳（2026-11-21 真机报告「只剩一个左半圆」）。恢复该场景
+   的 flex 布局，其余 col-lg-6 场景的皮肤行为不变 */
+.col-lg-6.input-group {
+  display: flex;
 }
 body .header-layer {
   padding: 1em !important;
