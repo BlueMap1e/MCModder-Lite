@@ -1,5 +1,5 @@
 import { settings } from "../loader/ConfigLoader";
-import { Mcmodder } from "../Mcmodder";
+import type { Mcmodder } from "../Mcmodder";
 import { StorageBuffer } from "../StorageBuffer";
 import type { ConfigRepository } from "./ConfigRepository";
 

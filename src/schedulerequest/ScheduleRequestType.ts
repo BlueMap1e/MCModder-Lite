@@ -1,6 +1,6 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
 import type { Mcmodder } from "../Mcmodder";
-import { ScheduleRequestUtils } from "./ScheduleRequestUtils";
+import type { ScheduleRequestUtils } from "./ScheduleRequestUtils";
 
 /**
  * 计划任务基类：每种定时任务都继承本类，由 {@link ScheduleRequestUtils} 调度。

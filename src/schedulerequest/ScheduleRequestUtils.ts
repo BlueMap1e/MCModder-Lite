@@ -1,7 +1,7 @@
 import type { ConfigRepository } from "../config/ConfigRepository";
 import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
-import { ScheduleRequestType } from "./ScheduleRequestType";
+import type { ScheduleRequestType } from "./ScheduleRequestType";
 
 /**
  * 计划任务的触发方式。
