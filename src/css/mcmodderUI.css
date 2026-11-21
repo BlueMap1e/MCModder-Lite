@@ -706,11 +706,17 @@ body > .container > * {
 .common-text-menu,
 .mcmodder-golden-alert,
 .mcmodder-gui-alert,
-.form-control,
 .sl-state-block,
 .btn {
   border-radius: var(--mcmodder-width-radius);
   padding: 0.1em var(--mcmodder-width-padding-2);
+  box-shadow: var(--mcmodder-color-box-shadow) 0px 2px 4px 0px;
+}
+/* .form-control 不参与批量 padding 压扁（0.1em 全向把 bootstrap 表单控件压成
+   扁胶囊，2026-11-21 真机报告「输入框被强制压扁、毫无轻重感」）：圆角与阴影
+   保留，padding 回归 bootstrap 原生 0.375rem 0.75rem */
+.form-control {
+  border-radius: var(--mcmodder-width-radius);
   box-shadow: var(--mcmodder-color-box-shadow) 0px 2px 4px 0px;
 }
 #edui1 {

@@ -585,7 +585,8 @@ body .top-main .pulldown .top_content,
 .form-control {
   width: 100%;
   box-sizing: border-box;
-  padding: 4px;
+  /* padding 不设：bootstrap 原生 0.375rem 0.75rem 回归（历史上的 4px 全向
+     与皮肤批量 0.1em 叠加把输入框压成扁胶囊，2026-11-21 真机报告） */
   color: var(--mcmodder-color-text);
 }
 .form-control:disabled,
@@ -622,6 +623,44 @@ input,
 body .header-layer {
   border-color: var(--mcmodder-color-background-dark2);
   box-shadow: inset 0px 1px 0px var(--mcmodder-color-box-shadow);
+}
+/* 合成表 GUI 槽位的展示层（INPUT.view / INPUT.value）被上面两条全局 input
+   夜间规则打上 inset 阴影 / 透明底 / overflow——贴图被截断、出现神秘填充
+   （2026-11-21 真机报告「合成表自身样式崩溃」）。恢复站点原生形态 */
+.item-table-gui-slot .view,
+.item-table-gui-slot .value {
+  box-shadow: none;
+  overflow: visible;
+  padding: 0;
+  background-color: transparent;
+}
+/* 合成表页两处搜索框（.input-group 内输入框 + 按钮拼接）：dark2 边框在深色
+   页面上不可见，拼接处失去分界读作「怼在一起」（用户报告）。边框提亮一档
+   （同 .fwin .px 的中性灰先例） */
+html.dark .input-group .form-control,
+html.dark .input-group .btn {
+  border-color: #565656;
+}
+/* 记忆栏文字按钮（.btn-link.text-dark）夜间四态：bootstrap 的
+   a.text-dark:hover/focus 带 !important 把文字拉回近黑 #1d2124，深底上整体
+   隐形（2026-11-21 真机报告「漆黑一片」——不是背景黑，是文字黑）。全态强制
+   夜间文字色；hover 与选中态（bootstrap tab 的 .active）以石墨蓝底作状态反馈 */
+html.dark .btn-link.text-dark,
+html.dark .btn-link.text-dark:hover,
+html.dark .btn-link.text-dark:focus,
+html.dark .btn-link.text-dark.active {
+  color: var(--mcmodder-color-text) !important;
+}
+html.dark .btn-link.text-dark:hover,
+html.dark .btn-link.text-dark.active {
+  background-color: var(--mcmodder-color-accent-background);
+}
+/* 合成表页 GUI 区注入物（合成表 ID 徽章 / 锁定复选框容器）：站点 reset 后
+   相邻元素零 margin，注入物贴死下拉按钮（用户报告「挤成一团」） */
+.mcmodder-gui-id-display,
+.mcmodder-gui-lock-wrap,
+.mcmodder-shapeless-wrap {
+  margin-top: 0.5em;
 }
 input,
 .form-control:focus,
@@ -2633,7 +2672,9 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 }
 .item-used-frame,
 .item-search-frame {
-  width: 100%;
+  /* 原生桌面布局 = 两者各 50% 并排（edit.frame.css），本仓历史上的 width:100%
+     把并排压成上下堆叠（2026-11-21 真机报告「单屏工作流报废」），删除恢复并排；
+     max-height 放宽到 500px 保留 */
   max-height: 500px;
   margin-bottom: 0.5em;
 }

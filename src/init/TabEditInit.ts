@@ -127,6 +127,9 @@ export class TabEditInit extends Init {
   }
 
   private initRecipeSelector() {
+    // 配方匹配预览是双栏工作流组件（同表格行的绑定语义，用户裁决）：原生布局
+    // 不注入——无匹配数据时预览面板的标题行会以报错形态常开在主流上
+    if (!this.splitLayout) return;
     this.recipeFrame = $(`
       <div class="recipe-frame">
         <p class="title">匹配到的配方:</p>
@@ -912,7 +915,9 @@ export class TabEditInit extends Init {
     Utils.addClickCopyEvent(guiIdDisplay, "当前合成表 ID ", () => guiIdDisplay.children().text());
 
     // 快速设置GUI
-    const guiLockerContainer = $("<div>").appendTo($("#item-table-gui-select").parent());
+    const guiLockerContainer = $("<div>")
+      .addClass("mcmodder-gui-lock-wrap")
+      .appendTo($("#item-table-gui-select").parent());
     this.guiLocker = Number(this.configs.getSettings("guiLocker"));
     this.guiLockerToggle = createApp(CheckboxInput, {
       title: "锁定当前 GUI",
@@ -933,7 +938,9 @@ export class TabEditInit extends Init {
     }
 
     // 应用无序
-    const shapelessContainer = $("<div>").appendTo($("#edit-page-2 .tab-li").first());
+    const shapelessContainer = $("<div>")
+      .addClass("mcmodder-shapeless-wrap")
+      .appendTo($("#edit-page-2 .tab-li").first());
     this.shapeless = this.configs.getSettings("shapelessLocker") ?? false;
     this.mcmodShapelessToggle = $("#item-table-data-orderly-1");
     createApp(CheckboxInput, {
