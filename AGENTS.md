@@ -26,7 +26,7 @@ npm run dev      # vite-plugin-monkey dev server; install the served script into
 npm run build    # vue-tsc (type check) && vite build  ->  dist/mcmodder-lite.user.js
 npm run lint     # eslint src
 npm run format   # prettier --write src
-npm run verify   # lint + lint:config + format:check (the static local gate)
+npm run verify   # lint + lint:config + format:check + cycle gate (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
@@ -189,10 +189,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   config/context-bound helpers (`isKeyMatchConfig`, class-name maps, item-type lookups)
   live in `ConfigRepository`. Routing rule for new helpers: pure function -> `Utils`
   static; needs settings / GM storage / parent context -> `ConfigRepository`; sends
-  requests -> `WebFetchUtils`. `npx dpdm src/main.ts` reports the cycle list: the one
-  real runtime cycle (`Utils.ts ⇄ ConfigRepository.ts`, double value import) is resolved;
-  remaining cycles are type-only (closed by `import type { Mcmodder }` edges from every
-  init/widget), harmless runtime-wise.
+  requests -> `WebFetchUtils`. `npx dpdm src/main.ts` reports the cycle list: all current
+  cycles are type-only (closed by `import type { Mcmodder }` edges from every
+  init/widget), harmless runtime-wise. The classification is automated as verify's
+  4th step (`scripts/check-cycles.mjs`): a cycle is benign iff at least one edge is a
+  pure `import type` (the value subgraph breaks); a cycle whose edges are ALL value
+  imports fails the gate — two such latent cycles (`ConfigUtils ⇄ Mcmodder`,
+  `ScheduleRequestType ⇄ ScheduleRequestUtils`) were caught and fixed on 2026-11-22
+  by flipping type-only-used imports to `import type`. Keep it that way.
 
 ## Host-page constraints
 
