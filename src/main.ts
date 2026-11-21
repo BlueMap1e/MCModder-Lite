@@ -7,6 +7,7 @@ import { GM_getValue, GM_addValueChangeListener } from "$";
 import { Mcmodder } from "./Mcmodder";
 import bbsCss from "./css/bbs.css?raw";
 import { installCodeBrushEarly } from "./init/CodeBrushInit";
+import { installBbsImageAspectFix } from "./init/BbsImageAspectFix";
 
 (() => {
   // 代码高亮扩展（YAML/TOML/TS）：必须在求值期注入——/preview/ 等页面的自身
@@ -20,11 +21,16 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
   window.addEventListener("unhandledrejection", (event) => {
     console.error("[MCModder-Lite] 未处理的 Promise 异常：", event.reason);
   });
-  const initBbsDarkMode = () => {
-    let settings: any = {};
+  // bbs 域不构造 Mcmodder / ConfigRepository，设置从 GM 存储裸读；
+  // bbs 分支的全部特性共用这一次解析
+  const readBbsSettings = (): any => {
     try {
-      settings = JSON.parse(GM_getValue("mcmodderSettings") || "{}");
-    } catch (e) {}
+      return JSON.parse(GM_getValue("mcmodderSettings") || "{}");
+    } catch (e) {
+      return {};
+    }
+  };
+  const initBbsDarkMode = (settings: any) => {
     if (!settings.bbsNightMode) {
       clearScreenCover();
       return;
@@ -236,7 +242,11 @@ import { installCodeBrushEarly } from "./init/CodeBrushInit";
   };
   const init = () => {
     if (window.location.hostname === "bbs.mcmod.cn") {
-      initBbsDarkMode();
+      const bbsSettings = readBbsSettings();
+      initBbsDarkMode(bbsSettings);
+      // 帖内图片比例修复：与夜间模式无关（日间同样受益），独立开关；
+      // bbs 域设置走裸读，历史存储缺键时按默认开（!== false）
+      installBbsImageAspectFix(bbsSettings.bbsImageAspectFix !== false);
     } else if (typeof jQuery === "undefined" && document.body != null) {
       // 已被封禁
       if ((document.body.textContent ?? "").includes("您已被系统封禁")) {

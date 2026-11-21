@@ -230,6 +230,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   dispatched by `MutationObserver`, following `CenterInit` / `AdminInit`. `AdminBaseInit`
   subclasses are matched by their `h1.title` and run on every navigation: repeatable
   rendering in `run()`, one-time listeners/timers in `firstRun()`.
+- **bbs.mcmod.cn features** -> leaf modules installed from the `main.ts` bbs branch:
+  the bbs domain never constructs `Mcmodder`/`InitLoader`/`ConfigRepository`, settings
+  are read raw via `GM_getValue("mcmodderSettings")`, and a missing key means the panel
+  default applies (gate with `!== false` semantics). Module body goes in `src/init/`
+  with a header note explaining the bypass (precedent: `BbsImageAspectFix.ts`).
 - **Editor behavior** -> `src/ueditor/`: `UEditor` (DOM unwrap, styles, table-wall
   normalization, dialog styling) and `AdvancedUEditor` (Markdown/HTML editors, stats,
   autolink, tools). `Mcmodder.editorLoad()` instantiates them; there is no `Init` subclass

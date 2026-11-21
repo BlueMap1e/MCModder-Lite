@@ -137,6 +137,14 @@ export const settings = [
             value: true,
           },
           {
+            id: "bbsImageAspectFix",
+            title: "帖内图片比例修复",
+            description:
+              "修复社群帖内附件图片被横向压缩（多为帖子首图被显示成 600×600 方图）：站点脚本在图片加载的布局窗口期量到占位盒尺寸并写死宽高，本功能按图片真实比例就地纠偏。",
+            type: "checkbox",
+            value: true,
+          },
+          {
             id: "backgroundAlpha",
             title: "背景透明度",
             description: "控制背景透明度，数值越小透明度越高。",

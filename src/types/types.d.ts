@@ -141,6 +141,7 @@ interface Settings {
   nightModePreference: 0 | 1 | 2;
   dimCoverAtNight: boolean;
   bbsNightMode: boolean;
+  bbsImageAspectFix: boolean;
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;
   // unlockHeaderContainer: boolean,
