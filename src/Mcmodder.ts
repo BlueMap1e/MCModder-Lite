@@ -107,14 +107,6 @@ export class Mcmodder {
     ) {
       this.configRepository.setSettings("keybindFastLink", { altKey: true, key: "X", keyCode: 88 });
     }
-    // 一次性迁移：物品搜索详情（tabSelectorInfo）旧默认 true 会把合成表页记忆栏
-    // 与搜索结果改成大卡片详情形态；双栏布局时代被右栏窄栏掩盖，2026-11-21 合成
-    // 表页面恢复站点原生布局后（tabPageSplit 引入）在主流上版面爆炸（用户裁决
-    // 「默认打开详情绝对不应该发生」）。新默认 false，无条件翻转既有 true——布尔
-    // 键无法区分「默认落盘」与「主动开启」，主动开启者可在设置面板重新打开
-    if (this.configRepository.getSettings("tabSelectorInfo") === true) {
-      this.configRepository.setSettings("tabSelectorInfo", false);
-    }
     this.styleColors = Utils.getThemeColors(this.configRepository);
 
     InitLoader.run(this, this.initList);
@@ -746,7 +738,7 @@ export class Mcmodder {
       for (const [c, width] of pending) c.css("width", width + "px");
     } else Utils.addStyle(".common-text .figure {align-items: center;}");
     $(
-      ".mold, .progress-list, .class-item-type li, .post-block, .tag li, .mcver li a, .tools-list li a, .edit-tools span, .comment-row, .comment-channel-list li a, .class-relation-list .relation li, .btn:not(.btn-link), .mcmodder-gui-alert, .edit-tools > span, .center-sub-menu a, .center-content.admin-list a, .center-card-block.badges, .center-card-border, .modlist-block, .common-center .maintext .item-give, .common-center .post-row .postname .tool li a",
+      ".mold, .progress-list, .class-item-type li, .post-block, .tag li, .mcver li a, .tools-list li a, .edit-tools span, .comment-row, .comment-channel-list li a, .class-relation-list .relation li, .btn:not(.btn-link), .edit-tools > span, .center-sub-menu a, .center-content.admin-list a, .center-card-block.badges, .center-card-border, .modlist-block, .common-center .maintext .item-give, .common-center .post-row .postname .tool li a",
     ).addClass("mcmodder-content-block");
     $(".common-nav .line").html('<i class="fa fa-chevron-right" />');
     $(".oredict-ad, .worldgen-list-ad").remove();

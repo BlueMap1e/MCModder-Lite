@@ -45,7 +45,7 @@ interface HorizontalDraggableFrameConfig {
  * # 两组界限的区别
  * - **拖动界限** `leftDraggableLimit` / `rightDraggableLimit` —— 硬性钳制，决定分隔条**能拖到哪**；
  * - **折叠阈值** `leftCollapseThreshold` / `rightCollapseThreshold` —— 决定面板**什么时候收起**。
- * 二者相互独立，典型用法是「允许拖到 0.3，但拖到 0.3 以下时左面板就整块消失」（见 `TabEditInit`）。
+ * 二者相互独立，典型用法是「允许拖到 0.3，但拖到 0.3 以下时左面板就整块消失」（见 `AdminVerifyInit`）。
  * 当某个面板被收起到极限位置（位置触到拖动界限）时，称整个分屏处于「折叠」状态（`isCollapsed`）。
  *
  * # 交互方式
@@ -92,7 +92,7 @@ export class HorizontalDraggableFrame {
    * @warning 该值经 `parseInt(this.$instance.css("left"))` 反读，若父容器已有 `padding`，
    * 或分隔条处于 `display: none` 等导致 `left` 解析为 `auto` 的状态，读回的是**包含父容器
    * padding 的绝对坐标**乃至 `NaN`（`parseInt("auto")`）。本类依赖调用方传入的 `parent`
-   * 是干净的定位上下文，实际使用（`TabEditInit`/`AdminInit`）暂未触发该问题。
+   * 是干净的定位上下文，实际使用（`AdminVerifyInit`）暂未触发该问题。
    */
   private originalPos: number;
   /** 绑定的左侧面板，尚未绑定时为 null */

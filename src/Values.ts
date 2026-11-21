@@ -17,7 +17,7 @@ import defaultVerifyReasons from "./assets/json/input/VerifyReason.json";
  *   modPlatformMap / modRelationTypeMap / modSourceMap / modStatusMap
  * - 搜索与物品类型（~941）：searchOption / nonItemTypeList / itemDefaultTypeList /
  *   itemCustomTypeList
- * - 默认模板（~1166）：defaultGuiBound / defaultTemplateList
+ * - 默认模板（~1166）：defaultTemplateList
  */
 export class Values {
   // ─── 菜单命令 ───
@@ -233,7 +233,6 @@ export class Values {
    *   2 表示「领先超过两倍上限」才判定为脏数据，与上限之间留有充足间隔。
    */
   static readonly REQUEST_SCHEDULE_MAX_DRIFT_FACTOR = Values.MAX_REQUEST_COUNT * 2;
-  static readonly MAX_RECIPE_LENGTH = 100;
 
   static get headerContainerHeight() {
     return $(".top-main, .header-container, #top").get(0)?.getBoundingClientRect()?.height || 50;
@@ -1189,17 +1188,6 @@ export class Values {
   ];
 
   // ─── 默认模板 ───
-  static readonly defaultGuiBound: RecipeJsonFrameGuiBound[] = [
-    { guiID: "minecraft:crafting", mcmodID: 1 },
-    { guiID: "minecraft:smelting", mcmodID: 2 },
-    { guiID: "minecraft:blasting", mcmodID: 797 },
-    { guiID: "minecraft:smoking", mcmodID: 923 },
-    { guiID: "minecraft:campfire_smoking", mcmodID: 1083 },
-    { guiID: "minecraft:stonecutting", mcmodID: 421 },
-    { guiID: "minecraft:smithing", mcmodID: 1222 }, // 1.19- 版本段该 GUI 的 mcmodID 是 404
-    { guiID: "minecraft:brewing", mcmodID: 282 },
-  ];
-
   static readonly defaultTemplateList = [
     {
       id: "general_armor",

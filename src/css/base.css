@@ -655,13 +655,6 @@ html.dark .btn-link.text-dark:hover,
 html.dark .btn-link.text-dark.active {
   background-color: var(--mcmodder-color-accent-background);
 }
-/* 合成表页 GUI 区注入物（合成表 ID 徽章 / 锁定复选框容器）：站点 reset 后
-   相邻元素零 margin，注入物贴死下拉按钮（用户报告「挤成一团」） */
-.mcmodder-gui-id-display,
-.mcmodder-gui-lock-wrap,
-.mcmodder-shapeless-wrap {
-  margin-top: 0.5em;
-}
 input,
 .form-control:focus,
 .waifu .waifu-tips,
@@ -969,20 +962,6 @@ body:not(.view),
   color: #fff;
   font-size: 12px;
   line-height: 15px;
-}
-.mcmodder-gui-in {
-  position: absolute;
-  right: 0;
-  bottom: -0.25em;
-  color: #fff;
-  text-shadow: 2px 2px 1px var(--mcmodder-color-primary-dark1);
-}
-.mcmodder-gui-out {
-  position: absolute;
-  right: 0;
-  bottom: -0.25em;
-  color: #fff;
-  text-shadow: 2px 2px 1px var(--mcmodder-color-accent-dark1);
 }
 .mcmodder-progress {
   position: relative;
@@ -1542,7 +1521,6 @@ div#mcmodder-text-result {
 .common-text-menu,
 #mcmodder-text-result,
 .mcmodder-golden-alert,
-.mcmodder-gui-alert,
 .sl-state-block,
 .header-right .header-search form,
 .form-control,
@@ -2024,42 +2002,6 @@ body .arrow {
 #connect-frame .table > tbody > tr > td,
 #connect-frame .table > tfoot > tr > td {
   padding: 0.2em var(--mcmodder-width-padding-3);
-}
-#mcmodder-tabedit-tip {
-  display: inline-block;
-}
-#item-table-item-frame .delete {
-  position: absolute;
-  bottom: 0px;
-  right: 0px;
-  color: var(--mcmodder-color-danger);
-}
-#item-table-item-frame .delete:hover {
-  color: var(--mcmodder-color-danger-dark1);
-}
-/* 双栏修订版：表格自身与上下文恢复呼吸感（上游零 margin 挤压，用户裁决顺手
-   修复）。表格 DOM 仅双栏态创建，原生布局无匹配元素 */
-#mcmodder-item-tab-edit {
-  margin: 0.75em 0 1.25em;
-}
-#mcmodder-item-tab-edit td {
-  text-wrap: nowrap;
-  padding: 3px 4px;
-}
-#mcmodder-item-tab-edit tr:first-child td {
-  text-align: center;
-}
-#mcmodder-item-tab-edit td.input-head {
-  text-align: right;
-  color: var(--mcmodder-color-primary-dark1);
-}
-#mcmodder-item-tab-edit td.output-head {
-  text-align: right;
-  color: var(--mcmodder-color-accent-dark1);
-}
-#mcmodder-item-tab-edit td.fuel-head {
-  text-align: right;
-  color: var(--mcmodder-color-danger-dark1);
 }
 .common-center .center {
   max-width: unset;
@@ -2775,24 +2717,6 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 .mcmodder-item-localecount {
   color: var(--mcmodder-color-version-release-1);
 }
-.mcmodder-horizontal-window #item-table-item-frame {
-  margin-top: 0;
-}
-/* 双栏态：扩展信息 pane（#edit-page-2）解除隐藏后与基本信息 pane 纵向堆叠，
-   恢复分段呼吸感。这条 restyle 站点原生 DOM，按仓库规则走 marker class 作用域，
-   关闭双栏时规则不生效 */
-html.mcmodder-tab-split #edit-page-2 {
-  margin-top: 1.5em;
-}
-.mcmodder-recipe-display,
-#item-table-item-frame .item-table-hover.mcmodder-recipe-display {
-  display: flex;
-  gap: 0.2em;
-  justify-content: center;
-  height: auto;
-  padding: 0.2em;
-  position: relative;
-}
 .mcmodder-recipe-arrow {
   background-image: url(https://i.mcmod.cn/editor/upload/20241018/1729266514_179043_vZVb.png);
   height: 32px;
@@ -2802,15 +2726,6 @@ html.mcmodder-tab-split #edit-page-2 {
   margin-left: 5px;
   margin-right: 5px;
   position: relative;
-}
-.mcmodder-recipe-error {
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  right: var(--mcmodder-width-padding-3);
-  color: var(--mcmodder-color-danger-dark2);
-  font-size: 16px;
 }
 .mcmodder-tab-item-icon {
   background-image: url(https://i.mcmod.cn/editor/upload/20241019/1729313235_179043_fNWH.png);

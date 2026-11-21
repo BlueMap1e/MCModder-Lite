@@ -281,22 +281,6 @@ export const settings = [
             type: "checkbox",
           },
           {
-            id: "tabSelectorInfo",
-            title: "物品搜索详情",
-            description:
-              "在合成表编辑界面中搜索物品与记忆栏时，将每个条目改为大卡片详情形态（ID / 译名 / 原名）。注意：这会显著增大记忆栏与搜索结果的占用版面，与站点原生的紧凑图标形态差异较大。",
-            type: "checkbox",
-            value: false,
-          },
-          {
-            id: "tabPageSplit",
-            title: "合成表页面双栏布局",
-            description:
-              "将合成表添加/编辑页面重构为双栏工作台：资料选择移至右栏（分隔条可拖拽且记忆位置），数量与概率整合为支持 Tab / Enter / 方向键的表格行，扩展信息并入主流。默认关闭时保持站点原生页面与选项卡结构。",
-            type: "checkbox",
-            value: false,
-          },
-          {
             id: "autoCloseSwal",
             title: "渐入佳境",
             description: "成功提交审核后不再强制跳转至待审列表页面。对免审编辑无效。",

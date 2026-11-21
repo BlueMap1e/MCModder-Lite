@@ -132,7 +132,7 @@ export class StyleLoader {
    *    加载平台、版本标记、分类状态等固定色板），直接以 `[]` 修饰表产出基础变量；
    * 4. 将上述变量并入 `:root`（亮色）与 `:root.dark`（夜间）两个选择器，
    *    并根据用户配置开关拼接 `base`/`mcmodderUI`/`tableThemeColor`/`tableLeftAlign`/
-   *    `tabSelectorInfo`/`splitScreenOnVerify`/`codemirrorCss`/`reducedMotion` 等静态 CSS；
+   *    `splitScreenOnVerify`/`codemirrorCss`/`reducedMotion` 等静态 CSS；
    * 5. 合并结果存入 `parent.css` 并通过 `Utils.addStyle` 注入 `<head>`；
    * 6. 写入 `--mcmodder-ratio-radius` 圆角比例变量，调用 `parent.updateNightMode()`
    *    应用当前主题，最后给防闪烁遮罩写入淡入动画并移除遮罩，完成首屏渲染。
@@ -152,7 +152,6 @@ export class StyleLoader {
     const mcmodderUICss = importCSS("mcmodderUI");
     const tableThemeColorCss = importCSS("tableThemeColor");
     const tableLeftAlignCss = importCSS("tableLeftAlign");
-    const tabSelectorInfoCss = importCSS("tabSelectorInfo");
     const splitScreenOnVerifyCss = importCSS("splitScreenOnVerify");
     const codemirrorCss = importCSS("codemirror");
     const reducedMotionCss = importCSS("reducedMotion");
@@ -532,7 +531,6 @@ export class StyleLoader {
       mcmodderUI: mcmodderUICss,
       tableThemeColor: tableThemeColorCss,
       tableLeftAlign: tableLeftAlignCss,
-      tabSelectorInfo: tabSelectorInfoCss,
       splitScreenOnVerify: splitScreenOnVerifyCss,
       codemirrorCss: codemirrorCss,
       // 末尾追加：减弱动效规则需要压过同选择器的静态样式
@@ -561,9 +559,6 @@ export class StyleLoader {
     }
     if (configs.getSettings("tableLeftAlign")) {
       style += css.tableLeftAlign;
-    }
-    if (configs.getSettings("tabSelectorInfo")) {
-      style += css.tabSelectorInfo;
     }
     // 只在分屏真正可用时注入：移动端 JS 不会挂分屏（enableSplit=false），
     // 这条 CSS 却会隐藏站点原生审核窗，形成「样式生效、功能没挂」的半残状态

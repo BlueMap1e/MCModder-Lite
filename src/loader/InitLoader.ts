@@ -18,7 +18,6 @@ import { PostPageInit } from "../init/PostPageInit";
 import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
 import { SandboxInit } from "../init/SandboxInit";
-import { TabEditInit } from "../init/TabEditInit";
 import { ToolsPageInit } from "../init/ToolsPageInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
@@ -29,7 +28,6 @@ export class InitLoader {
   static run(parent: Mcmodder, list: Init[]) {
     list.push(
       new HomePageInit(parent),
-      new TabEditInit(parent),
       new ItemEditorInit(parent),
       new ClassEditorInit(parent),
       new ItemPageInit(parent),

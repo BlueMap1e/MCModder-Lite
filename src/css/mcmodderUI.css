@@ -705,7 +705,6 @@ body > .container > * {
 .item-text > .item-info-table,
 .common-text-menu,
 .mcmodder-golden-alert,
-.mcmodder-gui-alert,
 .sl-state-block,
 .btn {
   border-radius: var(--mcmodder-width-radius);
@@ -728,15 +727,6 @@ body .edui-default .edui-editor-toolbarboxouter,
 }
 body .edui-default .edui-editor-iframeholder {
   padding: 0 0.5em;
-}
-.mcmodder-gui-alert {
-  max-width: 60%;
-  background: linear-gradient(
-    45deg,
-    var(--mcmodder-color-primary-transparent1),
-    var(--mcmodder-color-accent-transparent1)
-  );
-  line-height: 1.8;
 }
 .tag li,
 .mcver li a,

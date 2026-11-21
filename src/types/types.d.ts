@@ -120,7 +120,6 @@ interface AppStorage {
   modDependences_v2?: Record<string, number[]>;
   scheduleRequestList?: ScheduleRequestList;
   rankData?: Record<string, /* { user: number, value: number }[] */ string>;
-  guiBound?: RecipeJsonFrameGuiBound[];
   classData?: Record<string, string>;
   inputList?: Record<string, InputSimplifiedSuggestion[]>;
   assistantViewed?: Record<string, (number | [id: number, refund: number])[]>;
@@ -157,9 +156,6 @@ interface Settings {
   noSubmitWarningDelay: boolean;
   autoSaveFix: boolean;
   fastSubmitFix: boolean;
-  tabSelectorInfo: boolean;
-  /** 合成表添加/编辑页面双栏布局（默认关 = 站点原生单栏纵向流） */
-  tabPageSplit: boolean;
   rememberModRelation: boolean;
   editorStats: number;
   mdEditorInlineCodeConverter: 0 | 1 | 2;
@@ -222,8 +218,6 @@ interface Settings {
   lastRequestTime: number;
   itemCustomTypeList: ItemType[];
   recentlyVisitedMods: RecentlyVisited[];
-  guiLocker: number;
-  shapelessLocker: boolean;
   jsonDatabase_v2: Record<0 | 1, string[]>;
   markdownIt: boolean;
   htmlEditor: boolean;
@@ -602,23 +596,6 @@ interface ChangedStorage {
   item: string;
   key: string;
 }
-
-type RecipeIngredient = string | string[];
-interface Recipe {
-  in_id?: Record<string, RecipeIngredient>;
-  out_id?: Record<string, RecipeIngredient>;
-  in_num?: Record<string, number>;
-  out_num?: Record<string, number>;
-  in_chance?: Record<string, number>;
-  out_chance?: Record<string, number>;
-  power_num?: Record<string, string>;
-  gui_id: string;
-}
-interface SimpleRecipe extends Recipe {
-  in_id?: Record<string, string>;
-  out_id?: Record<string, string>;
-}
-type RecipeList = Recipe[];
 
 /** 一个表达自定义资料类型的数据 */
 interface ItemType {
@@ -1679,11 +1656,6 @@ interface ItemJsonFrameApplication {
   size: string;
   info: string;
   op: string;
-}
-
-interface RecipeJsonFrameGuiBound {
-  guiID: string;
-  mcmodID: number;
 }
 
 type JsonStorage<T extends TableAcceptable> = Record<string, T[]>;
