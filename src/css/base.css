@@ -695,6 +695,12 @@ html.dark .input-group .form-control,
 html.dark .input-group .btn {
   border-color: #565656;
 }
+/* bootstrap 对拼接控件削掉输入框右侧圆角（左圆右直），皮肤层的大圆角被削成
+   半截（用户报告「圆角半截」）。夜间恢复对称 */
+html.dark .input-group > .form-control:not(:last-child) {
+  border-top-right-radius: var(--mcmodder-width-radius);
+  border-bottom-right-radius: var(--mcmodder-width-radius);
+}
 /* 记忆栏文字按钮（.btn-link.text-dark）夜间四态：bootstrap 的
    a.text-dark:hover/focus 带 !important 把文字拉回近黑 #1d2124，深底上整体
    隐形（2026-11-21 真机报告「漆黑一片」——不是背景黑，是文字黑）。全态强制
