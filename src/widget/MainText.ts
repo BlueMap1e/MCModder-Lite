@@ -4,6 +4,23 @@ import { Utils } from "../Utils";
 import type { WebFetchUtils } from "../WebFetchUtils";
 import { Values } from "../Values";
 
+type LinkMarkReplaceRule = {
+  regExp: RegExp;
+  icon: string;
+  parser: (link: string) => string;
+};
+
+/**
+ * 资料正文 QA 容器。
+ *
+ * 「资料链接检查」于 2026-11-22 收窄为 Fandom 旧链接检测：原同文本→不同目标
+ * 查重判据与编辑者落链即唯一指定的实际行为相抵触（AE 系方块/面板形态变体、
+ * GT 系跨模组同名都是常态编辑而非异常），已摘除；Fandom 迁移巡检对红石生电
+ * 条目仍有效，保留（命中就地红框）。
+ *
+ * 「资料链接标注」保留为独立开关（Mek/AE 编辑在用）：所有链接旁就地标注目标
+ * ID/URL，版本大跨度核对时实用。上游 MainText 仍带查重实现，对账勿回迁。
+ */
 export class MainText {
   private readonly configs: ConfigRepository;
   private readonly web: WebFetchUtils;
@@ -14,32 +31,82 @@ export class MainText {
     this.web = parent.web;
     this.container = $(container);
 
+    // Fandom 旧链接检测（收窄后职能）
     if (this.configs.getSettings("linkCheck")) {
       this.fandomLinkCheck();
     }
-
+    // 资料链接标注（独立开关，2026-11-22 前次误删已恢复）
+    if (this.configs.getSettings("linkMark")) {
+      this.annotateLinks();
+    }
     // 图像本地化检测
     if (this.configs.getSettings("imageLocalizedCheck")) {
       this.imageLocalizedCheck();
     }
   }
 
-  /**
-   * Fandom 旧链接检测：命中 minecraft.fandom.com 的链接就地加红框
-   * （mcmodder-link-warn）。面向红石生电等仍有 fandom 残留引用的条目，
-   * 服务 zh.minecraft.wiki 迁移巡检；纯被动标记，无 Toast。
-   *
-   * 原「资料链接检查」的同文本→不同目标查重已于 2026-11-22 摘除（用户裁定）：
-   * 该判据源自 GT 系语境——同名物品跨模组实现，查重对那里有用；但 AE/Mek 系
-   * 的同名是同模组内的形态变体（858246 实证：655633 方块 ae2:interface 与
-   * 655790 面板 ae2:cable_interface），编辑落链时目标即唯一指定，查重对这类
-   * 页面是常态化误报。GT 系编辑如需查重可使用上游 Mcmodder。上游 MainText
-   * 仍有旧实现，对账时勿回迁。
-   */
+  /** Fandom 旧链接检测：命中 minecraft.fandom.com 的链接本体加红框。 */
   private fandomLinkCheck() {
     this.container
       .find('> *:not(.item-data) a[href*="minecraft.fandom.com"]')
       .each((_, a) => a.classList.add("mcmodder-link-warn"));
+  }
+
+  /** 资料链接标注：所有链接旁就地标注其目标（条目 ID / 矿词条 / URL）。 */
+  private annotateLinks() {
+    this.container
+      .find('> *:not(.item-data) a:not([href="javascript:void(0);"])')
+      .filter((_, c) => !!(c.textContent && (c.parentNode as Element)?.tagName != "LEGEND"))
+      .each((_, a) => {
+        const value = (a as HTMLAnchorElement).href.replaceAll(/https:\/\/www1?\.mcmod\.cn/g, "");
+        this.generateLinkMark(value).insertAfter(a);
+      });
+  }
+
+  private static readonly linkMarkReplaceRules: LinkMarkReplaceRule[] = [
+    {
+      regExp: /^\/item\/\d+\.html$/,
+      icon: "cube",
+      parser: (link) => Utils.abstractIDFromURL(link, "item").toString(),
+    },
+    {
+      regExp: /^\/item\/tab\/\d+\.html$/,
+      icon: "table",
+      parser: (link) => Utils.abstractIDFromURL(link, "item/tab").toString(),
+    },
+    {
+      regExp: /^\/class\/\d+\.html$/,
+      icon: "cubes",
+      parser: (link) => Utils.abstractIDFromURL(link, "class").toString(),
+    },
+    {
+      regExp: /^\/modpack\/\d+\.html$/,
+      icon: "file-zip-o",
+      parser: (link) => Utils.abstractIDFromURL(link, "modpack").toString(),
+    },
+    {
+      regExp: /^\/author\/\d+\.html$/,
+      icon: "author",
+      parser: (link) => Utils.abstractIDFromURL(link, "author").toString(),
+    },
+    {
+      regExp: /^\/oredict\/[0-9A-Za-z:_/]+-1.html$/,
+      icon: "tag",
+      parser: (link) => link.slice(9, -7),
+    },
+  ];
+
+  private generateLinkMark(link: string) {
+    const container = $('<span class="mcmodder-link-check">');
+    for (const { regExp, icon, parser } of MainText.linkMarkReplaceRules) {
+      if (regExp.test(link)) {
+        const escaped = Utils.escapeHTML(parser(link));
+        container.html(`<i class="mcmodder-link-icon fa fa-${icon}"></i>${escaped}`);
+        return container;
+      }
+    }
+    const escaped = Utils.escapeHTML(link);
+    return container.html(escaped);
   }
 
   private imageLocalizedCheck() {

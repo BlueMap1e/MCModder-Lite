@@ -515,9 +515,8 @@ export const settings = [
             id: "linkMark",
             title: "资料链接标注",
             description:
-              "在启用“资料链接检查”的基础上，在资料正文和后台审核中所有的链接旁标注该链接所指向的 URL。",
+              "在资料正文和后台审核的所有链接旁就地标注该链接所指向的 URL / 条目 ID——版本大跨度编辑时核对链接指向很实用。默认关闭。",
             type: "checkbox",
-            visible: (ctx) => ctx.configs.getSettings("linkCheck"),
           },
           {
             id: "removePostProtection",
