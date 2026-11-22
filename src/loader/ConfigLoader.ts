@@ -128,7 +128,7 @@ export const settings = [
       },
       {
         id: "ui",
-        label: "UI 与排版",
+        label: "排版与皮肤",
         settings: [
           {
             id: "customFont",
@@ -160,21 +160,35 @@ export const settings = [
             value: true,
           },
           {
-            id: "moveAds",
-            title: "广告优化",
-            description:
-              "将百科的部分广告移动到不影响浏览体验的位置。（本项只挪不删；要彻底隐藏广告请启用「屏蔽 AdSense 广告」）",
-            type: "checkbox",
-            value: true,
+            id: "backgroundAlpha",
+            title: "背景透明度",
+            description: "控制背景透明度，数值越小透明度越高。",
+            type: "slider",
+            value: 204,
+            range: [128, 255],
           },
           {
-            id: "blockAds",
-            title: "屏蔽 AdSense 广告",
-            description:
-              "隐藏百科页面中的 Google AdSense 广告单元（ins.adsbygoogle）及其空壳容器；同时把主页 / 整合包区的「广告」条目替换成可关闭的占位，并移除矿词、世界生成列表页的站点广告位。其余站点原生内容不受影响。",
-            type: "checkbox",
-            value: true,
+            id: "textShadowAlpha",
+            title: "文字阴影透明度",
+            description: "控制夜间模式下的文字阴影透明度，数值越小透明度越高。",
+            type: "slider",
+            value: 64,
+            range: [0, 255],
           },
+          {
+            id: "radiusRatio",
+            title: "圆角大小比例",
+            description: "控制页面中绝大多数 UI 元素的边缘圆角半径。",
+            type: "slider",
+            value: 1,
+            range: [0, 1],
+          },
+        ],
+      },
+      {
+        id: "night",
+        label: "夜间与配色",
+        settings: [
           {
             id: "nightModePreference",
             title: "夜间模式偏好",
@@ -220,34 +234,44 @@ export const settings = [
             type: "checkbox",
             value: true,
           },
+        ],
+      },
+      {
+        id: "ads",
+        label: "广告",
+        settings: [
           {
-            id: "backgroundAlpha",
-            title: "背景透明度",
-            description: "控制背景透明度，数值越小透明度越高。",
-            type: "slider",
-            value: 204,
-            range: [128, 255],
+            id: "moveAds",
+            title: "广告优化",
+            description:
+              "将百科的部分广告移动到不影响浏览体验的位置。（本项只挪不删；要彻底隐藏广告请启用「屏蔽 AdSense 广告」）",
+            type: "checkbox",
+            value: true,
           },
           {
-            id: "textShadowAlpha",
-            title: "文字阴影透明度",
-            description: "控制夜间模式下的文字阴影透明度，数值越小透明度越高。",
-            type: "slider",
-            value: 64,
-            range: [0, 255],
+            id: "blockAds",
+            title: "屏蔽 AdSense 广告",
+            description:
+              "隐藏百科页面中的 Google AdSense 广告单元（ins.adsbygoogle）及其空壳容器；同时把主页 / 整合包区的「广告」条目替换成可关闭的占位，并移除矿词、世界生成列表页的站点广告位。其余站点原生内容不受影响。",
+            type: "checkbox",
+            value: true,
           },
-          {
-            id: "radiusRatio",
-            title: "圆角大小比例",
-            description: "控制页面中绝大多数 UI 元素的边缘圆角半径。",
-            type: "slider",
-            value: 1,
-            range: [0, 1],
-          },
+        ],
+      },
+      {
+        id: "pageLayout",
+        label: "页面重排",
+        settings: [
           {
             id: "autoExpandPage",
             title: "自动展开页面",
             description: "根据时间范围搜索待审列表和历史编辑记录时，自动展开所有页面。",
+            type: "checkbox",
+          },
+          {
+            id: "classAddHelper",
+            title: "展开模组添加分页",
+            description: "使模组添加页面中的所有内容全部同屏显示。",
             type: "checkbox",
           },
           {
@@ -324,12 +348,6 @@ export const settings = [
         label: "通用",
         settings: [
           {
-            id: "classAddHelper",
-            title: "展开模组添加分页",
-            description: "使模组添加页面中的所有内容全部同屏显示。",
-            type: "checkbox",
-          },
-          {
             id: "noSubmitWarningDelay",
             title: "取消提交警告延时",
             description:
@@ -363,6 +381,19 @@ export const settings = [
             type: "checkbox",
           },
           {
+            id: "fastUrge",
+            title: "快速催审",
+            description: "在待审列表中显示“一键催审”按钮。",
+            type: "checkbox",
+            value: true,
+          },
+        ],
+      },
+      {
+        id: "tab",
+        label: "合成表",
+        settings: [
+          {
             id: "tabFillFocusQty",
             title: "落槽后聚焦数量框",
             description:
@@ -382,13 +413,6 @@ export const settings = [
             description:
               "数量/概率输入框内：↑/↓ 数量 ±1（空值取「默认」值），Shift+↑/↓ ×2/÷2，Enter/Shift+Enter 移到同列上/下一行并拦下表单误提交。仅作用于数量与概率框，物品 ID 不参与步进；Ctrl/Alt 组合键让位给站点快速提交与浏览器。开启后左栏「编辑帮助」末尾追加一行速记。默认关闭。",
             type: "checkbox",
-          },
-          {
-            id: "fastUrge",
-            title: "快速催审",
-            description: "在待审列表中显示“一键催审”按钮。",
-            type: "checkbox",
-            value: true,
           },
         ],
       },
@@ -744,8 +768,8 @@ export const settings = [
     label: "其他",
     sections: [
       {
-        id: "autolink",
-        label: "自动链接",
+        id: "editAssist",
+        label: "编辑增强",
         settings: [
           {
             id: "takeoverNativeAutolink",
@@ -756,12 +780,6 @@ export const settings = [
             value: true,
             visible: (ctx) => !ctx.mobile,
           },
-        ],
-      },
-      {
-        id: "codeblock",
-        label: "代码块",
-        settings: [
           {
             id: "codeBrushLanguages",
             title: "YAML / TOML / TS 代码块支持",

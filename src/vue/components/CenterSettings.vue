@@ -37,11 +37,21 @@
             v-for="section in category.sections"
             :key="section.id"
             class="center-block-section-container center-content mcmodder-interpolate-container"
-            :class="{ collapsed: !hasVisibleSettingInSection(section) }"
+            :class="{
+              collapsed: !hasVisibleSettingInSection(section),
+              folded: isSectionFolded(section),
+            }"
             :data-section="section.id"
           >
             <div class="center-block-section">
-              <div class="center-block-section-label" v-text="section.label" />
+              <div
+                class="center-block-section-label"
+                title="点击展开 / 收起本节"
+                @click="toggleSection(section)"
+              >
+                {{ section.label
+                }}<span class="center-block-section-count"> （{{ visibleCount(section) }}）</span>
+              </div>
               <template v-for="key in section.settings" :key="key.id">
                 <div
                   class="center-block-setting-container mcmodder-interpolate-container"
@@ -253,6 +263,35 @@ const hasVisibleSettingInSection = (section: SettingsSection) =>
 const hasVisibleSettingInCategory = (category: SettingsCategory) =>
   category.sections.some(hasVisibleSettingInSection);
 
+/**
+ * 分区折叠（渐进披露）：默认全部收起，仅显示节名与条目数；点击节名、侧边目录
+ * 树或检索命中均可展开。检索命中的分区由下方 watch 程序化展开，与手动状态共用
+ * 一个集合，互不覆盖。
+ */
+const expandedSections = ref(new Set<string>());
+const isSectionFolded = (section: SettingsSection) =>
+  !isSearching.value && !expandedSections.value.has(section.id);
+/** 分区内当前可见（权限/移动端满足且检索命中）的条目数，随检索实时变化 */
+const visibleCount = (section: SettingsSection) =>
+  section.settings.filter((item) => isSettingVisible(item.id)).length;
+function toggleSection(section: SettingsSection) {
+  if (expandedSections.value.has(section.id)) {
+    expandedSections.value.delete(section.id);
+  } else {
+    expandedSections.value.add(section.id);
+  }
+}
+watch(matchedRanges, (map) => {
+  if (!isSearching.value) return;
+  settings.forEach((category) =>
+    category.sections.forEach((section) => {
+      if (section.settings.some((item) => map.has(item.id))) {
+        expandedSections.value.add(section.id);
+      }
+    }),
+  );
+});
+
 /** 整棵树是否至少有一个配置项需要显示（检索无任何命中时为 false） */
 const hasVisibleSetting = computed(() => settings.some(hasVisibleSettingInCategory));
 
@@ -343,12 +382,16 @@ const configResourceFileListInteractorProps = [
 ] as const;
 
 function goto(type: "category" | "section", id: string) {
-  const target = $(settingsContentRef.value!).find(`[data-${type}=${id}]`);
-  const el = target.get(0);
-  if (!el) return;
-  // scrollIntoView 只支持 "start"/"center"/"end"，故手动滚到「视口顶端 + 顶栏高度」处
-  const top = el.getBoundingClientRect().top + window.scrollY - Values.headerContainerHeight;
-  window.scrollTo({ top, behavior: "smooth" });
+  // 目录树点进折叠中的分区：先展开再滚动，否则目标只有一条节名横条
+  if (type === "section") expandedSections.value.add(id);
+  void nextTick(() => {
+    const target = $(settingsContentRef.value!).find(`[data-${type}=${id}]`);
+    const el = target.get(0);
+    if (!el) return;
+    // scrollIntoView 只支持 "start"/"center"/"end"，故手动滚到「视口顶端 + 顶栏高度」处
+    const top = el.getBoundingClientRect().top + window.scrollY - Values.headerContainerHeight;
+    window.scrollTo({ top, behavior: "smooth" });
+  });
 }
 
 /**
@@ -481,6 +524,30 @@ onBeforeUnmount(() => treeObserver?.disconnect());
   font-size: 18px;
   color: var(--mcmodder-color-text-dark1);
   font-weight: bold;
+  cursor: pointer;
+  user-select: none;
+}
+
+.center-block-section-label::before {
+  content: "▸";
+  margin-right: 0.4em;
+  color: var(--mcmodder-color-text-dark3);
+  font-weight: normal;
+}
+
+.center-block-section-container:not(.folded) .center-block-section-label::before {
+  content: "▾";
+}
+
+.center-block-section-count {
+  font-size: 12px;
+  color: var(--mcmodder-color-text-dark3);
+  font-weight: normal;
+}
+
+/* 渐进披露：收起的分区只保留节名横条（条目容器整体隐藏，节名仍可点击展开） */
+.center-block-section-container.folded .center-block-setting-container {
+  display: none;
 }
 
 .center-block-section .center-setting-block {

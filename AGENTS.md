@@ -208,8 +208,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 - **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), add one declarative
   entry to the `settings` array in `src/loader/ConfigLoader.ts` (id, title, description, type,
   default, optional `visible`), and reuse the matching control in `src/vue/components/input/`.
-  Add the reader in the same change. Internal keys may live in `Settings` without a panel row
-  (precedent: `markdownIt`, `lastRequestTime`) — they still need a reader.
+  Add the reader in the same change. Place the entry by page/workflow domain (合成表
+  features -> the 合成表 section, review-list items -> 后台管理), never by mechanism —
+  mixed-domain sections defeat the panel hierarchy; sections render folded by default.
+  Internal keys may live in `Settings` without a panel row (precedent: `markdownIt`,
+  `lastRequestTime`) — they still need a reader.
 - **Persisted state / context-bound helpers** -> `ConfigRepository` (`getSettings`/`setSettings`,
   reactive `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid,
   `*Class` per classID, keybinding matching, class-name maps, item-type lookups). Prefer it
