@@ -60,12 +60,10 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
   `verbatimModuleSyntax`).
 - No browser/unit test suite; DOM behavior is validated by smokes + real-page exercise.
   **Pure-decision logic has logic tests** (`npm run test:logic`): real-body `.ts` suites in
-  `scripts/logic-tests/` (run by `tsx`, which resolves the `"$"` virtual module through
+  `scripts/logic-tests/`, run by `tsx` (the `"$"` virtual module resolves through
   `tsconfig.test.json` → `scripts/test-stubs/monkey-client.mjs` GM stub — stubs only allow
-  loading, tests must never call GM). When adding a logic test for a module that imports
-  `"$"`-touching chains, keep `src/` free of Node assumptions (no module-scope
-  `window`/`document`, no unguarded `import.meta.glob`) and put the suite in
-  `scripts/logic-tests/`, NOT `src/` (src is the browser type context).
+  loading). Suites live there, NOT in `src/`: `src/` stays browser-pure (no module-scope
+  `window`/`document`, no unguarded `import.meta.glob`).
 - Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
   mode). The logged-in E2E harness is **not** committed (lives outside the repo); a GM shim
   is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no cross-tab sync) — anything
@@ -75,14 +73,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 ## Technical facts (how the code and site actually behave)
 
 - `ConfigRepository.getSettings` returns the live cached object (StorageBuffer shares one
-  array/object per key) — mutating it in place corrupts the cache; copy first
+  array/object per key) — in-place mutation corrupts the cache; copy first
   (`[...arr].reverse()`).
 - `Utils.addStyle` injects CSS through jQuery `.html()`, which parses the text as HTML — a
   literal `<style>` string would split the stylesheet in two. Refer to tags in prose as
   "style 元素".
 - `ItemTabInit` is instantiated directly by `ItemPageInit` / `OredictPageInit` even though
   `canRun()` returns false — `canRun()` alone never proves a file dead.
-- Editor globals / UEditor DOM may be absent on 404 or restricted pages; guard `editor`,
+- Editor globals / UEditor DOM may be absent on 404 or restricted pages — guard `editor`,
   wrap `init()` in try/catch, skip rather than throw.
 - Changing a setting's `value:` default only affects users who never toggled it — persisted
   settings win. Forcing everyone over needs a one-off migration.
@@ -93,101 +91,86 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
   cross-position rule merging rewrites cascade order.
 - The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery,
   `editor`, `swal`, `PublicLangData`, `echarts`, ...) are declared in `src/Mcmod.d.ts` but
-  only exist on real pages: touch them only inside `Init.run()` or event callbacks, never at
-  module scope. Nothing in `src/` runs under plain Node.
-- GM APIs go through the `$` alias (`import { GM_getValue } from "$"`,
-  `vite-plugin-monkey/client`). Never use `localStorage`/`sessionStorage` for app data.
+  only exist on real pages, so they are touched inside `Init.run()` / event callbacks, not
+  at module scope. Nothing in `src/` runs under plain Node.
+- App data lives in GM storage through the `$` alias (`import { GM_getValue } from "$"`,
+  `vite-plugin-monkey/client`); `localStorage`/`sessionStorage` belong to the host page
+  realm, not to the script.
 - All network traffic goes through `Mcmodder.web.createRequest` (`WebFetchUtils`; rate
   limit via `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token`
-  retry). Never call `GM_xmlhttpRequest` directly. `GM_cookie` is used only for `yxd_token`
-  (write is deliberately `httpOnly: false` — site-native shape; see `WebFetchUtils.ts`).
+  retry) — a raw `GM_xmlhttpRequest` silently loses all three. `GM_cookie` is used only
+  for `yxd_token` (write is deliberately `httpOnly: false` — site-native shape; see
+  `WebFetchUtils.ts`).
 - Host pages ship different jQuery versions (measured: homepage 1.8.2, `/tools/cbcreator/`
-  1.7.2, list pages 2.1.0) — shared code must stay jQuery-1.7-compatible. mcmod.cn's own
-  libraries (jQuery, `swal`, Bootstrap, UEditor, `echarts`) are the API — use page globals,
-  never replace them with npm packages.
-- `pangu` must keep being evaluated inside the content iframe — its `spacingPage` XPath
-  binds to the evaluating realm's global `document`; bundling it as a module would silently
-  space the wrong document.
+  1.7.2, list pages 2.1.0) — shared code stays jQuery-1.7-compatible. mcmod.cn's own
+  libraries (jQuery, `swal`, Bootstrap, UEditor, `echarts`) are the API; they are not
+  replaced with npm packages.
+- `pangu` is evaluated inside the content iframe: its `spacingPage` XPath binds to the
+  evaluating realm's global `document`, so a bundled module would silently space the wrong
+  document.
 - Dynamic `import()` requires `inlineDynamicImports` (already set in `vite.config.ts`) —
   without it the dynamic chunk becomes a separate file a single-file userscript cannot
-  carry. The GM-shim harness cannot reproduce this — loading-structure changes must be
-  clicked once on a real machine.
+  carry. The GM-shim harness cannot reproduce this; loading-structure changes get clicked
+  once on a real machine.
 - Site-JS-rendered DOM (verify.html lists, center pages, editor surfaces) may not exist when
   the script starts — poll for readiness (300ms × 20 pattern, see `callEditor` /
   `pollCompacted`) before structural DOM changes; inject style only after the structural
   change succeeded.
-- `center.mcmod.cn` is an SPA: content renders only after data fetches, so observer gates
-  evaluated at `main()` time miss it; observers must attach unconditionally there. When
-  several defensive skips guard the same call path, re-read the whole path — each is
-  correct alone, together they multiply silent-failure modes.
-- The logged-in E2E harness is **not** committed (lives outside the repo). Manual-only
-  checks live in `docs/release-checklist.md`.
+- `center.mcmod.cn` is an SPA: content renders only after data fetches, so observers there
+  attach unconditionally (no `main()`-time gating). When several defensive skips guard the
+  same call path, re-read the whole path — each is correct alone, together they multiply
+  silent-failure modes.
 
 ## Working defaults (deviate when the requirement demands; state the deviation)
 
-- **Reuse the established entry point** for each feature area (see "Where to change what");
-  add a second convention only when the requirement needs it, and note why.
-- **User-facing text**: comments, config titles/descriptions and UI copy are Chinese,
+- **User-facing text** (comments, config titles/descriptions, UI copy) is Chinese,
   matching the existing style.
-- **`CHANGELOG.md` is the public release history.** Entries are user-facing release notes:
-  behavior changes only — no internal process, actors or decision narrative (those belong
-  in HANDOFF / PROJECT-HISTORY / commit messages). Version bumps, release timing and the
-  announcement post stay the user's call.
-- **Every setting must be read by code.** Dead toggles that do nothing were a known
-  regression in this fork.
-- **New user-visible features default to ON but must be killable.** Bug fixes, startup
-  plumbing and security pipelines may be unswitched; if a tweak is too small to deserve a
-  key, say so in a comment ("deliberately unswitched").
+- **`CHANGELOG.md` is the public release history**: user-facing behavior changes only — no
+  internal process or decision narrative (HANDOFF / PROJECT-HISTORY / commit messages).
+  Version bumps, release timing and the announcement post stay the user's call.
+- **Settings discipline**: every panel key is read by code (dead toggles were a known
+  regression); new user-visible features default ON but are killable; bug fixes, startup
+  plumbing and security pipelines may be unswitched — a tweak too small for a key gets a
+  "deliberately unswitched" comment.
 - **A setting gates its entire behavior surface — CSS included.** Rules that restyle
-  site-native DOM for a gated feature must be scoped under a marker class that the feature's
+  site-native DOM for a gated feature are scoped under a marker class that the feature's
   `run()` adds to `<html>`; prefer styling the feature's own namespaced DOM (`.mcmodder-*`).
   `mcmodderUI.css` is the legacy skin layer (gated by `mcmodderUISkin`, default on; contains
   no night rules).
-- `eslint.config.ts` exemptions are closed lists. Never add new files to silence your own
+- `eslint.config.ts` exemptions are closed lists — new files don't get added to silence
   code.
-- Refactoring is allowed when the task calls for it — no blanket ban; keep the diff
-  explainable by the task.
-- `import type` is mandatory for type-only imports (`verbatimModuleSyntax`). Delete unused
-  locals/parameters; the build fails on them.
-
-## Styling & maintenance defaults (deviate when the requirement demands; state it)
-
-- **CSS layout work is draft-cheap.** Build + on/off screenshot + show; iterate on real
-  pages; commit only after approval. Do not run release-grade gates per draft.
+- Refactoring is allowed when the task calls for it; keep the diff explainable by the task.
+- `import type` for type-only imports (`verbatimModuleSyntax`); unused locals/parameters
+  fail the build.
 - Default: no bulk CSS deletes — deviate with CSS-coverage evidence and before/after
   screenshots of every affected page (`base.css` ~114 KB / `mcmodderUI.css` ~34 KB /
   `bbs.css` ~53 KB carry legacy overrides that have broken night mode before).
 - **Global CSS rules are page-density multipliers** — a rule touching element classes
-  (`.btn`, `.form-control`, `.col-lg-6`, bare `input`) fires on EVERY page. Discipline:
-  enumerate the page types a rule touches; single-page exemptions use compound selectors
-  with a comment naming the page; flipping a layout default gets a full visual audit in
-  night mode.
+  (`.btn`, `.form-control`, `.col-lg-6`, bare `input`) fires on EVERY page. Enumerate the
+  page types a rule touches; single-page exemptions use compound selectors with a comment
+  naming the page. Layout flips go through the draft-screenshot loop, which surfaces
+  night-mode fallout before release.
 - **Informational text walls on site pages (banners, notes, usage hints) are condensable
   or removable under an opt-in gate** — they are content, not workflow. The workflow
   red line protects functional controls, not text.
 - Avoid full-DOM `getComputedStyle` passes; prefilter with `[style]`.
-- Gate always-on observers by page / selector and give them a timeout
-  (**exception: `center.mcmod.cn` is an SPA** — attach unconditionally there). When several
-  defensive skips guard the same call path, re-read the whole path — each is correct alone,
-  together they multiply silent-failure modes.
-- Global keyboard shortcuts must return early when the target is an `input`, `textarea`,
-  `select` or `isContentEditable` (they otherwise swallow native Ctrl+A/C/Z). Before picking
-  a shortcut, check browser menu accelerators and site-native bindings (edit pages bind keys
-  in inline scripts); prefer taking over a site-native documented key via capture phase.
+- Gate always-on observers by page / selector and give them a timeout (the SPA exception
+  is in Technical facts).
+- Global keyboard shortcuts return early when the target is an `input`, `textarea`,
+  `select` or `isContentEditable` (otherwise native Ctrl+A/C/Z get swallowed). Before
+  picking a shortcut, check browser menu accelerators and site-native bindings; prefer
+  taking over a site-native documented key via capture phase.
 - **Warnings for destructive actions belong ON the destructive action, shown once**;
   persisted one-time hints / hover text / setting descriptions are the passive channels;
   recurring modals are the last resort.
 - `uploadFileButton` rides on undocumented UEditor endpoints (`uploadfile`/`listfile`) —
   fails silently if the site changes them; off by default;
-  `Values.ueditorFileAccept` must list every extension the description promises.
-- **Night-mode icon fixes on bbs use CSS mask + inline data-URI SVG, never fonts or
-  filters** (no FontAwesome sheet there; GIF/PNG sprites are 1-bit hard transparency).
-  Pattern: `::before` with `mask: url("data:image/svg+xml;utf8,...") center / contain
-no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified bounding
-  box. Do not reach for flex on containers that also hold non-item children.
-- Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Values`,
-  per-page CSS or bundle splitting. Dead-file scanning: e2e `dead-files2.mjs`; trust a
-  "DEAD" verdict only after grepping the symbol repo-wide.
+  `Values.ueditorFileAccept` lists every extension the description promises.
+- **Night-mode icon fixes on bbs use CSS mask + inline data-URI SVG** (no FontAwesome sheet
+  there; GIF/PNG sprites are 1-bit hard transparency): `::before` with
+  `mask: url("data:image/svg+xml;utf8,...") center / contain no-repeat` +
+  `background-color: currentColor`, hand-drawn SVGs on a unified bounding box. Avoid flex
+  on containers that also hold non-item children.
 - Conventions live here (rules) and in HANDOFF.md (environment facts) — a rule recorded
   anywhere else is a rule nobody can find. **Adding a rule retires an old one** — this file
   does not grow.
@@ -195,8 +178,8 @@ no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified
 ## Where to change what
 
 - **Page-specific feature** -> new `Init` subclass in `src/init/` (`canRun()` = URL/DOM gate,
-  `run()` = DOM work), registered in `src/loader/InitLoader.ts`. Never put page logic in
-  `src/main.ts`.
+  `run()` = DOM work), registered in `src/loader/InitLoader.ts`. `src/main.ts` is the
+  bootstrap — page logic lives in Init subclasses.
 - **Eval-time early injection** (document-start level, bypasses InitLoader) -> leaf module
   following the `earlySplash.ts` / `CodeBrushInit.ts` pattern: only the `$` alias imported,
   host-side logic injected as page-context script text in `String.raw` (no backticks, no
@@ -215,14 +198,13 @@ no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified
   autolink, tools). `Mcmodder.editorLoad()` instantiates them; there is no `Init` subclass
   for the editor.
   - **Table-wall watchdog invariants** (`UEditor.init` / `scheduleBodySync`):
-    `contentChange` and the body `MutationObserver` are "content really changed" signals and
-    must call `scheduleBodySync(true)`; `selectionchange` and the 1.5 s watchdog must call
-    `scheduleBodySync()` so they only run the cheap, idempotent trailing-paragraph check.
-    `updateEditorStats()` serializes the whole body and forces layout — never call it from the
-    cheap path.
-  - `ensureTrailingParagraph()` must return whether it changed the DOM, must be idempotent,
-    and must **not** rebuild the trailing paragraph's `innerHTML` (UEditor bookmarks/caret
-    live there). Add a `<br>`, strip `nowrap` declarations, leave other nodes alone.
+    `contentChange` and the body `MutationObserver` are "content really changed" signals →
+    `scheduleBodySync(true)`; `selectionchange` and the 1.5 s watchdog → `scheduleBodySync()`
+    (cheap, idempotent trailing-paragraph check only). `updateEditorStats()` serializes the
+    whole body and forces layout — it stays off the cheap path.
+  - `ensureTrailingParagraph()` returns whether it changed the DOM, is idempotent, and does
+    not rebuild the trailing paragraph's `innerHTML` (UEditor bookmarks/caret live there):
+    add a `<br>`, strip `nowrap` declarations, leave other nodes alone.
 - **New setting** -> add the key to `Settings` (`src/types/types.d.ts`), add one declarative
   entry to the `settings` array in `src/loader/ConfigLoader.ts` (id, title, description, type,
   default, optional `visible`), and reuse the matching control in `src/vue/components/input/`.
@@ -232,8 +214,8 @@ no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified
   reactive `getSettingsRef`/`get*WritableRef`, number-list variants, `*Profile` per uid,
   `*Class` per classID, keybinding matching, class-name maps, item-type lookups). Prefer it
   over raw `GM_*Value` calls for keys it covers.
-- **Network requests** -> `WebFetchUtils`: call `mcmodder.web.createRequest(...)` (rate
-  limiting, request log, `yxd_token` retry). Never dispatch `GM_xmlhttpRequest` directly.
+- **Network requests** -> `WebFetchUtils`: call `mcmodder.web.createRequest(...)` (see
+  Technical facts for what that layer carries).
 - **Pure static helpers** -> `Utils`.
 - **Reactive/storage-cached keys** -> register with `StorageBuffer.addCacheableItem` in
   `src/loader/StorageBufferLoader.ts`; global config-to-behavior watchers (night mode, page
@@ -245,10 +227,10 @@ no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified
   Dexie/IndexedDB, switched by the `itemRepository` setting under 数据存储). It feeds the
   auto-link local search in `src/vue/components/AutoLink.vue`.
 - **Self-contained feature modules** -> own top-level `src/<name>/` directory with
-  its own storage, decision logic and a `__logic-test.cjs` runnable with plain node —
-  **never** rewrite host DOM or restyle host elements (exemplar: `src/background/`,
-  counter-exemplar: the removed TabEditInit, see PROJECT-HISTORY §四). Cross-domain data
-  must go through GM storage — IndexedDB is origin-isolated.
+  its own storage, decision logic and a `__logic-test.cjs` runnable with plain node.
+  Host-DOM rewriting / host-element restyling breaks that contract — the coupling is what
+  killed TabEditInit (PROJECT-HISTORY §四). Cross-domain data goes through GM storage —
+  IndexedDB is origin-isolated. (Exemplar: `src/background/`.)
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
 - **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
@@ -300,5 +282,5 @@ no-repeat` + `background-color: currentColor`. Keep hand-drawn SVGs on a unified
   `## [...]` heading in `CHANGELOG.md` equals `package.json`'s version. `npm run pack`
   enforces the same check.
 - The literal `[release]` anywhere in a push's head commit message triggers the release job.
-  Later commits touching a released version must avoid that literal — `release.cjs` skips
-  when the tag already exists, but keeping it out of messages keeps CI history clean.
+  Later commits touching a released version avoid that literal — `release.cjs` skips when
+  the tag already exists, but keeping it out of messages keeps CI history clean.
