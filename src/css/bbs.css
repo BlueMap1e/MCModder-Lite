@@ -1985,6 +1985,13 @@ html.dark .post_act li.a2 span::before {
 html.dark .post_act li.a3 span::before {
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3 1.5 V14.5'/><path d='M3 2.5 H13 L10.5 5.5 L13 8.5 H3'/></svg>");
 }
+/* 禁用形态区分度：span 变体（动作不可用）整体降透明度 + not-allowed 光标，与可用
+   链接按钮拉开视觉差——站点原生日间也不区分（误导性为原生自带），本规则仅夜间
+   收紧，日间站点外观不干预。 */
+html.dark .post_act li span {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
 /* 富文本编辑器 iframe 元素自身的底色（内容文档由 main.ts 注入处理） */
 html.dark iframe#e_iframe {
   background-color: var(--mcmodder-color-background-dark2);
