@@ -688,6 +688,24 @@ body .header-layer {
   padding: 0;
   background-color: transparent;
 }
+/* 合成表槽位↔数量框的站点原生配对高亮（edit.frame.css 的 .active，站点原色
+   #333）：日间在灰贴图上偏弱、夜间 #333 暗对暗不可见（2026-11-22 用户反馈
+   「原生机制不是很明显」；取证：夜间 .active 态 computed 边框与静息态同色）。
+   以 accent 色重申激活态（变量昼夜自适应、双侧同色成对），数量框侧补一层淡
+   光晕（同皮肤层 :focus 光晕语言）。deliberately unswitched：状态可见性修复，
+   仅 hover/focus 才出现，夜间类本身即门。选择器带 .form-control 位（0,3,1）
+   ——同页 html.dark .input-group .form-control 同强度规则在场，需平级后置取胜 */
+.item-table-gui-slot.active .view,
+html.dark .item-table-gui-slot.active .view {
+  border-color: var(--mcmodder-color-accent);
+}
+input.form-control.slot-text.active,
+div.checkbox.slot-text.active,
+html.dark input.form-control.slot-text.active,
+html.dark div.checkbox.slot-text.active {
+  border-color: var(--mcmodder-color-accent);
+  box-shadow: 0 0 0 0.15em var(--mcmodder-color-accent-transparent2);
+}
 /* 合成表页两处搜索框（.input-group 内输入框 + 按钮拼接）：dark2 边框在深色
    页面上不可见，拼接处失去分界读作「怼在一起」（用户报告）。边框提亮一档
    （同 .fwin .px 的中性灰先例） */
