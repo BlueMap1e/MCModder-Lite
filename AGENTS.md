@@ -311,8 +311,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   removed TabEditInit, whose in-place page rewrite caused two rounds of style
   conflicts). Cross-domain data (settings in center, pages in www) must go through
   GM storage — IndexedDB is origin-isolated. The crafting-table workflow (阶段 2,
-  now in 立项筹备 — plan and red lines in HANDOFF 未决 15) will follow this exemplar
-  when it lands.
+  direction settled 2026-11-22 — plan, contract findings and red lines in HANDOFF
+  未决 15) will follow this exemplar when it lands.
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
 - **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
