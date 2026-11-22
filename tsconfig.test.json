@@ -1,0 +1,9 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "paths": {
+      "$": ["./scripts/test-stubs/monkey-client.mjs"]
+    }
+  },
+  "include": ["src", "scripts/test-stubs"]
+}

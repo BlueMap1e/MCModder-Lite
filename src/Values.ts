@@ -114,9 +114,14 @@ export class Values {
   }
 
   // ─── 站点与环境 ───
-  static readonly hostname = window.location.href.startsWith("https://www1.mcmod.cn/")
-    ? "https://www1.mcmod.cn"
-    : "https://www.mcmod.cn";
+  static readonly hostname =
+    // 逻辑测试在 plain Node 下加载本模块（无 window），回落 www 默认；
+    // 站点上恒有 window，www1 分支仅在镜像域名会话下生效（该域名 DNS 已不解析）
+    (typeof window === "undefined" ? "https://www.mcmod.cn/" : window.location.href).startsWith(
+      "https://www1.mcmod.cn/",
+    )
+      ? "https://www1.mcmod.cn"
+      : "https://www.mcmod.cn";
 
   /** 短评跨页跳转：消息中心把楼层/回复序号写进目标链接的 query，目标页据此缩小查找范围 */
   static readonly commentJump = {
@@ -151,12 +156,15 @@ export class Values {
       },
     },
     icon: {
-      fileUpload: (
-        import.meta.glob("./assets/icons/fileUpload.svg", {
-          query: "?raw",
-          eager: true,
-        })["./assets/icons/fileUpload.svg"] as { default: string }
-      ).default,
+      /** 惰性求值：import.meta.glob 是 Vite 构建期 API，plain Node（逻辑测试）下不存在，首次访问才解析 */
+      get fileUpload() {
+        return (
+          import.meta.glob("./assets/icons/fileUpload.svg", {
+            query: "?raw",
+            eager: true,
+          })["./assets/icons/fileUpload.svg"] as { default: string }
+        ).default;
+      },
     },
     storage: {
       indexes: {
@@ -1193,12 +1201,15 @@ export class Values {
       id: "general_armor",
       title: "套装/盔甲/铠甲/XX套",
       description: "适用于将“头盔”、“胸甲”、“护腿”、“靴子”综合到同一个父资料中一起介绍时使用。",
-      content: (
-        import.meta.glob("./html/defaultTemplate.html", {
-          query: "?raw",
-          eager: true,
-        })["./html/defaultTemplate.html"] as { default: string }
-      ).default,
+      /** 惰性求值：import.meta.glob 是 Vite 构建期 API，plain Node（逻辑测试）下不存在，首次访问才解析 */
+      get content() {
+        return (
+          import.meta.glob("./html/defaultTemplate.html", {
+            query: "?raw",
+            eager: true,
+          })["./html/defaultTemplate.html"] as { default: string }
+        ).default;
+      },
     },
   ];
 
