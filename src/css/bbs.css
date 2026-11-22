@@ -1964,6 +1964,27 @@ html.dark .post_act li a[title="点评"]::before {
 html.dark .post_act li a#ak_rate::before {
   mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3 1.5 V14.5'/><path d='M3 2.5 H13 L10.5 5.5 L13 8.5 H3'/></svg>");
 }
+/* 禁用形态（span 变体）：动作对当前用户不可用时（如自己的帖子上「点评」），站点
+   渲染 li > span（无 a、无 title/id）——上面的拆雪碧图规则命中 span 但图标规则只
+   写了 a，导致图标消失 + 30px 图标区空置 + 版式塌陷（tid=24179 真机报告，2026-11-22）。
+   按 li 类映射图标（a1=回复 / a2=点评 / a3=评分，与雪碧图位一致），几何与 a::before
+   同一契约；span 在日间仍走雪碧图，本规则仅夜间。 */
+html.dark .post_act li span::before {
+  content: "";
+  display: block;
+  width: 16px;
+  height: 16px;
+  margin: -24px auto 6px;
+  background-color: var(--mcmodder-color-text-dark1);
+  mask: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><rect x='1.5' y='2.5' width='13' height='8.5' rx='1.5'/><path d='M4.5 11 L4.5 13.5 L7.5 11'/></svg>")
+    center / contain no-repeat;
+}
+html.dark .post_act li.a2 span::before {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M10.5 2.5 L13.5 5.5 L5 14 H2 V11 Z'/></svg>");
+}
+html.dark .post_act li.a3 span::before {
+  mask-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16' fill='none' stroke='black' stroke-width='1.4' stroke-linecap='round' stroke-linejoin='round'><path d='M3 1.5 V14.5'/><path d='M3 2.5 H13 L10.5 5.5 L13 8.5 H3'/></svg>");
+}
 /* 富文本编辑器 iframe 元素自身的底色（内容文档由 main.ts 注入处理） */
 html.dark iframe#e_iframe {
   background-color: var(--mcmodder-color-background-dark2);
