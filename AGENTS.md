@@ -11,9 +11,11 @@ keep code identifiers and paths verbatim.
 - When a default conflicts with the requirement, execute the requirement and state the
   deviation in the deliverable. **Never silently downscale a requirement** — either
   implement it, or come back with the tradeoff and let the user decide.
-- Drafts are cheap: build + on/off screenshot + show. **Commits only after user approval.**
-  Full gates run once, after the user signs off, before a release. Breaking a draft and
-  fixing it in the next screenshot round is the expected loop, not a violation.
+- Drafts are cheap: settle the target composition before implementing (layout work: the
+  user's real viewport + grep the site CSS constraints), then build + on/off screenshot +
+  show. **Commits only after user approval.** Full gates run once, after the user signs
+  off, before a release. Breaking a draft and fixing it in the next screenshot round is
+  the expected loop, not a violation.
 - Timidity is a failure mode. Moving fast on the requirement outranks procedural caution;
   the defaults below exist to prevent _released_ damage, not to slow down drafts.
 - Do not touch anything the user has frozen; when frozen, wait for the trigger.
@@ -49,25 +51,25 @@ npm run lint     # eslint src
 npm run format   # prettier --write src
 npm run verify   # lint + lint:config + format:check + cycle gate (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
-npm run test:logic  # logic tests for pure-decision modules (139 assertions, plain node via tsx, no site)
+npm run test:logic  # logic tests for pure-decision modules (plain node via tsx, no site)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
 GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 ```
 
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
-  locals/parameters fail it (`strict`, `noUnusedLocals`, `noUnusedParameters`,
-  `verbatimModuleSyntax`).
+  locals/parameters fail it.
 - No browser/unit test suite; DOM behavior is validated by smokes + real-page exercise.
-  **Pure-decision logic has logic tests** (`npm run test:logic`): real-body `.ts` suites in
-  `scripts/logic-tests/`, run by `tsx` (the `"$"` virtual module resolves through
-  `tsconfig.test.json` → `scripts/test-stubs/monkey-client.mjs` GM stub — stubs only allow
-  loading). Suites live there, NOT in `src/`: `src/` stays browser-pure (no module-scope
+  **Pure-decision logic has logic tests** (`npm run test:logic`): `.ts` suites in
+  `scripts/logic-tests/`, run by `tsx` with a GM stub (see `tsconfig.test.json`). Suites
+  live there, NOT in `src/`: `src/` stays browser-pure (no module-scope
   `window`/`document`, no unguarded `import.meta.glob`).
-- Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
-  mode). The logged-in E2E harness is **not** committed (lives outside the repo); a GM shim
-  is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no cross-tab sync) — anything
-  depending on those still needs a real-browser pass.
+- Manual-only checks: the user release procedure is `docs/release-checklist.md`; the
+  agent-side manual surfaces (editor dialogs, night mode, BBS) are listed in `HANDOFF.md`
+  §五. The logged-in E2E harness is **not** committed (lives outside the repo) and its GM
+  shim is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no `@connect`
+  enforcement, no cross-tab sync) — changes on those faces passing the harness prove
+  nothing; verify dist metadata or a real browser.
 - The shippable artifact is `dist/mcmodder-lite.user.js` (copy into Tampermonkey).
 
 ## Technical facts (how the code and site actually behave)
@@ -75,9 +77,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 - `ConfigRepository.getSettings` returns the live cached object (StorageBuffer shares one
   array/object per key) — in-place mutation corrupts the cache; copy first
   (`[...arr].reverse()`).
-- `Utils.addStyle` injects CSS through jQuery `.html()`, which parses the text as HTML — a
-  literal `<style>` string would split the stylesheet in two. Refer to tags in prose as
-  "style 元素".
+- `Utils.addStyle` injects CSS through jQuery `.html()`, which parses the text as HTML —
+  pass bare CSS, never a literal `<style>` tag string (it would split the stylesheet in two).
 - `ItemTabInit` is instantiated directly by `ItemPageInit` / `OredictPageInit` even though
   `canRun()` returns false — `canRun()` alone never proves a file dead.
 - Editor globals / UEditor DOM may be absent on 404 or restricted pages — guard `editor`,
@@ -117,9 +118,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
   `pollCompacted`) before structural DOM changes; inject style only after the structural
   change succeeded.
 - `center.mcmod.cn` is an SPA: content renders only after data fetches, so observers there
-  attach unconditionally (no `main()`-time gating). When several defensive skips guard the
-  same call path, re-read the whole path — each is correct alone, together they multiply
-  silent-failure modes.
+  attach unconditionally (no `main()`-time gating). Where several defensive skips stack on
+  one call path, each is correct alone yet can silence the path together — check the whole
+  path when touching it.
 
 ## Working defaults (deviate when the requirement demands; state the deviation)
 
@@ -143,8 +144,8 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 - `import type` for type-only imports (`verbatimModuleSyntax`); unused locals/parameters
   fail the build.
 - Default: no bulk CSS deletes — deviate with CSS-coverage evidence and before/after
-  screenshots of every affected page (`base.css` ~114 KB / `mcmodderUI.css` ~34 KB /
-  `bbs.css` ~53 KB carry legacy overrides that have broken night mode before).
+  screenshots of every affected page (`base.css` / `mcmodderUI.css` / `bbs.css` are the
+  three big legacy-override sheets; they have broken night mode before).
 - **Global CSS rules are page-density multipliers** — a rule touching element classes
   (`.btn`, `.form-control`, `.col-lg-6`, bare `input`) fires on EVERY page. Enumerate the
   page types a rule touches; single-page exemptions use compound selectors with a comment
