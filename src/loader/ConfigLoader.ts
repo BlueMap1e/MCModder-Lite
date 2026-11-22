@@ -370,6 +370,13 @@ export const settings = [
             type: "checkbox",
           },
           {
+            id: "tabCompactLayout",
+            title: "合成表页紧凑布局",
+            description:
+              "合成表添加/编辑页压缩为单屏工作区：隐藏说明性文字墙（页首横幅、记忆/搜索/矿词用法提示、GUI 注意事项与快捷键说明），数量框并入 GUI 右侧空区（材料 3×3、产出在右下），记忆栏超过约五行时改为内部滚动。数量填 -1 表示不消耗的说明随墙隐藏，语义不变。默认关闭；仅排版与文字显隐，表单数据通路不受影响，切换 GUI 后布局自动保持。开关后刷新页面生效。",
+            type: "checkbox",
+          },
+          {
             id: "fastUrge",
             title: "快速催审",
             description: "在待审列表中显示“一键催审”按钮。",

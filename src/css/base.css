@@ -3932,3 +3932,140 @@ html.dark .banner .m_menu .m_center form._search input.text {
 html.dark .banner .m_menu .m_center form._search input.text::placeholder {
   color: var(--mcmodder-color-text-dark3);
 }
+
+/* ===== 合成表页紧凑布局（tabCompactLayout，默认关；marker 由 TabCompactInit 挂载） =====
+   纯排版重排：不移动/销毁节点，表单契约（data-multi-name / slot-text-N）零接触。
+   已知坑对位（PROJECT-HISTORY §一）：li.tab-li 是 inline-block 收缩容器——
+   grid+1fr 在其中循环解析塌缩到 min-content，:has() 修为 block；
+   站点 #item-table-gui-frame .tab-li { width:25% }（232px 出处）在网格轨道里
+   按新轨道解析，须压过；数量格显式落位避免 auto-flow 溢入左柱。 */
+html.mcmodder-tab-compact #edit-form .edit-page-title {
+  display: none;
+}
+html.mcmodder-tab-compact #edit-form p.mcmodder-wall {
+  display: none;
+}
+html.mcmodder-tab-compact #item-table-item-frame .item-used-frame {
+  /* 工具行（清空/暂停）在 DOM 里排于记忆列表之后——上限若挂在框体上会把按钮
+     推进滚动区底部（滚到按钮处标签页又消失 = 反模式，2026-11-22 用户指认）。
+     上限改挂 .tab-content（纯网格），标签行与工具行常驻可见 */
+  border-bottom: none;
+}
+html.mcmodder-tab-compact #item-table-item-frame .item-used-list .tab-content {
+  max-height: 150px;
+  overflow-y: auto;
+}
+html.mcmodder-tab-compact ul.tab-ul > li.tab-li:has(> #item-table-gui-frame) {
+  /* 站点对 .tab-li 的 inline-block 走更高特异性选择器，同强度反制
+     （Discuz 地雷图谱：ID 压过类链；落笔前未做 matches 审计已实爆一次） */
+  display: block !important;
+}
+html.mcmodder-tab-compact #item-table-gui-frame {
+  display: grid;
+  grid-template-columns: auto repeat(3, 1fr);
+  gap: 6px 12px;
+  align-items: start;
+}
+/* 间距收紧：行距由 grid gap 统一供给，格子自带 margin-bottom(10px) 与
+   标题内边距在紧凑态为纯冗余（信息在 placeholder 中完整存在） */
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li {
+  width: auto;
+  margin: 0;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li > p.title {
+  margin: 0 0 6px;
+  padding-bottom: 0;
+}
+html.mcmodder-tab-compact ul.tab-ul > li.tab-li {
+  margin-bottom: 6px;
+}
+/* 标签行高收紧：36px→20px（资料/搜索/矿词/数量标题全线），文字与下划线保留。
+   站点行高声明带 ID 前缀（computed 实证 36px），必须 !important 反制 */
+html.mcmodder-tab-compact ul.tab-ul p.title {
+  line-height: 20px !important;
+}
+/* 行高收紧吃掉了原半行距的 ~9px 呼吸感（computed 实证 title→控件 gap:0 贴死，
+   用户目检为「重叠」）——按原视觉节奏补回间距 */
+html.mcmodder-tab-compact #item-table-item-frame p.title {
+  margin-bottom: 8px !important;
+}
+html.mcmodder-tab-compact ul.tab-ul > li.tab-li > p.title {
+  margin-bottom: 6px !important;
+}
+/* 左栏「编辑帮助」压缩：文字墙由 TabCompactInit.SIDEBAR_WALL 打标隐藏（锚点护栏
+   保链接行与 QQ 按钮），剩余行距收紧、<br> 空档清理——目标是左栏底沿与
+   .common-menu-area 平齐，不再独自撑高页面滚动（2026-11-22 用户指认） */
+html.mcmodder-tab-compact .left .text p {
+  line-height: 20px;
+  margin: 0 0 4px;
+}
+html.mcmodder-tab-compact .left .text br {
+  display: none;
+}
+html.mcmodder-tab-compact .left > .common-rowlist-block:last-child {
+  margin-bottom: 0;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > .gui {
+  /* 纵跨 3 行：GUI 高度(160) ≤ 3 行数量格(57×3+gap=183)，行高改由数量格决定——
+     否则第 1 行被 GUI 撑到 160，1-3 号下方留 ~100px 空腔（2026-11-22 用户实测指认） */
+  grid-area: 1 / 1 / span 3 / 2;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > p {
+  grid-area: 4 / 1;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > div:not(.gui) {
+  /* 注意事项墙 = 无类名 DIV，站点侧 display 声明特异性更高，需 !important 反制 */
+  display: none !important;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > hr {
+  display: none !important;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li {
+  width: auto;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(1) {
+  grid-area: 1 / 2;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(2) {
+  grid-area: 1 / 3;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(3) {
+  grid-area: 1 / 4;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(4) {
+  grid-area: 2 / 2;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(5) {
+  grid-area: 2 / 3;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(6) {
+  grid-area: 2 / 4;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(7) {
+  grid-area: 3 / 2;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(8) {
+  grid-area: 3 / 3;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(9) {
+  grid-area: 3 / 4;
+}
+html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(10) {
+  grid-area: 4 / 2;
+}
+
+/* 产出/概率字段按数据类型标注（accent）：各模板字段数量与顺序互异（工作台 9+1 /
+   回收机 1+1+概率 / 自动合成产出在前 / 水晶装配 10+1 混排，2026-11-22 用户实测），
+   固定行号无法泛化「另起一行」，标注与布局解耦。只动标签文字与下划线色，
+   不碰输入框边——避免压过层 1 的配对高亮（.active accent 描边） */
+html.mcmodder-tab-compact
+  #item-table-gui-frame
+  > li.tab-li:has(input[data-multi-id="slot-out-number"])
+  > p.title,
+html.mcmodder-tab-compact
+  #item-table-gui-frame
+  > li.tab-li:has(input[data-multi-id="slot-out-chance"])
+  > p.title {
+  color: var(--mcmodder-color-accent);
+  font-weight: 600;
+}

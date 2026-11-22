@@ -177,6 +177,7 @@ interface Settings {
   autoExpandPage: boolean;
   autoCloseSwal: boolean;
   tabFillFocusQty: boolean;
+  tabCompactLayout: boolean;
   versionHelper: boolean;
   hoverDescription: boolean;
   hoverImage: boolean;

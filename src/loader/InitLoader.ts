@@ -19,6 +19,7 @@ import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
 import { SandboxInit } from "../init/SandboxInit";
 import { TabAssistInit } from "../init/TabAssistInit";
+import { TabCompactInit } from "../init/TabCompactInit";
 import { ToolsPageInit } from "../init/ToolsPageInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
@@ -50,6 +51,7 @@ export class InitLoader {
       new AdminInit(parent),
       new CommentInit(parent),
       new TabAssistInit(parent),
+      new TabCompactInit(parent),
       new ToolsPageInit(parent),
       new PlayServerPageInit(parent),
     );
