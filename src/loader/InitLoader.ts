@@ -18,6 +18,7 @@ import { PostPageInit } from "../init/PostPageInit";
 import { QueuePageInit } from "../init/QueuePageInit";
 import { RankInit } from "../init/RankInit";
 import { SandboxInit } from "../init/SandboxInit";
+import { TabAssistInit } from "../init/TabAssistInit";
 import { ToolsPageInit } from "../init/ToolsPageInit";
 import { VerifyHistoryInit } from "../init/VerifyHistoryInit";
 import { VersionEditInit } from "../init/VersionEditInit";
@@ -48,6 +49,7 @@ export class InitLoader {
       new CenterInit(parent),
       new AdminInit(parent),
       new CommentInit(parent),
+      new TabAssistInit(parent),
       new ToolsPageInit(parent),
       new PlayServerPageInit(parent),
     );

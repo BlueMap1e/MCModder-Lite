@@ -176,6 +176,7 @@ interface Settings {
   anonymousUknowtoomuch: boolean;
   autoExpandPage: boolean;
   autoCloseSwal: boolean;
+  tabFillFocusQty: boolean;
   versionHelper: boolean;
   hoverDescription: boolean;
   hoverImage: boolean;

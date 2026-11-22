@@ -363,6 +363,14 @@ export const settings = [
             type: "checkbox",
           },
           {
+            id: "tabFillFocusQty",
+            title: "落槽后聚焦数量框",
+            description:
+              "合成表页点击记忆/搜索候选或自定义矿词落槽后，自动聚焦对应数量输入框，左手即可直接键入数量。关闭则维持原生焦点行为。",
+            type: "checkbox",
+            value: true,
+          },
+          {
             id: "fastUrge",
             title: "快速催审",
             description: "在待审列表中显示“一键催审”按钮。",
