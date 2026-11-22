@@ -178,6 +178,7 @@ interface Settings {
   autoCloseSwal: boolean;
   tabFillFocusQty: boolean;
   tabCompactLayout: boolean;
+  tabQtyKeyNav: boolean;
   versionHelper: boolean;
   hoverDescription: boolean;
   hoverImage: boolean;

@@ -12,6 +12,14 @@ import { Init } from "./Init";
  * .active，产出槽的数量/概率字段捆绑同亮（2026-11-22 用户反馈反直觉）——来源
  * 为字段时只保留来源字段与格子，来源为格子时保留整组。
  *
+ * 数量框键盘导航（tabQtyKeyNav，默认关，2026-11-22 用户裁定 opt-in）：思想移植
+ * 自上游 TabEditInit.onInputKeydown（↑/↓ ±1、Shift ×2/÷2、Enter/Shift+Enter 列内
+ * 移焦），但其实现三重 parentNode 爬取自家 tr>td 表格不可搬，此处按原生 DOM 重写：
+ * rect 就近匹配列（对模板字段数/顺序与紧凑布局开关均解耦），步进只挂 .slot-text
+ * 数量/概率框——上游把 ↑/↓ 无差别套上物品 ID 列导致 ID 漂移的瑕疵顺带修掉。
+ * 委托绑在 document，GUI 服务器模板整块替换后仍有效。开启后左栏「编辑帮助」
+ * 末尾追加一行速记（纯 textNode 加法，关闭即无痕）。
+ *
  * 沙箱纪律：选中槽位不读页面全局 strTableSlotFocus（TM Firefox 的 Xray 包装
  * 下页面 var 不可见，harness 无沙箱测不出——2026-11-22 真机报告「聚焦毫无
  * 效果」），改由监听槽位 click 自行维护镜像；候选 click 用原生捕获（对站点
@@ -30,9 +38,15 @@ export class TabAssistInit extends Init {
     if (this.bound) return;
     this.bound = true;
     this.bindPairingRefine();
+    // 多功能 Init 的门控一律逐功能 if——早退 return 会吞掉其后所有无关功能
+    //（2026-11-22 实爆：tabFillFocusQty 的早退把其后新增的键盘增强整段饿死）。
     // 「未落盘 = 默认开」语义：TM 沙箱下新键读不到默认值时别用 !x 误关
-    if (this.configs.getSettings("tabFillFocusQty") === false) return;
-    this.bindFillFocus();
+    if (this.configs.getSettings("tabFillFocusQty") !== false) this.bindFillFocus();
+    // 键盘增强默认关：显式 opt-in（=== true），与默认开门禁的「!== false」语义相反
+    if (this.configs.getSettings("tabQtyKeyNav") === true) {
+      this.bindQtyKeyNav();
+      this.appendSidebarHint();
+    }
   }
 
   /** 配对高亮拆绑：来源字段只保留来源+格子；来源格子保留整组 */
@@ -117,5 +131,82 @@ export class TabAssistInit extends Init {
     // 真机反馈「页面会跳」）。焦点照落（.active 配对照常触发），首键输入时浏览器
     // 才自然滚到该框——数量吃默认 1 不输入的场景页面零滚动
     qty.focus({ preventScroll: true });
+  }
+
+  /**
+   * 数量步进纯决策：↑(38)/↓(40) ±1，Shift ×2/÷2（双侧 floor，与上游语义一致，
+   * 不消耗的 -1 亦稳定）。空值回落 placeholder「(默认: N)」；非数值场景返回
+   * null = 不接管按键（矿词条、无默认数回落失败、非步进键位）。
+   */
+  static stepQty(
+    rawValue: string,
+    placeholder: string,
+    keyCode: number,
+    shiftKey: boolean,
+  ): number | null {
+    if (keyCode !== 38 && keyCode !== 40) return null;
+    const cur =
+      rawValue.trim() !== ""
+        ? Number(rawValue.trim())
+        : Number(/默认[:：]\s*(-?\d+(?:\.\d+)?)/.exec(placeholder)?.[1] ?? NaN);
+    if (isNaN(cur)) return null;
+    if (keyCode === 38) return shiftKey ? Math.floor(cur * 2) : cur + 1;
+    return shiftKey ? Math.floor(cur / 2) : cur - 1;
+  }
+
+  /** 数量框键盘导航（委托在 document：GUI 服务器模板整块替换后仍有效） */
+  private bindQtyKeyNav() {
+    $(document).on("keydown.tabQtyNav", "#item-table-gui-frame input.slot-text", (e) => {
+      const kev = (e.originalEvent ?? e) as KeyboardEvent;
+      // Ctrl/Cmd/Alt 组合让位：站点快速提交（Ctrl+Enter）与浏览器快捷键原样通过
+      if (kev.ctrlKey || kev.metaKey || kev.altKey) return;
+      const target = e.currentTarget as HTMLInputElement;
+      const next = TabAssistInit.stepQty(
+        target.value,
+        target.placeholder,
+        kev.keyCode,
+        kev.shiftKey,
+      );
+      if (next !== null) {
+        e.preventDefault();
+        $(target).val(next);
+        return;
+      }
+      if (kev.keyCode === 13) {
+        // Enter/Shift+Enter = 同列上/下移焦：rect 就近匹配，preventDefault 拦下
+        // 表单隐式提交（浏览器会对含默认按钮的表单触发默认按钮 click 链）
+        const all = [
+          ...document.querySelectorAll("#item-table-gui-frame input.slot-text"),
+        ] as HTMLInputElement[];
+        const tr = target.getBoundingClientRect();
+        const up = kev.shiftKey;
+        const cand = all
+          .filter((i) => i !== target)
+          .map((i) => ({ el: i, x: i.getBoundingClientRect().x, y: i.getBoundingClientRect().y }))
+          .filter(({ x, y }) => Math.abs(x - tr.x) < 24 && (up ? y < tr.y - 4 : y > tr.y + 4))
+          .sort((a, b) => (up ? b.y - a.y : a.y - b.y));
+        if (cand.length === 0) return;
+        e.preventDefault();
+        cand[0].el.focus({ preventScroll: true });
+      }
+    });
+  }
+
+  /** 左栏「编辑帮助」追加一行速记（纯 textNode 加法；开启态才出现，关闭即无痕）。
+   *  InitLoader 可能早于 DOM 解析完成执行——readyState loading 时挂 DOMContentLoaded */
+  private appendSidebarHint() {
+    const attach = () => {
+      const text = document.querySelector(".left .text");
+      if (!text || document.getElementById("mcmodder-qty-keynav-hint") !== null) return;
+      const p = document.createElement("p");
+      p.id = "mcmodder-qty-keynav-hint";
+      p.textContent = "数量键盘增强: ↑/↓ 数量 ±1 · Shift+↑/↓ ×2/÷2 · Enter/Shift+Enter 同列移焦";
+      text.appendChild(p);
+    };
+    if (document.readyState === "loading") {
+      document.addEventListener("DOMContentLoaded", attach, { once: true });
+    } else {
+      attach();
+    }
   }
 }

@@ -377,6 +377,13 @@ export const settings = [
             type: "checkbox",
           },
           {
+            id: "tabQtyKeyNav",
+            title: "合成表数量框键盘增强",
+            description:
+              "数量/概率输入框内：↑/↓ 数量 ±1（空值取「默认」值），Shift+↑/↓ ×2/÷2，Enter/Shift+Enter 移到同列上/下一行并拦下表单误提交。仅作用于数量与概率框，物品 ID 不参与步进；Ctrl/Alt 组合键让位给站点快速提交与浏览器。开启后左栏「编辑帮助」末尾追加一行速记。默认关闭。",
+            type: "checkbox",
+          },
+          {
             id: "fastUrge",
             title: "快速催审",
             description: "在待审列表中显示“一键催审”按钮。",

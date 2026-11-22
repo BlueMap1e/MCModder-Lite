@@ -14,7 +14,7 @@
     "format": "prettier --write src",
     "format:check": "prettier --check src eslint.config.ts eslint-local-rules vite.config.ts prettier.config.ts lint-staged.config.ts",
     "verify": "npm run lint && npm run lint:config && npm run format:check && node scripts/check-cycles.mjs",
-    "test:logic": "tsx scripts/logic-tests/table-command.ts && tsx scripts/logic-tests/fieldindex.ts && tsx --tsconfig tsconfig.test.json scripts/logic-tests/editrule.ts && tsx src/background/__logic-test.cjs",
+    "test:logic": "tsx scripts/logic-tests/table-command.ts && tsx scripts/logic-tests/fieldindex.ts && tsx --tsconfig tsconfig.test.json scripts/logic-tests/editrule.ts && tsx --tsconfig tsconfig.test.json scripts/logic-tests/tab-qty-keynav.ts && tsx src/background/__logic-test.cjs",
     "check": "node scripts/release-gate.mjs",
     "pack": "node scripts/release-pack.mjs",
     "smoke:public": "node scripts/smoke-public.mjs",
