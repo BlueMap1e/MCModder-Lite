@@ -30,11 +30,16 @@ export class MainText {
     }
   }
 
+  /**
+   * 资料链接检查：疑似冲突（同文本 → 不同目标）与 Fandom 旧链接就地打
+   * mcmodder-link-warn 标记——纯被动通道，不弹 Toast（同一信息标记已就近呈现，
+   * 弹窗只有认知负载没有增量信息；2026-11-22 用户裁定移除，上游 Toast 频道病第二例）。
+   * 已知误报两类：多模组同名消歧（有意按上下文各链各的）、URL 形态差异
+   * （协议相对 //host/... 与路径相对 /... 归一后不同）。
+   */
   private linkCheck() {
     const linkMap: Map<string, string> = new Map();
     const warnList: string[] = [];
-    let clashFlag = false;
-    let fandomFlag = false;
     this.container
       .find('> *:not(.item-data) a:not([href="javascript:void(0);"])')
       .filter((_, c) => !!(c.textContent && (c.parentNode as Element)?.tagName != "LEGEND"))
@@ -48,20 +53,10 @@ export class MainText {
         else if (linkMap.get(key) != value) warnList.push(key);
       })
       .each((_, a) => {
-        if (warnList.includes(a.textContent)) {
-          a.nextElementSibling?.classList.add("mcmodder-link-warn");
-          clashFlag = true;
-        } else if ((a as HTMLAnchorElement).href.includes("minecraft.fandom.com")) {
-          a.nextElementSibling?.classList.add("mcmodder-link-warn");
-          fandomFlag = true;
-        }
+        const isClash = warnList.includes(a.textContent);
+        const isFandom = (a as HTMLAnchorElement).href.includes("minecraft.fandom.com");
+        if (isClash || isFandom) a.nextElementSibling?.classList.add("mcmodder-link-warn");
       });
-    if (clashFlag) Utils.commonMsg("发现疑似的链接冲突问题，请检查~", false);
-    if (fandomFlag)
-      Utils.commonMsg(
-        "发现 Minecraft Wiki Fandom 链接，请将其及时更新至 zh.minecraft.wiki ~",
-        false,
-      );
   }
 
   private static readonly linkMarkReplaceRules: LinkMarkReplaceRule[] = [
