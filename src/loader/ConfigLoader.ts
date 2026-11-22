@@ -506,9 +506,9 @@ export const settings = [
           },
           {
             id: "linkCheck",
-            title: "资料链接检查",
+            title: "Fandom 旧链接检测",
             description:
-              "在资料正文和后台审核中高亮疑似冲突的链接和旧的基于 Fandom 的 Minecraft Wiki 链接。",
+              "在资料正文中高亮仍指向 minecraft.fandom.com 的旧链接（红石生电等条目偶有残留，应迁移至 zh.minecraft.wiki），命中处以红框标记。默认关闭。",
             type: "checkbox",
           },
           {

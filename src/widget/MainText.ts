@@ -4,12 +4,6 @@ import { Utils } from "../Utils";
 import type { WebFetchUtils } from "../WebFetchUtils";
 import { Values } from "../Values";
 
-type LinkMarkReplaceRule = {
-  regExp: RegExp;
-  icon: string;
-  parser: (link: string) => string;
-};
-
 export class MainText {
   private readonly configs: ConfigRepository;
   private readonly web: WebFetchUtils;
@@ -21,7 +15,7 @@ export class MainText {
     this.container = $(container);
 
     if (this.configs.getSettings("linkCheck")) {
-      this.linkCheck();
+      this.fandomLinkCheck();
     }
 
     // 图像本地化检测
@@ -31,86 +25,21 @@ export class MainText {
   }
 
   /**
-   * 资料链接检查：疑似冲突（同文本 → 不同目标）与 Fandom 旧链接就地打
-   * mcmodder-link-warn 标记——纯被动通道，不弹 Toast（2026-11-22 用户裁定移除，
-   * 上游 Toast 频道病第二例）。标记打在链接本体上，不依赖「资料链接标注」开关
-   * （旧实现把 warn 类打在标注 span 上，标注关闭时冲突完全隐形——858246 实证）。
+   * Fandom 旧链接检测：命中 minecraft.fandom.com 的链接就地加红框
+   * （mcmodder-link-warn）。面向红石生电等仍有 fandom 残留引用的条目，
+   * 服务 zh.minecraft.wiki 迁移巡检；纯被动标记，无 Toast。
    *
-   * 领域注记（同文本多目标 ≠ 编辑错误，标记仅为「请核对」提示而非错误断言）：
-   * AE 系方块/面板形态变体共用一个本地化名（858246 实证：655633 块状 ae2:interface
-   * 与 655790 面板状 ae2:cable_interface，副条目与主条目文本按惯例同步），GT 系
-   * 则是重名物品跨模组实现——两个语境里同文本多目标都是编辑者的显式指定。
+   * 原「资料链接检查」的同文本→不同目标查重已于 2026-11-22 摘除（用户裁定）：
+   * 该判据源自 GT 系语境——同名物品跨模组实现，查重对那里有用；但 AE/Mek 系
+   * 的同名是同模组内的形态变体（858246 实证：655633 方块 ae2:interface 与
+   * 655790 面板 ae2:cable_interface），编辑落链时目标即唯一指定，查重对这类
+   * 页面是常态化误报。GT 系编辑如需查重可使用上游 Mcmodder。上游 MainText
+   * 仍有旧实现，对账时勿回迁。
    */
-  private linkCheck() {
-    const linkMap: Map<string, string> = new Map();
-    const warnList: string[] = [];
+  private fandomLinkCheck() {
     this.container
-      .find('> *:not(.item-data) a:not([href="javascript:void(0);"])')
-      .filter((_, c) => !!(c.textContent && (c.parentNode as Element)?.tagName != "LEGEND"))
-      .each((_, a) => {
-        const key = a.textContent;
-        const value = (a as HTMLAnchorElement).href.replaceAll(/https:\/\/www1?\.mcmod\.cn/g, "");
-        if (this.configs.getSettings("linkMark")) {
-          this.generateLinkMark(value).insertAfter(a);
-        }
-        if (!linkMap.has(key)) linkMap.set(key, value);
-        else if (linkMap.get(key) != value) warnList.push(key);
-      })
-      .each((_, a) => {
-        const isClash = warnList.includes(a.textContent);
-        const isFandom = (a as HTMLAnchorElement).href.includes("minecraft.fandom.com");
-        if (isClash || isFandom) {
-          a.classList.add("mcmodder-link-warn");
-          // 标注 span（若开启）同步点亮，保持旧行为的完整形态
-          a.nextElementSibling?.classList.add("mcmodder-link-warn");
-        }
-      });
-  }
-
-  private static readonly linkMarkReplaceRules: LinkMarkReplaceRule[] = [
-    {
-      regExp: /^\/item\/\d+\.html$/,
-      icon: "cube",
-      parser: (link) => Utils.abstractIDFromURL(link, "item").toString(),
-    },
-    {
-      regExp: /^\/item\/tab\/\d+\.html$/,
-      icon: "table",
-      parser: (link) => Utils.abstractIDFromURL(link, "item/tab").toString(),
-    },
-    {
-      regExp: /^\/class\/\d+\.html$/,
-      icon: "cubes",
-      parser: (link) => Utils.abstractIDFromURL(link, "class").toString(),
-    },
-    {
-      regExp: /^\/modpack\/\d+\.html$/,
-      icon: "file-zip-o",
-      parser: (link) => Utils.abstractIDFromURL(link, "modpack").toString(),
-    },
-    {
-      regExp: /^\/author\/\d+\.html$/,
-      icon: "author",
-      parser: (link) => Utils.abstractIDFromURL(link, "author").toString(),
-    },
-    {
-      regExp: /^\/oredict\/[0-9A-Za-z:_/]+-1.html$/,
-      icon: "tag",
-      parser: (link) => link.slice(9, -7),
-    },
-  ];
-
-  private generateLinkMark(link: string) {
-    const container = $('<span class="mcmodder-link-check">');
-    for (const { regExp, icon, parser } of MainText.linkMarkReplaceRules) {
-      if (regExp.test(link)) {
-        const escaped = Utils.escapeHTML(parser(link));
-        container.html(`<i class="mcmodder-link-icon fa fa-${icon}"></i>${escaped}`);
-        return container;
-      }
-    }
-    const escaped = Utils.escapeHTML(link);
-    return container.html(escaped);
+      .find('> *:not(.item-data) a[href*="minecraft.fandom.com"]')
+      .each((_, a) => a.classList.add("mcmodder-link-warn"));
   }
 
   private imageLocalizedCheck() {
