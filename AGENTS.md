@@ -7,17 +7,18 @@ keep code identifiers and paths verbatim.
 A trimmed hard fork of [Mcmodder](https://github.com/Charcoal-Black/Mcmodder) (AGPL-3.0).
 Removed modules (attitudes/Supabase, GIF editor, ECharts dashboards, achievements, GTCEu,
 request queues, JSON import UI, structure editor, entertainment extras) stay removed unless
-the user explicitly asks.
+the user explicitly asks. Campaign histories, closed campaigns and post-mortems live in
+`Repos\PROJECT-HISTORY.md` (next to HANDOFF.md, outside the repo) — this file keeps only
+operative rules.
 
 **Upstream**: `Charcoal-Black/Mcmodder` is a read-only reference — never merge it; port
 manually when needed. Nothing lands in upstream space (push / PR / issue / comment) except
 on the user's explicit instruction. **Commit messages in our repos must never contain
 cross-repo issue references** (any `owner/repo#N` form): GitHub's push scan posts a
 permanent `referenced` event to that issue's timeline, and the event survives amend /
-force push / commit deletion (empirically confirmed 2026-11-20). If an upstream issue must
-be mentioned, write 「上游 issue N」 plain text. The user's own repos
-(BlueMap1e/MCModder-Lite, BlueMap1e/Mcmodder) are free to operate — commits, releases,
-branch pushes, rollbacks.
+force push / commit deletion. If an upstream issue must be mentioned, write 「上游 issue N」
+plain text. The user's own repos are free to operate — commits, releases, branch pushes,
+rollbacks.
 
 ## Commands
 
@@ -31,7 +32,7 @@ npm run check    # full gate: verify + build + public smoke + security smoke (re
 npm run test:logic  # logic tests for pure-decision modules (126 assertions, plain node via tsx, no site)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
-GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channel and pack-time variant removed)
+GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 ```
 
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
@@ -41,19 +42,18 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   **Pure-decision logic has logic tests** (`npm run test:logic`): real-body `.ts` suites in
   `scripts/logic-tests/` (run by `tsx`, which resolves the `"$"` virtual module through
   `tsconfig.test.json` → `scripts/test-stubs/monkey-client.mjs` GM stub — stubs only allow
-  loading, tests must never call GM), plus the self-contained `src/background/__logic-test.cjs`
-  replication precedent. When adding a logic test for a module that imports `"$"`-touching
-  chains, keep `src/` free of Node assumptions (no module-scope `window`/`document`,
-  no unguarded `import.meta.glob`) and put the suite in `scripts/logic-tests/`, NOT `src/`
-  (src is the browser type context). `npm run check` chains the reproducible parts; both
-  smokes drive real pages through Playwright with a GM shim, need no login and touch no site
-  data. They report SKIPPED instead of failing when the site's CAPTCHA blocks the runner.
-  CI runs both smokes, and `release` waits for them.
+  loading, tests must never call GM). When adding a logic test for a module that imports
+  `"$"`-touching chains, keep `src/` free of Node assumptions (no module-scope
+  `window`/`document`, no unguarded `import.meta.glob`) and put the suite in
+  `scripts/logic-tests/`, NOT `src/` (src is the browser type context).
 - Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
   mode). The logged-in E2E harness is **not** committed (lives outside the repo); a GM shim
   is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no cross-tab sync) — anything
   depending on those still needs a real-browser pass.
 - The shippable artifact is `dist/mcmodder-lite.user.js` (copy into Tampermonkey).
+- **Verification tiering (2026-11-22, user ruling)**: CSS/layout changes = build + on/off
+  screenshot eyeball; JS changes = `npm run check`; full chain only before a release.
+  Do not run the full gate per draft iteration.
 
 ## Working rules
 
@@ -112,18 +112,14 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - The script never reads or writes `_uuid` (the site's HttpOnly session cookie). Multi-account
   switching and per-account credential storage were removed on purpose; multi-account is the
   browser's job — do not reintroduce it. `GM_cookie` is used only for `yxd_token`; the write
-  is read back with `GM_cookie.list` (a mismatch is logged; the retry proceeds regardless).
-  The write is deliberately `httpOnly: false` — non-HttpOnly is the site-native shape (the
-  token lands via `document.cookie`, which cannot set HttpOnly); see the comment in
-  `WebFetchUtils.ts`.
+  is deliberately `httpOnly: false` (site-native shape); see the comment in `WebFetchUtils.ts`.
 - Do not bulk-delete or rewrite CSS. Add scoped rules only, and re-check long pages plus night
   mode visually.
 - Avoid full-DOM `getComputedStyle` passes. Prefilter with `[style]` and only normalize inline
   styles.
 - Gate always-on observers by page / selector and give them a timeout; a document-level
   observer that lives for the whole session is a bug. **Exception — `center.mcmod.cn` is an
-  SPA**: content renders only after data fetches, so gates evaluated at `main()` time miss
-  it; observers must attach unconditionally there. Corollary: when several defensive skips
+  SPA**: observers must attach unconditionally there. Corollary: when several defensive skips
   guard the same call path, re-read the whole path — each is correct alone, together they
   multiply silent-failure modes; a bail that can be permanent must either retry or log loudly.
 - **Site-JS-rendered DOM (verify.html lists, center pages, editor surfaces) may not exist
@@ -138,13 +134,12 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   rule only with CSS-coverage evidence and before/after screenshots of every affected page.
 - **Global CSS rules are page-density multipliers.** A rule touching element classes
   (`.btn`, `.form-control`, `.col-lg-6`, bare `input`) fires on EVERY page — the denser
-  the form area, the bigger the blast radius. Two full rounds of regressions (2026-11-21,
-  crafting-table page) came from such rules whose conflicts had been masked by the old
-  two-column layout. Discipline: (a) when adding/changing a global rule, enumerate the
-  page types it touches; (b) for single-page exemptions use compound selectors
-  (`.col-lg-6.input-group`, `:not(.btn-link)`) with a comment naming the page; (c) flipping
-  any layout default REQUIRES a full visual audit of the affected page in night mode, not
-  just structural assertions — style conflicts live outside any feature gate.
+  the form area, the bigger the blast radius (two rounds of regressions came from such
+  rules masked by an old layout; see PROJECT-HISTORY §四). Discipline: (a) when
+  adding/changing a global rule, enumerate the page types it touches; (b) for single-page
+  exemptions use compound selectors (`.col-lg-6.input-group`, `:not(.btn-link)`) with a
+  comment naming the page; (c) flipping any layout default REQUIRES a full visual audit of
+  the affected page in night mode, not just structural assertions.
 - `ItemTabInit` is instantiated directly by `ItemPageInit` / `OredictPageInit` even though
   `canRun()` returns false — `canRun()` alone never proves a file dead.
 - Global keyboard shortcuts must return early when the event target is an `input`,
@@ -153,17 +148,15 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - **Keyboard shortcuts**: before picking one, check browser menu accelerators and
   site-native bindings — mcmod.cn edit pages bind keys in **inline scripts**, so
   page-source forensics is mandatory. Prefer taking over a site-native documented key with
-  a capture-phase listener over inventing a new one — a site's own key is guaranteed to
-  reach the page on every machine (see the Alt+X takeover in `AdvancedUEditor.advinit`).
+  a capture-phase listener over inventing a new one (see the Alt+X takeover in
+  `AdvancedUEditor.advinit`).
 - Conventions live here, not in code comments or chat logs — a rule recorded anywhere else
   is a rule nobody can find. A working decision's reason lands in this file (rule) or
   HANDOFF.md (environment facts).
 - **Warnings for destructive actions belong ON the destructive action, shown once.** Entry
-  warnings fire on every page load for habitual users ("first creation" is per-instance, not
-  per-lifetime); state-drift warnings based on HTML comparison cannot attribute who changed
-  the content, so they fire on the user's own legitimate edits. Persisted one-time hints,
-  hover text and setting-description copy are the passive channels; recurring modals are the
-  last resort.
+  warnings fire on every page load for habitual users; state-drift warnings based on HTML
+  comparison cannot attribute who changed the content. Persisted one-time hints, hover text
+  and setting-description copy are the passive channels; recurring modals are the last resort.
 - Editor enhancements must be defensive: editor globals / UEditor DOM may be absent on 404
   or restricted pages. Guard `editor`, wrap `init()` in try/catch, and skip rather than throw.
 - Changing a setting's `value:` default only affects users who never toggled it — persisted
@@ -172,39 +165,25 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   `listfile`); if the site changes them the button fails silently. It is off by default, and
   `Values.ueditorFileAccept` must list every extension the setting description promises.
 - **Night-mode icon fixes on bbs use CSS mask + inline data-URI SVG, never fonts or
-  filters.** The bbs domain has no FontAwesome font sheet (probe-verified), and GIF/PNG
-  sprites are 1-bit hard transparency — their anti-aliasing pixels turn into jaggies on
-  dark backgrounds, so filters/scale cannot fix them. Pattern: `::before` carries the
-  icon (`mask: url("data:image/svg+xml;utf8,...") center / contain no-repeat` +
-  `background-color: currentColor`), so color follows the night text variable and text
-  content is untouched. Keep every hand-drawn SVG on a unified bounding box — unequal
-  viewBox margins read as misalignment. `minifyRawCss` string protection keeps data URIs
-  intact (verified). Do not reach for flex on containers that also hold non-item children
-  (a username `p` becomes a squeezed flex item — `text-align: center` + `inline-block`
-  is the safe centering there).
+  filters** (bbs has no FontAwesome font sheet; GIF/PNG sprites are 1-bit hard
+  transparency — filters cannot fix their jaggies). Pattern: `::before` carries the icon
+  (`mask: url("data:image/svg+xml;utf8,...") center / contain no-repeat` +
+  `background-color: currentColor`). Keep every hand-drawn SVG on a unified bounding box.
+  Do not reach for flex on containers that also hold non-item children.
 - Deferred cleanup (do not start without a plan): splitting `ConfigLoader` / `Values`,
-  per-page CSS or bundle splitting. Dead-file scanning lives in the e2e
-  workspace as `dead-files2.mjs`; trust a "DEAD" verdict only after grepping the symbol
-  repo-wide. The shipped bundle is ~1.6 MB, and `?raw` CSS is comment/whitespace-stripped
-  at build by the `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild
-  CSS minify, whose cross-position rule merging rewrites cascade order; splitting mainly
-  helps low-end devices and adds loading / debugging complexity.
-- **Utils split is done (2026-11-21, structure ported from upstream dcc3692, not
-  cherry-picked).** `Utils` is pure-static: no instance state, no `Mcmodder` /
-  `ConfigRepository` references, never instantiate it. Stateful request logic
-  (`createRequest` / `updateRequestTime`, rate-limit cursor, request log, `yxd_token`
-  retry) lives in `src/WebFetchUtils.ts`, constructed once as `Mcmodder.web`;
-  config/context-bound helpers (`isKeyMatchConfig`, class-name maps, item-type lookups)
-  live in `ConfigRepository`. Routing rule for new helpers: pure function -> `Utils`
+  per-page CSS or bundle splitting. Dead-file scanning lives in the e2e workspace as
+  `dead-files2.mjs`; trust a "DEAD" verdict only after grepping the symbol repo-wide. The
+  shipped bundle is ~1.6 MB, and `?raw` CSS is comment/whitespace-stripped at build by the
+  `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild CSS minify, whose
+  cross-position rule merging rewrites cascade order.
+- **Utils is pure-static** (2026-11-21 split, structure ported from upstream): no instance
+  state, no `Mcmodder` / `ConfigRepository` references, never instantiate it. Stateful
+  request logic lives in `src/WebFetchUtils.ts` (`Mcmodder.web`); config/context-bound
+  helpers live in `ConfigRepository`. Routing rule for new helpers: pure function -> `Utils`
   static; needs settings / GM storage / parent context -> `ConfigRepository`; sends
-  requests -> `WebFetchUtils`. `npx dpdm src/main.ts` reports the cycle list: all current
-  cycles are type-only (closed by `import type { Mcmodder }` edges from every
-  init/widget), harmless runtime-wise. The classification is automated as verify's
-  4th step (`scripts/check-cycles.mjs`): a cycle is benign iff at least one edge is a
-  pure `import type` (the value subgraph breaks); a cycle whose edges are ALL value
-  imports fails the gate — two such latent cycles (`ConfigUtils ⇄ Mcmodder`,
-  `ScheduleRequestType ⇄ ScheduleRequestUtils`) were caught and fixed on 2026-11-22
-  by flipping type-only-used imports to `import type`. Keep it that way.
+  requests -> `WebFetchUtils`. Cycle gate: `scripts/check-cycles.mjs` (verify's 4th step) —
+  a cycle is benign iff at least one edge is a pure `import type`; all-value-import cycles
+  fail the gate. Keep it that way.
 
 ## Host-page constraints
 
@@ -218,38 +197,29 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   limit via `minimumRequestInterval`, log to `mcmodderLogger`, automatic `yxd_token`
   retry). Never call `GM_xmlhttpRequest` directly.
 - External libraries:
-  - **No `@require`, no runtime remote loads**: nothing is fetched at install time or from
-    the network at runtime — every third-party library is bundled at build time
-    (`package.json` + `import`); never through `@require` or a runtime `<script src>`.
-    Two pins to preserve: `markdown-it` stays at exact 11.0.1 and `pangu` at exact 4.0.7
-    (7.2.x regressed spacing). `pangu` must keep being evaluated inside the content
-    iframe — its `spacingPage` XPath binds to the evaluating realm's global `document`,
-    so bundling it as a module would silently space the wrong document.
+  - **No `@require`, no runtime remote loads**: every third-party library is bundled at
+    build time (`package.json` + `import`). Two pins to preserve: `markdown-it` stays at
+    exact 11.0.1 and `pangu` at exact 4.0.7 (7.2.x regressed spacing). `pangu` must keep
+    being evaluated inside the content iframe — its `spacingPage` XPath binds to the
+    evaluating realm's global `document`.
   - **Dynamic `import()` requires `inlineDynamicImports`** (already set in
-    `vite.config.ts` build.rollupOptions): without it rollup emits the dynamic chunk as a
-    separate file that a single-file userscript cannot carry, and at runtime the relative
-    specifier 404s. The GM-shim harness cannot reproduce this (it lacks the TM bridge) —
-    any change to the loading structure must be clicked once on a real machine.
+    `vite.config.ts`): without it the dynamic chunk becomes a separate file a
+    single-file userscript cannot carry. The GM-shim harness cannot reproduce this — any
+    change to the loading structure must be clicked once on a real machine.
   - Bundled npm libs: `codemirror` (v5), `js-beautify`, `vue`, `dexie`, `diff`, `dompurify`,
-    `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it` (11.0.1, Markdown
-    editor), `pangu` (4.0.7, 中英间添加空格), `markdown-it-cjk-friendly` (applied to the
-    markdown-it instance in `performMarkdownIt`: fixes CommonMark emphasis failing at
-    punctuation+CJK boundaries).
-  - Type-aware ESLint subset: `eslint.config.ts` runs 12 curated
-    `@typescript-eslint` type-checked rules over `src/**/*.ts` via `projectService`
-    (high-signal only — the `no-unsafe-*`/`no-explicit-any` family is deliberately NOT
-    adopted; host integrations would drown the output). Do not add those noise-family
-    rules; if a new type-checked rule fires on interface-conformance `async` methods with
-    no `await` (AppRepository implementations), use a scoped disable with the interface
-    rationale, as in `src/jsonframe/repository/`.
+    `pinyin-match`, `turndown`, `turndown-plugin-gfm`, `markdown-it` (11.0.1),
+    `pangu` (4.0.7), `markdown-it-cjk-friendly`.
+  - Type-aware ESLint subset: 12 curated `@typescript-eslint` type-checked rules via
+    `projectService` (high-signal only — do not add the `no-unsafe-*`/`no-explicit-any`
+    noise family; if a new type-checked rule fires on interface-conformance `async` methods
+    with no `await`, use a scoped disable with the interface rationale, as in
+    `src/jsonframe/repository/`).
   - mcmod.cn's own libraries: jQuery, SweetAlert (`swal`), Bootstrap, UEditor (`editor`),
-    ECharts (`echarts`, read for night-mode re-theming on class/center/play-server pages).
-    Use page globals.
+    ECharts (`echarts`). Use page globals.
   - **Shared code must stay jQuery-1.7-compatible**: host pages ship different jQuery
-    versions (measured: homepage 1.8.2, `/tools/cbcreator/` 1.7.2, list pages 2.1.0). Any
-    API newer than 1.7 blows up only on some hosts.
-  - Do not replace mcmod.cn's own libraries (jQuery, SweetAlert, Bootstrap, UEditor) with npm
-    packages: the host page's globals are the API, and their versions differ per page.
+    versions (measured: homepage 1.8.2, `/tools/cbcreator/` 1.7.2, list pages 2.1.0).
+  - Do not replace mcmod.cn's own libraries with npm packages: the host page's globals are
+    the API, and their versions differ per page.
 
 ## Where to change what
 
@@ -293,8 +263,7 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   over raw `GM_*Value` calls for keys it covers.
 - **Network requests** -> `WebFetchUtils`: call `mcmodder.web.createRequest(...)` (rate
   limiting, request log, `yxd_token` retry). Never dispatch `GM_xmlhttpRequest` directly.
-- **Pure static helpers** -> `Utils` (pure-static class; see the Utils-split note in
-  Maintenance notes for the routing rule).
+- **Pure static helpers** -> `Utils` (see the routing rule in Maintenance notes).
 - **Reactive/storage-cached keys** -> register with `StorageBuffer.addCacheableItem` in
   `src/loader/StorageBufferLoader.ts`; global config-to-behavior watchers (night mode, page
   width) live in `Mcmodder.watchRef()`.
@@ -307,12 +276,9 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - **Self-contained feature modules** -> own top-level `src/<name>/` directory with
   its own storage, decision logic and a `__logic-test.cjs` runnable with plain node —
   **never** rewrite host DOM or restyle host elements (exemplar: `src/background/`,
-  the local background pool ported from upstream ea11ab8; counter-exemplar: the
-  removed TabEditInit, whose in-place page rewrite caused two rounds of style
-  conflicts). Cross-domain data (settings in center, pages in www) must go through
-  GM storage — IndexedDB is origin-isolated. The crafting-table workflow (阶段 2,
-  direction settled 2026-11-22 — plan, contract findings and red lines in HANDOFF
-  未决 15) will follow this exemplar when it lands.
+  counter-exemplar: the removed TabEditInit, whose in-place page rewrite caused two
+  rounds of style conflicts; see PROJECT-HISTORY §四). Cross-domain data (settings in
+  center, pages in www) must go through GM storage — IndexedDB is origin-isolated.
 - **Vue components** -> not an SPA: mount ad hoc into host DOM nodes with
   `createApp(Component, { parent: mcmodder })`; components take a `parent: Mcmodder` prop.
 - **Plain-DOM widgets** -> `src/widget/*` (`MainText`, draggable/compare frames,
@@ -359,14 +325,13 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
   (the section title must match `package.json` exactly); the release job extracts that
   section into the GitHub release notes — a mismatched title means empty notes.
 - CI (`.github/workflows/build.yaml`): push triggers only when code/build paths change
-  (`src/**`, `scripts/**`, configs, workflows — docs-only pushes skip CI entirely; the
-  smokes hit the real site and their failures are non-deterministic under site-side rate
-  limiting, so they must not run on every push). A weekly cron (Mon 05:00 UTC+8) runs both
-  smokes as a site-compatibility sentry, and `workflow_dispatch` allows manual full runs.
-  Publishing is restricted to `main` **push events** (scheduled/manual runs never release)
-  and waits for build + both smokes; the tag is created at the pushed commit (`--target`),
-  and `release.cjs` refuses to publish unless the first `## [...]` heading in
-  `CHANGELOG.md` equals `package.json`'s version. `npm run pack` enforces the same check.
+  (`src/**`, `scripts/**`, configs, workflows — docs-only pushes skip CI entirely). A weekly
+  cron (Mon 05:00 UTC+8) runs both smokes as a site-compatibility sentry, and
+  `workflow_dispatch` allows manual full runs. Publishing is restricted to `main` **push
+  events** (scheduled/manual runs never release) and waits for build + both smokes; the tag
+  is created at the pushed commit (`--target`), and `release.cjs` refuses to publish unless
+  the first `## [...]` heading in `CHANGELOG.md` equals `package.json`'s version.
+  `npm run pack` enforces the same check.
 - The literal `[release]` anywhere in a push's head commit message triggers the release job.
   Later commits touching a released version must avoid that literal — `release.cjs` skips
   when the tag already exists, but keeping it out of messages keeps CI history clean.
