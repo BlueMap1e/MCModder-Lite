@@ -49,7 +49,7 @@ npm run lint     # eslint src
 npm run format   # prettier --write src
 npm run verify   # lint + lint:config + format:check + cycle gate (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
-npm run test:logic  # logic tests for pure-decision modules (126 assertions, plain node via tsx, no site)
+npm run test:logic  # logic tests for pure-decision modules (139 assertions, plain node via tsx, no site)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
 GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
