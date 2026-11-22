@@ -32,11 +32,14 @@ export class MainText {
 
   /**
    * 资料链接检查：疑似冲突（同文本 → 不同目标）与 Fandom 旧链接就地打
-   * mcmodder-link-warn 标记——纯被动通道，不弹 Toast（同一信息标记已就近呈现，
-   * 弹窗只有认知负载没有增量信息；2026-11-22 用户裁定移除，上游 Toast 频道病第二例）。
-   * 已知误报类：多模组同名消歧（有意按上下文各链各的）、站点同名重复条目
-   * （数据层存在两个同 ID 段同名的条目——858246 实证：655633/655790 正文逐字节
-   * 相同，属站点数据问题非编辑错误；a.href 为解析后绝对路径，URL 形态不构成误报）。
+   * mcmodder-link-warn 标记——纯被动通道，不弹 Toast（2026-11-22 用户裁定移除，
+   * 上游 Toast 频道病第二例）。标记打在链接本体上，不依赖「资料链接标注」开关
+   * （旧实现把 warn 类打在标注 span 上，标注关闭时冲突完全隐形——858246 实证）。
+   *
+   * 领域注记（同文本多目标 ≠ 编辑错误，标记仅为「请核对」提示而非错误断言）：
+   * AE 系方块/面板形态变体共用一个本地化名（858246 实证：655633 块状 ae2:interface
+   * 与 655790 面板状 ae2:cable_interface，副条目与主条目文本按惯例同步），GT 系
+   * 则是重名物品跨模组实现——两个语境里同文本多目标都是编辑者的显式指定。
    */
   private linkCheck() {
     const linkMap: Map<string, string> = new Map();
@@ -56,7 +59,11 @@ export class MainText {
       .each((_, a) => {
         const isClash = warnList.includes(a.textContent);
         const isFandom = (a as HTMLAnchorElement).href.includes("minecraft.fandom.com");
-        if (isClash || isFandom) a.nextElementSibling?.classList.add("mcmodder-link-warn");
+        if (isClash || isFandom) {
+          a.classList.add("mcmodder-link-warn");
+          // 标注 span（若开启）同步点亮，保持旧行为的完整形态
+          a.nextElementSibling?.classList.add("mcmodder-link-warn");
+        }
       });
   }
 

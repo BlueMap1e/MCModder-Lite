@@ -2056,6 +2056,11 @@ body .arrow {
   margin: 2px;
   text-indent: 0;
 }
+/* 冲突/Fandom 标记直接打在链接本体上（2026-11-22 修正：旧实现只点亮标注 span，
+   仅开检查不开标注时冲突完全隐形） */
+a.mcmodder-link-warn {
+  border: 2px solid var(--mcmodder-color-danger);
+}
 .center-block-head .more {
   color: var(--mcmodder-color-text-dark2);
   border-color: var(--mcmodder-color-background-dark2);
