@@ -113,6 +113,9 @@ export class TabAssistInit extends Init {
       `#item-table-gui-frame input.slot-text[data-multi-id="${m[1] === "in" ? "slot-in-number" : "slot-out-number"}"][data-part="${m[2]}"]`,
     );
     if (!(qty instanceof HTMLInputElement)) return;
-    qty.focus();
+    // preventScroll：数量区通常在折叠线下，裸 focus 会把页面猛跳过去（2026-11-22
+    // 真机反馈「页面会跳」）。焦点照落（.active 配对照常触发），首键输入时浏览器
+    // 才自然滚到该框——数量吃默认 1 不输入的场景页面零滚动
+    qty.focus({ preventScroll: true });
   }
 }
