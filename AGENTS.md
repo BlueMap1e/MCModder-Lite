@@ -28,6 +28,7 @@ npm run lint     # eslint src
 npm run format   # prettier --write src
 npm run verify   # lint + lint:config + format:check + cycle gate (the static local gate)
 npm run check    # full gate: verify + build + public smoke + security smoke (read-only, ~2 min)
+npm run test:logic  # logic tests for pure-decision modules (126 assertions, plain node via tsx, no site)
 npm run smoke:public    # public-page smoke only (Chromium + GM shim, no login)
 npm run smoke:security  # XSS regression only (payload injected as page text before the script)
 GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channel and pack-time variant removed)
@@ -36,11 +37,18 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only; GF channe
 - `npm run build` is the release gate: `vue-tsc` runs first, so type errors and unused
   locals/parameters fail it (`strict`, `noUnusedLocals`, `noUnusedParameters`,
   `verbatimModuleSyntax`).
-- No unit test suite. Validate with `verify` + `build`, then exercise behavior on real
-  mcmod.cn pages. `npm run check` chains the reproducible parts; both smokes drive real pages
-  through Playwright with a GM shim, need no login and touch no site data. They report
-  SKIPPED instead of failing when the site's CAPTCHA blocks the runner. CI runs both smokes,
-  and `release` waits for them.
+- No browser/unit test suite; DOM behavior is validated by smokes + real-page exercise.
+  **Pure-decision logic has logic tests** (`npm run test:logic`): real-body `.ts` suites in
+  `scripts/logic-tests/` (run by `tsx`, which resolves the `"$"` virtual module through
+  `tsconfig.test.json` → `scripts/test-stubs/monkey-client.mjs` GM stub — stubs only allow
+  loading, tests must never call GM), plus the self-contained `src/background/__logic-test.cjs`
+  replication precedent. When adding a logic test for a module that imports `"$"`-touching
+  chains, keep `src/` free of Node assumptions (no module-scope `window`/`document`,
+  no unguarded `import.meta.glob`) and put the suite in `scripts/logic-tests/`, NOT `src/`
+  (src is the browser type context). `npm run check` chains the reproducible parts; both
+  smokes drive real pages through Playwright with a GM shim, need no login and touch no site
+  data. They report SKIPPED instead of failing when the site's CAPTCHA blocks the runner.
+  CI runs both smokes, and `release` waits for them.
 - Manual-only checks live in `docs/release-checklist.md` (admin sinks, editor flows, night
   mode). The logged-in E2E harness is **not** committed (lives outside the repo); a GM shim
   is not Tampermonkey's sandbox (no Xray, no HttpOnly cookies, no cross-tab sync) — anything
