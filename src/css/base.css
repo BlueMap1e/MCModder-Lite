@@ -4074,3 +4074,68 @@ html.mcmodder-tab-compact
   color: var(--mcmodder-color-accent);
   font-weight: 600;
 }
+
+/* ── 下载列表页（/download/）抗挤压修复 ───────────────────────────────────
+   站点原生（download.frame.css）：.download-table{table-layout:fixed} 按 th 百分比
+   定死列宽（运行环境列只分到残羹），叠加 td{word-break:break-all} 允许任意字符断行，
+   组合出两类撕裂——标签「测试/版」中间断开；td.version 8% 列宽容不下
+   「1.19.2/1.19.1」，宽窗下也稳定折行（fixed 布局列宽不随内容，拉伸无效，
+   2026-11-23 用户 glitch 报告，UA 无关）。
+   修复 = 内容驱动列宽（auto）+ 数据列一律 nowrap + 关闭任意断行：标签/版本/大小/
+   操作恒单行，挤压全部由文件名列吸收（jar 名含连字符可断，nth-child(2) 是唯一
+   white-space:normal 的列）。th 百分比保留为 auto 布局的宽度提示，宽窗下比例与
+   原生几乎一致。
+   作用域枚举：.download-table 与 .download-tags 仅存在于 /download/ 页
+   （download.frame.css 仅该页加载），无跨页密度。故意不设开关——渲染缺陷修复
+   而非功能（AGENTS「deliberately unswitched」）。设置弹窗的 .download-setting-table
+   未报告问题，不在本修复范围。 */
+.download-table {
+  table-layout: auto;
+}
+.download-table td {
+  word-break: normal;
+  white-space: nowrap;
+}
+/* 文件名列 = 唯一可折行列。overflow-wrap:anywhere 参与 min-content 计算
+   （break-word 不参与）：双引擎实测（2026-11-23 probe-download-engines.mjs，
+   同 800px）Chromium 会把该列压到 120px 全表塞下，Firefox 的 auto 布局
+   拒绝压缩、按 30% 提示给 258px → 表溢出容器 127px，上传时间/操作列被
+   上层裁剪吞掉（立即下载不可达，用户 Zen 实证）。anywhere 把该列 min-content
+   塌缩到单字符，两引擎都能压扁全表；.download-list-frame 的 overflow-x:auto
+   是极端宽度的兜底逃生口（横向滚动而非吞列）。 */
+.download-table td:nth-child(2) {
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+.download-list-frame {
+  overflow-x: auto;
+}
+
+/* ── 留言板/评论区提交按钮主题色（2026-11-23 用户 glitch 报告）────────────
+   #comment-submit 是站点语义绿（mcmodderUI .btn.btn-success 家族在同文件
+   靠后位置覆盖了 .btn 基础模板）——上游从未给它主题色规则（两仓 grep 均无
+   此 id）。用户期望走主题色，且样式对齐皮肤「公式化模板」：此处逐字复刻
+   mcmodderUI 的 .btn:not(.btn-link) 基础模板（primary-light → accent-light
+   45° 渐变 + 正文色文字 + 背景色描边）与 hover 扁平化（accent-background /
+   accent-dark2）。全部变量驱动，昼/夜调色板自动适应，无需 html.dark 分层。
+   ID 特异性压过皮肤 success 家族的类级规则。留言板是懒加载动态内容，纯 CSS
+   规则在元素出现时自动生效，无需观察者。故意不设开关——小面积主题一致性修正。
+   scope 注意：主站评论区若共用此 id 则一并走主题色模板（语义统一）。 */
+#comment-submit {
+  background: linear-gradient(
+    45deg,
+    var(--mcmodder-color-primary-light),
+    var(--mcmodder-color-accent-light)
+  );
+  color: var(--mcmodder-color-text);
+  border: 1px solid var(--mcmodder-color-background);
+}
+#comment-submit:not(:disabled):not(.disabled):hover {
+  background-color: var(--mcmodder-color-accent-background);
+  background-image: none;
+  color: var(--mcmodder-color-accent-dark2);
+}
+#comment-submit:not(:disabled):not(.disabled):active,
+#comment-submit:not(:disabled):not(.disabled):focus {
+  color: var(--mcmodder-color-accent-dark2);
+}
