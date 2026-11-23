@@ -1,7 +1,7 @@
 <template>
   <div class="center-block-head">
-    <span class="mcmodder-title-new">Mcmodder 设置</span>
-    <span class="text">版本 v{{ Values.mcmodderVersion }} ~ ☆</span>
+    <span class="mcmodder-title-new">MCModder-Lite 设置</span>
+    <span class="text">版本 v{{ Values.mcmodderVersion }}</span>
   </div>
 
   <div class="center-setting-search">
@@ -113,7 +113,6 @@
 
   <div class="center-block-head">
     <span class="mcmodder-title-new">资源管理</span>
-    <span class="text">轻触各项可展开详情~</span>
   </div>
 
   <div class="center-content mcmodder-storage">
@@ -125,11 +124,6 @@
         <ConfigResourceFileListInteractor v-bind="cfgProps" />
       </li>
     </ul>
-  </div>
-
-  <div class="center-setting-block">
-    <div class="setting-item"></div>
-    <p class="text-muted">这在某些时候很有用——也许吧？</p>
   </div>
 </template>
 
