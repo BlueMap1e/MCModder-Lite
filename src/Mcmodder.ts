@@ -645,13 +645,6 @@ export class Mcmodder {
     );
   }
 
-  copyright() {
-    $(".copyleft")
-      .last()
-      .append(`<br>☆ MCMODDER v${Values.mcmodderVersion} ☆ ——MC百科编审辅助工具`);
-    $(".sidebar-plan .space").last().append(`<br>mcmodder-v${Values.mcmodderVersion}`);
-  }
-
   /**
    * # 副作用挂载
    * 这里是少数用 `watch` 监听配置变化驱动全局行为的入口（夜间模式、宽窄屏切换）。
@@ -1026,7 +1019,6 @@ export class Mcmodder {
     });
 
     this.watchRef();
-    this.copyright();
     this.updateTitleNode();
   }
 }

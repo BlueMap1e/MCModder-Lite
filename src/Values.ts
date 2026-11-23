@@ -223,7 +223,9 @@ export class Values {
     },
   } as const;
 
+  /** 脚本自身版本（GM 元数据），设置面板头部展示用 */
   static readonly mcmodderVersion = GM_info.script.version || "Unknown";
+
   static readonly MAX_REQUEST_COUNT = 10000;
   /**
    * 已排定时刻允许领先当前时间的最大倍数（以 {@link MAX_REQUEST_COUNT} 为单位）。
