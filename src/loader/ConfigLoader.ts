@@ -23,15 +23,14 @@ export const settings = [
             id: "themePreset",
             title: "主题样式包",
             description:
-              "一键选择整套主题配色（主配色 + 副配色配套设计，卡片上的渐变条即实际效果预览）。想细调时选「自定义」，会展开下方的主/副配色取色器。",
+              "一键选择整套主题配色（主配色 + 副配色配套设计，卡片上的渐变条即实际效果预览）。",
             type: "themepack",
             value: "graphite",
           },
           {
             id: "themeColor1",
             title: "主题样式主配色",
-            description:
-              "自定义细调：主题样式主配色。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
+            description: "自定义主题样式主配色。",
             type: "colorpicker",
             value: "#3b82f6",
             visible: (ctx) => !!ctx.configs.getSettings("themeCustomColors"),
@@ -40,7 +39,7 @@ export const settings = [
             id: "themeColor2",
             title: "主题样式副配色",
             description:
-              "自定义细调：主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。百科 Logo 经典的绿/蓝两色已收入取色器的「百科经典」预设。",
+              "自定义细调：主题样式副配色。建议选择与主配色同色系的深档颜色，渐变过渡会更平和。",
             type: "colorpicker",
             value: "#1e40af",
             visible: (ctx) => !!ctx.configs.getSettings("themeCustomColors"),
@@ -70,14 +69,14 @@ export const settings = [
           {
             id: "backgroundPoolDay",
             title: "白天本地背景",
-            description: `从本机选择一张或多张图片作为白天背景。此配置将优先于在“默认背景”与“默认夜间背景”配置项中填写的 URL。${backgroundPoolLimitText}`,
+            description: `从本机选择一张或多张图片作为白天背景。此配置将优先于「默认背景」与「默认夜间背景」配置。${backgroundPoolLimitText}`,
             type: "backgroundPool",
             value: 0,
           },
           {
             id: "backgroundPoolNight",
             title: "夜间本地背景",
-            description: `从本机选择一张或多张图片作为夜间背景，此配置将优先于在“默认背景”与“默认夜间背景”配置项中填写的 URL，且夜间模式下将优先使用这里的图片。${backgroundPoolLimitText}`,
+            description: `从本机选择一张或多张图片作为夜间背景，此配置将优先于「默认背景」与「默认夜间背景」配置，且夜间模式下将优先使用这里的图片。${backgroundPoolLimitText}`,
             type: "backgroundPool",
             value: 0,
           },
@@ -134,7 +133,7 @@ export const settings = [
             id: "customFont",
             title: "自定义字体",
             description:
-              "对百科默认字体应用选中的方案。默认不指定，沿用站点自身字体；「使用系统字体组」不产生任何网络请求；Noto Sans SC 与 Inter 需从 Google Fonts 加载，网络不通时会在 3 秒后放弃并回退到系统字体。",
+              "选择默认字体。默认为「不指定」，沿用站点自身字体；「使用系统字体组」不产生任何网络请求；Noto Sans SC 与 Inter 需从 Google Fonts 加载，网络不通时会在 3 秒后放弃并回退到系统字体。",
             type: "dropdownMenu",
             value: 0,
             range: {
@@ -148,7 +147,7 @@ export const settings = [
             id: "disableGradient",
             title: "禁用文字渐变",
             description:
-              "将脚本提供的渐变文字（编辑统计、金色提示等）与流光动画（自动链接图标、下拉框/搜索框描边）改为纯色静态显示。这些效果对性能的影响通常可以忽略，仅在低性能设备出现卡顿或对功耗敏感时才需要勾选。",
+              "将脚本提供的渐变文字（编辑统计、金色提示等）与流光动画（自动链接图标、下拉框/搜索框描边）改为纯色静态显示。性能影响通常轻微，仅在低性能设备出现卡顿或对功耗敏感时才需要勾选。",
             type: "checkbox",
           },
           {
@@ -215,7 +214,7 @@ export const settings = [
             id: "dimCoverAtNight",
             title: "夜间模式调暗封面图",
             description:
-              "夜间模式下调暗模组/整合包页的封面大图。百科的封面美术图多为白底，深夜直视比较刺眼。",
+              "夜间模式下调暗模组/整合包页的封面大图。百科的封面美术图多为白底，深夜直视可能较刺眼。",
             type: "checkbox",
             value: true,
           },
@@ -262,7 +261,7 @@ export const settings = [
             id: "moveAds",
             title: "广告优化",
             description:
-              "将百科的部分广告移动到不影响浏览体验的位置。（本项只挪不删；要彻底隐藏广告请启用「屏蔽 AdSense 广告」）",
+              "将百科的部分广告移动到不影响浏览体验的位置。只挪不删，想彻底移除广告请开启「屏蔽 AdSense 广告」选项，并使用广告拦截器插件。",
             type: "checkbox",
             value: true,
           },
@@ -307,8 +306,7 @@ export const settings = [
           {
             id: "advancedRanklist",
             title: "贡献榜重排版",
-            description:
-              "把贡献榜重排成卡片布局。站点原生排版已经改好，默认不需要开启；仅在原生布局显示异常时作为补救。",
+            description: "把贡献榜重排成卡片布局，字数/次数显示与占比可视化。",
             type: "checkbox",
             value: false,
           },
@@ -330,7 +328,7 @@ export const settings = [
           {
             id: "sandboxSidebarRemoval",
             title: "沙盒页移除侧栏",
-            description: "移除沙盒页左侧的提示栏并加宽右侧编辑区。默认关闭，保持站点原生布局。",
+            description: "移除沙盒页左侧的提示栏并加宽右侧编辑区，默认关闭。",
             type: "checkbox",
             value: false,
           },
@@ -368,8 +366,7 @@ export const settings = [
           {
             id: "noSubmitWarningDelay",
             title: "取消提交警告延时",
-            description:
-              "<del>你的时间非常值钱</del>准备提交编辑时，取消“警告”级别提醒的等待时间。慎重使用！",
+            description: "准备提交编辑时，取消「警告」级别提醒的等待。",
             type: "checkbox",
           },
           {
@@ -413,7 +410,7 @@ export const settings = [
         settings: [
           {
             id: "tabFillFocusQty",
-            title: "落槽后聚焦数量框",
+            title: "选择后自动聚焦数量框",
             description:
               "在合成表页落槽后（点选记忆栏 / 搜索结果 / 自定义矿词），自动聚焦对应的数量输入框，直接键入数量即可。数量默认 1 的合成表用不到，默认关闭。",
             type: "checkbox",
@@ -422,7 +419,7 @@ export const settings = [
             id: "tabCompactLayout",
             title: "合成表页紧凑布局",
             description:
-              "把合成表编辑页压缩为单屏：隐藏说明性文字，数量框移到合成表右侧，记忆栏过长时在框内滚动。仅调整排版与文字显隐，不影响填表内容；数量填 -1 仍表示不消耗。切换 GUI 后保持有效，开关后刷新页面生效，默认关闭。",
+              "把合成表编辑页压缩为单屏：隐藏说明性文字，数量框移到合成表右侧，记忆栏过长时在框内滚动。默认关闭。",
             type: "checkbox",
           },
           {
@@ -442,7 +439,7 @@ export const settings = [
             id: "inputSuggestions",
             title: "改动说明输入候选列表",
             description:
-              "在改动附言与改动说明输入框提供候选列表。候选不预置任何出厂模板，由编辑在输入时通过「+ 保存为快捷输入项」手动收录；关闭后输入框回归原生形态。审核页的理由候选同样受此开关控制。",
+              "在改动附言与改动说明输入框提供候选列表。候选项由编辑在输入时通过「+ 保存为快捷输入项」按钮手动收录；关闭后输入框回归原生形态。审核页的理由候选同样受此开关控制。",
             type: "checkbox",
             value: true,
           },
@@ -519,27 +516,27 @@ export const settings = [
             id: "imageLocalizedCheck",
             title: "图像本地化检测",
             description:
-              "高亮资料正文中未存储在百科本地中的图片资源（非 PNG/JPG/JPEG/GIF 格式或文件大小超出 1,024 KB 的除外），以便<del>水编辑次数</del>及时重新上传到本地，防止图片丢失。",
+              "高亮资料正文中未上传到百科服务器的图片资源（非 PNG/JPG/JPEG/GIF 格式或文件大小超出 1,024 KB 的除外），以便及时重新上传到百科，防止图片丢失。",
             type: "checkbox",
           },
           {
             id: "linkCheck",
             title: "Fandom 旧链接检测",
             description:
-              "在资料正文中高亮仍指向 minecraft.fandom.com 的旧链接（红石生电等条目偶有残留，应迁移至 zh.minecraft.wiki），命中处以红框标记。默认关闭。",
+              "在资料正文中高亮仍指向 minecraft.fandom.com 的旧链接（应尝试迁移至 zh.minecraft.wiki），命中处以红框标记。默认关闭。",
             type: "checkbox",
           },
           {
             id: "linkMark",
             title: "资料链接标注",
             description:
-              "在资料正文和后台审核的所有链接旁就地标注该链接所指向的 URL / 条目 ID——版本大跨度编辑时核对链接指向很实用。默认关闭。",
+              "在资料正文和后台审核的所有链接旁就地标注链接目标：站内链接显示对应资料编号 / 矿词条，站外链接显示 URL。默认关闭。",
             type: "checkbox",
           },
           {
             id: "removePostProtection",
             title: "免教程保护",
-            description: "移除未经允许禁止转载的个人教程防复制保护。尊重原创！",
+            description: "移除未经允许禁止转载的个人教程防复制保护。请尊重原创！",
             type: "checkbox",
           },
         ],
@@ -600,7 +597,7 @@ export const settings = [
             id: "versionHelperPlatform",
             title: "首选日志来源",
             description:
-              "打开日志智能管理时默认对齐的平台，面板内仍可随时临时切换。GitHub 使用公开仓库的 Releases（匿名请求限额 60 次/小时，不适合作为默认来源）。",
+              "打开日志智能管理时默认对齐的平台，面板内仍可随时临时切换。GitHub 使用公开仓库的 Releases（匿名请求限额 60 次/小时）。",
             type: "dropdownMenu",
             value: 0,
             range: {
@@ -713,7 +710,7 @@ export const settings = [
             id: "unlockComment",
             title: "无限制留言板",
             description:
-              "强行显示目标用户留言板，或是模组/作者的短评区，即使其已受天体运动影响而关闭。请勿滥用，除非你想见到重生亲手把这个特性毙掉。",
+              "强行显示目标用户留言板，或是模组/作者的短评区，即使其主动关闭。请勿滥用，除非你想见到重生亲手把这个特性毙掉。",
             type: "checkbox",
           },
           {
@@ -792,7 +789,7 @@ export const settings = [
             id: "takeoverNativeAutolink",
             title: "接管原生自动链接面板",
             description:
-              "开启后，编辑页站点的全部自动链接入口——原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」——都会改开本脚本的面板（两者同名同皮，并存时无法分辨；本面板数据为本地库 + 站点同一接口的双路搜索，为原生超集）。关闭后原生入口恢复原生面板，仅下方快捷键打开本面板。若站点更改其接口返回结构导致本面板异常，可关闭此项临时回退。重新载入页面后生效。",
+              "开启后，编辑页站点的全部自动链接入口——原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」都将被脚本的面板覆盖。关闭后恢复原生面板，仅下方快捷键打开本面板。若站点更改其接口返回结构导致本面板异常，可关闭此项临时回退。重新载入页面后生效。",
             type: "checkbox",
             value: true,
             visible: (ctx) => !ctx.mobile,
@@ -801,7 +798,7 @@ export const settings = [
             id: "codeBrushLanguages",
             title: "YAML / TOML / TS 代码块支持",
             description:
-              "站点的高亮引擎自带刷子仅有命令方块 / Java / Python / ZenScript，YAML、TOML、TypeScript 只有下拉项没有着色。开启后：阅读页为 brush:yaml / brush:toml / brush:ts 代码块补装语法着色（夜间模式同样适用），「插入代码」菜单追加这三项，Markdown 编辑器的 ```yaml 等代码围栏灌入时同步映射为对应代码块。关闭后完全回退站点原生（此类代码块不着色，与站点现状一致）。刷新页面后生效。",
+              "开启后，阅读页为 YAML / TOML / TS 代码块补装语法着色，「插入代码」菜单追加这三项，支持Markdown代码块转换。关闭后退回原生。刷新页面后生效。",
             type: "checkbox",
             value: true,
           },
@@ -814,7 +811,7 @@ export const settings = [
           {
             id: "keybindFastLink",
             title: "自动链接",
-            description: `在此可修改打开本脚本所提供“自动链接”功能的快捷键。默认 Alt+X，可改绑任意键；编辑页站点的全部自动链接入口（原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」）默认也改开本面板（见上方「接管原生自动链接面板」）。旧默认 Alt+C 与原生「快速排版设置」（Alt+C / Alt+Q）冲突，启动时自动迁移。`,
+            description: `在此可修改打开本脚本所提供“自动链接”功能的快捷键。默认 Alt+X；编辑页站点的全部自动链接入口（原生键位 Alt+X / Alt+A 与「相关链接搜索按钮」）。旧默认 Alt+C 与原生「快速排版设置」（Alt+C / Alt+Q）冲突，启动时自动迁移。`,
             type: "keybind",
             value: { altKey: true, key: "X", keyCode: 88 },
             visible: (ctx) => !ctx.mobile,
@@ -822,7 +819,7 @@ export const settings = [
           {
             id: "keybindFastSubmit",
             title: "快速提交",
-            description: `在此可修改百科“快速提交”的快捷键。（受技术限制，百科本体的“快速提交”快捷键无法被禁用。为避免冲突，若此项配置包含 ${Utils.keyToString({ ctrlKey: true, keyCode: 13, key: "Enter" })}，则其不会生效。）`,
+            description: `在此可修改百科“快速提交”的快捷键。（受技术限制，百科本体的「快速提交」快捷键无法被禁用。为避免冲突，若此项配置包含 ${Utils.keyToString({ ctrlKey: true, keyCode: 13, key: "Enter" })}，则其不会生效。）`,
             type: "keybind",
             value: { ctrlKey: true, key: "Enter", keyCode: 13 },
             visible: (ctx) => !ctx.mobile,
