@@ -93,7 +93,7 @@ export class VerifyPageInit extends Init {
 
           // 重构完成才注入紧凑样式。td 一律限定在待审列表容器内——无作用域的
           // 全局 td nowrap 是旧版挤压灾难的根源。横线化 + 行悬浮替代 bootstrap
-          // 全网格硬边（用户裁定走现代表格风格，2026-11-11）。
+          // 全网格硬边（现代表格风格）。
           Utils.addStyle(
             ".table-bordered thead td, .table-bordered thead th {text-align: center; min-width: 3em;} " +
               ".btn-group-sm > .btn, .btn-sm {padding: .0rem .5rem} " +

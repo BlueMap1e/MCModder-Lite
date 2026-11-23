@@ -586,6 +586,18 @@ export class Mcmodder {
     }
   }
 
+  /** 夜间图片调暗（主站）：把用户设定的强度写入根元素变量。base.css 的内容图规则
+   *  以 `brightness(var(--mcmodder-img-dim, 1))` 链在各自精调值之后，变量缺省 = 1 =
+   *  与历史观感一致；0 = 移除变量。仅夜间规则消费该变量，日间不受影响。 */
+  applyNightImageDim() {
+    const dim = Utils.clamp(Number(this.configRepository.getSettings("nightImageDim")) || 0, 0, 80);
+    if (dim > 0) {
+      document.documentElement.style.setProperty("--mcmodder-img-dim", String(1 - dim / 100));
+    } else {
+      document.documentElement.style.removeProperty("--mcmodder-img-dim");
+    }
+  }
+
   /** 一次性迁移：布尔自适应开关 adaptableNightMode → 三态偏好 nightModePreference，无条件写入（机制见方法内注释；解析偏好在 computeNightMode/resolveNightMode）。 */
   private migrateNightModePreference() {
     // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
@@ -654,6 +666,7 @@ export class Mcmodder {
       this.updateNightMode();
     });
     this.configRepository.watchSettingsRef("preferredWiderScreen", () => this.updatePageWidth());
+    this.configRepository.watchSettingsRef("nightImageDim", () => this.applyNightImageDim());
   }
 
   main() {
@@ -683,6 +696,9 @@ export class Mcmodder {
     if (customFont) {
       this.applyCustomFont(customFont);
     }
+
+    // 夜间图片调暗：初始应用 + watchRef 实时跟随（见 applyNightImageDim）
+    this.applyNightImageDim();
 
     // 关闭主页&整合包区广告
     // 只扫带内联样式的 span：原实现遍历全文档所有 span，每次加载白付一次 O(全页) 扫描

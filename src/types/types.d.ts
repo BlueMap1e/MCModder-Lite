@@ -139,6 +139,10 @@ interface Settings {
   /** 夜间模式偏好：0 跟随系统 / 1 固定日间 / 2 固定夜间 */
   nightModePreference: 0 | 1 | 2;
   dimCoverAtNight: boolean;
+  /** 夜间图片调暗强度（主站，%）：0 = 原图亮度；单层设计，无内置基数 */
+  nightImageDim: number;
+  /** 夜间图片调暗强度（社群，%）：同 nightImageDim（单层、无基数），社群域刷新生效 */
+  bbsImageDim: number;
   bbsNightMode: boolean;
   bbsImageAspectFix: boolean;
   // mcmodderUI: boolean,

@@ -83,7 +83,7 @@ interface Props {
 
 const { parent } = defineProps<Props>();
 
-/** 平台发布日期与百科收录日期允许的自然日差；超过才提示核对（用户裁定 1 天过窄，放宽到 7 天） */
+/** 平台发布日期与百科收录日期允许的自然日差；超过才提示核对（1 天过窄，放宽到 7 天） */
 const DATE_DIFF_WARN_DAYS = 7;
 const captchaAttemptMaxLimit = 2;
 const captchaAttemptInterval = 5000;
@@ -342,7 +342,7 @@ const columnOptions = {
       // ver 直接携带完整版本串（CF 文件名去 .jar / MR version_number / GH tag），
       // 不做「提取模组版本」的硬解析：跨平台模组的版本串因平台与 MC 版本而异
       // （1.21.1-neoforge-1.0.0 与 1.21.1-fabric-1.0.0 内容不同），截取首段数字
-      // 既草率也可能错误（用户裁定，2026-11-11）
+      // 既草率也可能错误
       const ver = encodeURIComponent(String(row.displayName ?? "").replace(/\.jar$/i, ""));
       const base = `/class/version/add/${Utils.abstractLastFromURL(window.location.href, "version")}/`;
       if (row.platform === 1)
@@ -514,7 +514,7 @@ function fetchCFList(cfid: string): Promise<NormalizedRow[]> {
               releaseType: releaseMap[i.releaseType] ?? "-",
               displayName: i.fileName,
               // CF 的 gameVersions 混入加载器与端类型（Client/Server/NeoForge…），
-              // 只保留 MC 版本号（用户裁定）；快照号（24w14a 等非点分格式）会一并
+              // 只保留 MC 版本号；快照号（24w14a 等非点分格式）会一并
               // 过滤——此类文件退化为仅按模组版本匹配，与 GitHub 渠道行为一致
               gameVersions: (i.gameVersions ?? []).filter((g) =>
                 /^\d+\.\d+(\.\d+)?$/.test(g.trim()),

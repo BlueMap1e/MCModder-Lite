@@ -725,7 +725,7 @@ export class AdvancedUEditor extends UEditor {
     // 一次性说明（持久化，终身一次；Modrinth 自动流豁免）：「Markdown → HTML」是
     // **单向覆盖**——正文随后的修改不会回流 MD 源，对包含表格 / 样式文字的已有
     // 正文转换有损。不做过期检测：html 比对无法归因修改来源，次次弹等于骚扰
-    //（2026-11-12 用户裁定：警告放按钮、一次性，不做入口拦截与逐次过期弹窗）。
+    //（警告放按钮、一次性提示，不做入口拦截与逐次过期弹窗）。
     if (!this.isModrinthVer && !this.configs.getSettings("mdOverwriteHintShown")) {
       this.configs.setSettings("mdOverwriteHintShown", true);
       const ok = await swal
@@ -749,7 +749,7 @@ export class AdvancedUEditor extends UEditor {
     const md = new markdownit();
     // CommonMark 的 emphasi 格阑规则在「标点 + CJK」边界失效：`）**汉字` 的闭合 ** 无法
     // 闭合（前面是标点 2a 失败、后面是非标点 2b 失败），输出字面 `**`——标题以全角括号
-    // 收尾再接正文即命中（2026-11-12 用户实测）。markdown-it 11 不含该修复，
+    // 收尾再接正文即命中（2026-11-12 真机实测）。markdown-it 11 不含该修复，
     // markdown-it-cjk-friendly 按 W3C CJK 强调要求补齐（Node 实测 16 组用例全过）。
     // 插件与实例同在构建产物内。
     md.use(cjkFriendly);

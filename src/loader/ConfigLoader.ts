@@ -220,11 +220,29 @@ export const settings = [
             value: true,
           },
           {
+            id: "nightImageDim",
+            title: "夜间图片调暗（主站）",
+            description:
+              "夜间模式下主站页面内容图片（资料正文、首页区块、榜单封面等）的调暗强度。0 = 保持原图亮度，数值越大越暗。图标与界面控件不受影响，修改即时生效。",
+            type: "slider",
+            value: 0,
+            range: [0, 80],
+          },
+          {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
             description: "对社群页面（论坛列表、帖子等）应用夜间配色。",
             type: "checkbox",
             value: true,
+          },
+          {
+            id: "bbsImageDim",
+            title: "夜间图片调暗（社群）",
+            description:
+              "夜间模式下社群页面图片（帖子正文图、任务图标等）的调暗强度。0 = 保持原图亮度，数值越大越暗。社群改动在刷新页面后生效。",
+            type: "slider",
+            value: 0,
+            range: [0, 80],
           },
           {
             id: "bbsImageAspectFix",

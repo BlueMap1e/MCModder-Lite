@@ -30,7 +30,7 @@ export class VersionEditInit extends Init {
         const target = e.currentTarget as HTMLInputElement;
         const raw = target.value.trim();
         if (!raw) return;
-        // 兼容多种格式（用户建议，2026-11-11）：yymmdd / yyyymmdd 数字串，及
+        // 兼容多种格式（2026-11-11）：yymmdd / yyyymmdd 数字串，及
         // -、/、. 分隔的 yy-mm-dd / yyyy-mm-dd 变体；年份在前，与旧约定一致。
         // 原先只认 6 位数字，可读性差且手输易错
         // 纯数字串与分隔格式两条互斥分支：若先剥分隔符再判位数，「2026-1-1」
@@ -153,7 +153,7 @@ export class VersionEditInit extends Init {
                 ueditor.mdEditor.setValue(data);
                 // 灌入后立即执行一次 MD→HTML：onLoad 只在组件 mount 时触发一次，
                 // 自动灌入发生在其后、等不到那次触发——旧流程要等用户「随便动一下」
-                // 才转换，UX 割裂（用户报告）。经按钮触发，与手动路径完全一致，无轮询
+                // 才转换，UX 割裂（真机反馈）。经按钮触发，与手动路径完全一致，无轮询
                 $("#mcmodder-tool-md").trigger("click");
               }
               let f = false;
@@ -187,7 +187,7 @@ export class VersionEditInit extends Init {
       const dateTs = Number(param.get("date"));
       if (Number.isFinite(dateTs) && dateTs > 0) {
         const d = new Date(dateTs);
-        // prefill 用 yyyy-mm-dd（可读性强，用户建议）；change 处理器兼容该格式
+        // prefill 用 yyyy-mm-dd（可读性强）；change 处理器兼容该格式
         $("#mcmodder-date-editor")
           .val(
             `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`,

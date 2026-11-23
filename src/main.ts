@@ -36,6 +36,16 @@ import { installBbsImageAspectFix } from "./init/BbsImageAspectFix";
       clearScreenCover();
       return;
     }
+    // 夜间图片调暗（bbsImageDim）：bbs.css 的帖子图/任务图规则以
+    // brightness(var(--mcmodder-img-dim, 1)) / calc(opacity × var) 消费该变量。
+    // bbs 域无 watchRef，与 bbsNightMode 同为启动裸读、刷新生效；缺键 = 不调暗。
+    const bbsImageDim = Number(settings.bbsImageDim);
+    if (Number.isFinite(bbsImageDim) && bbsImageDim > 0) {
+      document.documentElement.style.setProperty(
+        "--mcmodder-img-dim",
+        String(1 - Math.min(bbsImageDim, 80) / 100),
+      );
+    }
     // 夜间模式偏好（0 跟随系统 / 1 日间 / 2 夜间）。旧版仅有 adaptableNightMode 布尔开关，
     // 迁移发生前（首次访问 mcmod.cn 主站之前）的存储按旧语义解读，只读不改，
     // 真正的键值迁移由主站页面的 Mcmodder.main() 完成。

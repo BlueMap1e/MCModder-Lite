@@ -56,7 +56,7 @@ html.dark a:hover {
 
 /* 页头双层结构：外层 .top-main 全宽，内层 .top-main.frame 定宽 1200px 居中（其
    抬升底来自通用 .frame 规则）。外层若用页底色，内层两侧会露出更深的条带
-   （用户实测「两侧黑块」；日间站点原生内外同色、无分层）。外层同步抬升为暗2，
+   （真机实测「两侧黑块」；日间站点原生内外同色、无分层）。外层同步抬升为暗2，
    分隔线用暗3与页底衔接。 */
 html.dark .top-main {
   background-color: var(--mcmodder-color-background-dark2);
@@ -154,7 +154,7 @@ html.dark .top-main .more-info .separate-li {
 }
 
 /* 页头右上 .info 容器：通用 .info 规则（暗1底 + 边框）是为侧栏挂件设计的，
-   用在页头上比抬升页头带（暗2）更深，形成一块「凹陷黑底」（用户实测）。
+   用在页头上比抬升页头带（暗2）更深，形成一块「凹陷黑底」（真机实测）。
    页头处改回透明融入页头带；侧栏同名 .info 不在 .top-main 内，不受影响。 */
 html.dark .top-main .info {
   background-color: transparent;
@@ -440,7 +440,7 @@ html.dark .bar {
 }
 
 /* 输入框用抬升面而非页底色：多个页面（如个人资料）表单区背景透明，
-   页底色会让输入框与页面融为一体（用户实测）；亮面输入框对应日间白底语义。
+   页底色会让输入框与页面融为一体（真机实测）；亮面输入框对应日间白底语义。
    站点原生是简写 background:#FFF url(px.png)（白色渐变贴图），只覆盖
    background-color 会在输入框顶部残留一条亮带、整体观感僵硬（2026-11-19
    真机报告），贴图须一并清掉；圆角 4px 做柔和化（不参与布局计算，零风险） */
@@ -465,7 +465,7 @@ html.dark textarea:focus {
 /* .tedt 简编辑器容器（快速回复等）：站点原生形态 = 容器承载单线轮廓
    （.tedt 自带 1px 边框，.tedt .pt 写死 border:none），但上方通用输入框规则
    （html.dark textarea.pt，特异性 0,2,1）压过站点 .tedt .pt（0,2,0），给容器内
-   textarea 加回 1px 边框 + 圆角，与容器线叠成双框（thread-24239 用户报告）。
+   textarea 加回 1px 边框 + 圆角，与容器线叠成双框（thread-24239 反馈）。
    恢复站点原生单线：容器内 textarea 去边框，圆角一并归零（容器直角 + 内外
    同底色，圆角本不可见，留着徒增发丝级瑕疵）。聚焦反馈不加：站点原生连
    outline 都杀掉，focus-within 挂容器会被工具栏按钮抢焦点后常亮 */
@@ -523,7 +523,7 @@ html.dark .p_pop {
   box-shadow: 0 4px 6px -1px var(--mcmodder-color-bbs-shadow);
 }
 
-/* 发表主题悬浮菜单：站点 .p_pop a 带 !important 写死 #333，夜间低对比（用户实测）；
+/* 发表主题悬浮菜单：站点 .p_pop a 带 !important 写死 #333，夜间低对比（真机实测）；
    同强度反制，作用域带 html.dark 收紧 */
 html.dark .p_pop a {
   color: var(--mcmodder-color-text) !important;
@@ -545,7 +545,7 @@ html.dark .p_pop a.a {
 
 /* 帖内头像 hover 用户资料卡（showauthor 显隐的服务端渲染卡片，#userinfo<uid>）：
    类名是 .p-pop（连字符）——与上方 .p_pop（下划线）下拉弹层家族是两个类，下拉
-   夜间化时漏掉了这族（thread-24239 用户报告）。站点 .p-pop 写死白底 #fff +
+   夜间化时漏掉了这族（thread-24239 反馈）。站点 .p-pop 写死白底 #fff +
    .i 灰字 #999，夜间白块刺眼。适配为抬升面板：dark1 底 + dark3 描边 + 同款
    阴影；资料分层——标签（dt）降为次级灰，数值（dd）提亮到正文色，用户名等
    链接交由全站链接夜间规则 */
@@ -1294,7 +1294,7 @@ html.dark body#nv_forum #postlist .ad .plc {
 }
 
 /* 头像列 td.pls 被站点写成透明（单元格内联 style="background:none"，露出表格
-   暗1底，与内容列暗2形成色差——用户实测「头像列不协调黑块」）。内联样式压过
+   暗1底，与内容列暗2形成色差——真机实测「头像列不协调黑块」）。内联样式压过
    一切非 !important 声明，此处必须同强度反制才能生效。 */
 html.dark body#nv_forum #postlist td.pls,
 html.dark body#nv_forum .pl td.pls {
@@ -1568,15 +1568,22 @@ html.dark .ntc_l {
    mod=medal、mod=spacecp&ac=credit 与 mod=task）的站点遗留浅色底。
    页面文字色经 body 继承已是浅色，以下背景不压暗即浅字浅底（探针实测）。 ===== */
 
-/* 任务页图片（task.gif 日历图标、rewardless.gif 奖励按钮）是白色系位图，
-   夜间刺眼（用户实测）；色都烤死在图里，夜间整体降不透明度最稳妥。
-   rewardless 浅灰底白字更亮，单独压得更低。 */
-html.dark img[src*="static/image/task/"] {
-  opacity: 0.7;
-}
-
-html.dark img[src*="static/image/task/rewardless"] {
-  opacity: 0.55;
+/* ── 夜间图片调暗（bbsImageDim 设置的唯一消费端，main.ts 社群分支写入变量）──
+   单层设计：变量即全部调暗量，无内置基数（滑条 20 ≈ 原 0.8 基底观感）。集合：帖子正文图（.pct/.t_f，
+   含表情图）、任务页白色位图（task/rewardless，原 opacity 方案并入 brightness）、
+   隐藏内容块（.xld/.bbda 及其 .d 提示盒）、勋章图。变量缺省 = 1 = 原图亮度，
+   滑条默认 0，高对比度偏好者零感知。禁用态（.post_act li span 0.45）、关闭钮
+   降噪（.flbc 0.75）、Discuz opacity 反制规则不属于调光，未收编；编辑器
+   invert 变量族（反相区）按铁律不叠加调色。 */
+html.dark .pct img,
+html.dark .t_f img,
+html.dark img[src*="static/image/task/"],
+html.dark .xld img,
+html.dark .xld .d,
+html.dark .bbda img,
+html.dark .bbda .d,
+html.dark .mg_img img {
+  filter: brightness(var(--mcmodder-img-dim, 1));
 }
 
 /* Discuz 全站斑马行工具类（common.css .alt, .alt th, .alt td 浅灰） */
@@ -1655,7 +1662,7 @@ html.dark .fwin .flb {
 html.dark .fwin .flb em,
 html.dark .fwin .flb a {
   color: var(--mcmodder-color-text);
-  /* 站点 .m_c .flb em 写死白色 text-shadow，夜间浅色字上叠白晕显模糊（用户实测） */
+  /* 站点 .m_c .flb em 写死白色 text-shadow，夜间浅色字上叠白晕显模糊（真机实测） */
   text-shadow: none;
 }
 html.dark .fwin .flb a:hover {
@@ -1716,7 +1723,7 @@ html.dark .fwin .tedt .area {
 
 /* 发消息浮窗（showWindow('sendpm') 的 .pm 家族）：标题栏/输入框/按钮栏已被
    上方 .fwin 通用夜间规则覆盖，漏网的是内容层——链接条 .pm_tac 与消息层
-   .pm .c 站点写死 #F2F2F2，历史区大片浅色（thread-24239 用户报告）。均为
+   .pm .c 站点写死 #F2F2F2，历史区大片浅色（thread-24239 反馈）。均为
    dark1 平铺，与日间「链接条 = 内容层同色」的形态对齐 */
 html.dark .fwin .pm .c,
 html.dark .fwin .pm_tac {
@@ -1788,11 +1795,11 @@ html.dark #e_body.edt .area {
 
 /* 编辑器工具栏（.edt .bar）：按钮图标是透明底深色位图（editor.gif），站点给每个
    按钮写死 #f2f2f2 近白边框、部分下拉写死白底（.edt .b2r a.dp、card_btn.png 白盘），
-   夜间成为白框网格且图标没入深底（用户实测）。对按钮整只反相一步到位：
+   夜间成为白框网格且图标没入深底（真机实测）。对按钮整只反相一步到位：
    深色图标变亮、近白边框变暗（#f2f2f2 → ≈#3b3b3b）、白底下拉变深；
    文字预补偿为深色，反相后呈浅色。滤镜变量与 iframe 注入色同源维护。
    预补偿色必须 !important：否则被本文件更早的 html.dark #wp.wp.fwp a
-   （ID 特异性更高）压回 #cbd5e1，反相后只剩 #525252（用户实测对比度过低） */
+   （ID 特异性更高）压回 #cbd5e1，反相后只剩 #525252（真机实测对比度过低） */
 html.dark .edt .bar a {
   filter: var(--mcmodder-color-bbs-editor-filter);
   color: #1a1a1a !important;
@@ -1813,7 +1820,7 @@ html.dark .ftid a::after {
   color: var(--mcmodder-color-text-dark2);
 }
 
-/* ===== 编辑器第二轮（用户实测）：弹窗底栏 / 复选框 / 纯文本模式 / 下拉小按钮 ===== */
+/* ===== 编辑器第二轮（真机实测）：弹窗底栏 / 复选框 / 纯文本模式 / 下拉小按钮 ===== */
 
 /* 编辑器弹窗（.fwinmask 家族，如图片上传）：底栏 .o 站点写死 #f2f2f2 白底 */
 html.dark .fwinmask .o,
@@ -1834,7 +1841,7 @@ html.dark .flbc {
   opacity: 0.75;
 }
 
-/* 原生复选框/单选钮自绘：夜间的原生白块刺眼（用户实测）。appearance:none 后
+/* 原生复选框/单选钮自绘：夜间的原生白块刺眼（真机实测）。appearance:none 后
    各浏览器尺寸会塌，需显式定尺寸；✓ 勾用背景 SVG（Firefox 不渲染 input 的
    ::before 伪元素），单选用径向渐变圆点 */
 html.dark input[type="checkbox"],
@@ -1869,7 +1876,7 @@ html.dark input[type="radio"]:checked {
 }
 
 /* 纯文本模式编辑区：站点 .edt .pt 写死白底（特异性 2 类压过通用 textarea 规则），
-   切换瞬间整块翻白（用户实测） */
+   切换瞬间整块翻白（真机实测） */
 html.dark .edt .pt {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-text);
@@ -1877,7 +1884,7 @@ html.dark .edt .pt {
 
 /* 下拉展开小按钮（投票帖截止时间 ^ 等）：站点白底 + newarow 白贴图（箭头画在
    贴图里）。去掉贴图后按钮只剩空盒——站点用 text-indent:-9999px + overflow:hidden
-   藏字（用户实测「隐身」），此处反向利用：font-size:0 藏 ^，::after 补可见 ▾ */
+   藏字（真机实测「隐身」），此处反向利用：font-size:0 藏 ^，::after 补可见 ▾ */
 html.dark .dpbtn {
   background-color: var(--mcmodder-color-background-dark2);
   background-image: none;
@@ -1896,7 +1903,7 @@ html.dark .dpbtn::after {
 
 /* 帖子标题链接 .xst：旧规则用链接蓝，但列表页里被本文件更早的
    html.dark body#nv_forum #threadlist a（2 个 ID，正文色）压过，实际渲染为
-   近白正文色，整列刺眼（用户实测）。改为次要文字色并带上同等 ID 强度，
+   近白正文色，整列刺眼（真机实测）。改为次要文字色并带上同等 ID 强度，
    已读再降一档保留读写区分；站长内联标色（style="color:#…"）的标题不受影响。 */
 html.dark a.s.xst,
 html.dark body#nv_forum #threadlist a.s.xst {
@@ -1910,7 +1917,7 @@ html.dark .hottiebox .category_newlist li a {
   color: var(--mcmodder-color-text-dark1) !important;
 }
 /* 帖子内嵌表格（.cgtl）的标题行：站点 .cgtl caption 写死浅蓝灰底，
-   夜间浅字叠浅底几乎不可见（用户实测） */
+   夜间浅字叠浅底几乎不可见（真机实测） */
 html.dark .cgtl caption {
   background-color: var(--mcmodder-color-background-dark2);
   border-color: var(--mcmodder-color-background-dark3);
@@ -1926,7 +1933,7 @@ html.dark .cgtl td {
 
 /* 特殊主题自定义表单（编辑员申请等 .exfm 表单，table.tfm）：站点
    .exfm.cl table td/th 写死 #e5e7f2 浅底，特异性 (0,2,2) 压过通用 .ptm
-   透明化，整片浅底浅字（用户实测）；同强度反制，虚线分隔线一并压暗 */
+   透明化，整片浅底浅字（真机实测）；同强度反制，虚线分隔线一并压暗 */
 html.dark .exfm.cl table th,
 html.dark .exfm.cl table td {
   background-color: var(--mcmodder-color-background-dark2);
@@ -2025,18 +2032,9 @@ html.dark .buddy > li h3 {
    在 dd.m.avt，行尾「屏蔽」按钮 a.d.b 是 op.png 精灵图 20x20）、私信列表容器
    为 .bbda（dd.m.avt 头像）。白底小图与浅色精灵图夜间刺眼，与主站内容图片
    同法降亮，只压亮度不动形状。 */
-html.dark .xld img,
-html.dark .xld .d,
-html.dark .bbda img,
-html.dark .bbda .d {
-  filter: brightness(0.8);
-}
-
-/* 勋章页（home.php?mod=medal 及 action=log）：勋章图 f_*.png 为白底小图，
-   夜间刺眼，与提醒页图标同法降亮。 */
-html.dark .mg_img img {
-  filter: brightness(0.8);
-}
+/* .xld/.bbda 内容图及其 .d 提示盒、勋章图（.mg_img img）：已并入上方「夜间图片
+   调暗」统一规则（bbsImageDim 消费端注释）。.d 提示盒为 div，brightness 连同
+   盒内文字一并压暗，与原 0.8 行为一致。 */
 /* 勋章的白色卡片底是烤在 magic_imgbg.gif 贴图里的（.mg_img 的 background-image，
    76x76），夜间换调色板深底 + 圆角（与 CAPP 页纹理底图同法）；勋章图本体另有降亮。 */
 html.dark .mg_img {

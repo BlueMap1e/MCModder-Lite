@@ -12,7 +12,7 @@ import { Init } from "./Init";
  * .active，产出槽的数量/概率字段捆绑同亮（2026-11-22 用户反馈反直觉）——来源
  * 为字段时只保留来源字段与格子，来源为格子时保留整组。
  *
- * 数量框键盘导航（tabQtyKeyNav，默认关，2026-11-22 用户裁定 opt-in）：思想移植
+ * 数量框键盘导航（tabQtyKeyNav，默认关，opt-in）：思想移植
  * 自上游 TabEditInit.onInputKeydown（↑/↓ ±1、Shift ×2/÷2、Enter/Shift+Enter 列内
  * 移焦），但其实现三重 parentNode 爬取自家 tr>td 表格不可搬，此处按原生 DOM 重写：
  * rect 就近匹配列（对模板字段数/顺序与紧凑布局开关均解耦），步进只挂 .slot-text

@@ -574,7 +574,7 @@ th,
 }
 /* 待审列表表格软化（verify.html 原生表格，mcmodder-verify-page 标记类由
    VerifyHistoryInit 挂载）：全局 td/th 边框 tint（本文件上方）在这张宽表上
-   表现为僵硬的全网格彩边，用户裁定改为横线分隔的现代风格。紧凑模式
+   表现为僵硬的全网格彩边，改为横线分隔的现代风格。紧凑模式
    （compactedVerifylist）注入自己的同名规则，两态观感一致。 */
 .mcmodder-verify-page .verify-list-list .table-bordered {
   border: none;
@@ -707,14 +707,14 @@ html.dark div.checkbox.slot-text.active {
   box-shadow: 0 0 0 0.15em var(--mcmodder-color-accent-transparent2);
 }
 /* 合成表页两处搜索框（.input-group 内输入框 + 按钮拼接）：dark2 边框在深色
-   页面上不可见，拼接处失去分界读作「怼在一起」（用户报告）。边框提亮一档
+   页面上不可见，拼接处失去分界读作「怼在一起」（真机反馈）。边框提亮一档
    （同 .fwin .px 的中性灰先例） */
 html.dark .input-group .form-control,
 html.dark .input-group .btn {
   border-color: #565656;
 }
 /* bootstrap 对拼接控件削掉输入框右侧圆角（左圆右直），皮肤层的大圆角被削成
-   半截（用户报告「圆角半截」）。夜间恢复对称 */
+   半截（真机反馈「圆角半截」）。夜间恢复对称 */
 html.dark .input-group > .form-control:not(:last-child) {
   border-top-right-radius: var(--mcmodder-width-radius);
   border-bottom-right-radius: var(--mcmodder-width-radius);
@@ -3328,6 +3328,11 @@ html.dark .tools-list .mcmodder-content-block p.title {
 /* 首页内容图片（最受欢迎/科技/贡献榜等 *_block 组件，index_v3 专属类名）：
    封面图多为白底，夜间下整块刺眼。压亮度而非降透明度——降透明度会让深色页底
    透过浅色图反而发灰发脏，brightness 只压白而不伤图内深色细节。 */
+/* ── 夜间图片调暗（nightImageDim 设置的唯一消费端）────────────────────────
+   内容图集合：首页各区块、favicon/榜单、资料正文图。单层设计——变量即全部
+   调暗量，无内置基数（滑条 20 ≈ 原 0.8 基底观感）。变量缺省 = 1 = 原图亮度，滑条默认 0，高对比度
+   偏好者零感知。图标/界面控件/反相区（编辑器 invert 变量族）不在此列；
+   dimCoverAtNight 封面调暗是独立开关，不并入。 */
 html.dark .news_block img,
 html.dark .class_block img,
 html.dark .list_block img,
@@ -3335,8 +3340,12 @@ html.dark .chart_block img,
 html.dark .card_block img,
 html.dark .post_block img,
 html.dark .star_block img,
-html.dark .az_block img {
-  filter: brightness(0.8);
+html.dark .az_block img,
+html.dark img.favicon,
+html.dark .favicon img,
+html.dark .common-index-block .body-content img,
+html.dark .common-text img {
+  filter: brightness(var(--mcmodder-img-dim, 1));
 }
 
 /* CAPP 服务器页（/sv/，sv.frame.css）：面板写死白底 + 平铺 GIF 纹理底图
@@ -3790,15 +3799,8 @@ html.dark.mcmodder-tools-page .pages_system .Pbtn_on {
 html.dark .index-tool .iconfont-server {
   filter: invert(1) hue-rotate(180deg);
 }
-/* 找服玩图片降亮（与上方首页内容图片同法，brightness 压白不伤深色细节）：
-   img.favicon —— 服务器封面/列表图标（.favicon 为 serverlist 专属类，主站不用）；
-   .common-index-block .body-content img —— 首页各榜单内容图（热门模组/整合包封面等
-   多数无类名，只能按容器收；容器为 serverlist 首页专属）。 */
-html.dark img.favicon,
-html.dark .favicon img,
-html.dark .common-index-block .body-content img {
-  filter: brightness(0.8);
-}
+/* 找服玩图片（img.favicon 服务器封面/列表图标、首页各榜单内容图）已并入上方
+   「夜间图片调暗」统一规则（见 nightImageDim 消费端注释）。 */
 
 /* 找服玩服务器详情页：历史在线人数的日期范围选择器（pickerDateRange 插件，
    ta_* 类，dateRange.css 写死日间配色）。此前 .ta_date/.ta_calendar 被上游
@@ -3853,7 +3855,7 @@ html.dark .ta_calendar .i_next {
   filter: invert(1);
 }
 /* 今天/选中日：弃圆形贴图（深底上偏亮且与范围端点风格分裂），改用与
-   td.first/td.last 同款芯片式——单选/范围统一为方块状（用户裁定，2026-11-11） */
+   td.first/td.last 同款芯片式——单选/范围统一为方块状 */
 html.dark .ta_calendar td.today {
   background-image: none;
   background-color: var(--mcmodder-color-background-dark2);
@@ -4012,7 +4014,7 @@ html.mcmodder-tab-compact .left > .common-rowlist-block:last-child {
 }
 html.mcmodder-tab-compact #item-table-gui-frame > .gui {
   /* 纵跨 3 行：GUI 高度(160) ≤ 3 行数量格(57×3+gap=183)，行高改由数量格决定——
-     否则第 1 行被 GUI 撑到 160，1-3 号下方留 ~100px 空腔（2026-11-22 用户实测指认） */
+     否则第 1 行被 GUI 撑到 160，1-3 号下方留 ~100px 空腔（2026-11-22 真机实测指认） */
   grid-area: 1 / 1 / span 3 / 2;
 }
 html.mcmodder-tab-compact #item-table-gui-frame > p {
@@ -4060,7 +4062,7 @@ html.mcmodder-tab-compact #item-table-gui-frame > li.tab-li:nth-of-type(10) {
 }
 
 /* 产出/概率字段按数据类型标注（accent）：各模板字段数量与顺序互异（工作台 9+1 /
-   回收机 1+1+概率 / 自动合成产出在前 / 水晶装配 10+1 混排，2026-11-22 用户实测），
+   回收机 1+1+概率 / 自动合成产出在前 / 水晶装配 10+1 混排，2026-11-22 真机实测），
    固定行号无法泛化「另起一行」，标注与布局解耦。只动标签文字与下划线色，
    不碰输入框边——避免压过层 1 的配对高亮（.active accent 描边） */
 html.mcmodder-tab-compact
@@ -4080,7 +4082,7 @@ html.mcmodder-tab-compact
    定死列宽（运行环境列只分到残羹），叠加 td{word-break:break-all} 允许任意字符断行，
    组合出两类撕裂——标签「测试/版」中间断开；td.version 8% 列宽容不下
    「1.19.2/1.19.1」，宽窗下也稳定折行（fixed 布局列宽不随内容，拉伸无效，
-   2026-11-23 用户 glitch 报告，UA 无关）。
+   2026-11-23 真机报告，UA 无关）。
    修复 = 内容驱动列宽（auto）+ 数据列一律 nowrap + 关闭任意断行：标签/版本/大小/
    操作恒单行，挤压全部由文件名列吸收（jar 名含连字符可断，nth-child(2) 是唯一
    white-space:normal 的列）。th 百分比保留为 auto 布局的宽度提示，宽窗下比例与
@@ -4100,7 +4102,7 @@ html.mcmodder-tab-compact
    （break-word 不参与）：双引擎实测（2026-11-23 probe-download-engines.mjs，
    同 800px）Chromium 会把该列压到 120px 全表塞下，Firefox 的 auto 布局
    拒绝压缩、按 30% 提示给 258px → 表溢出容器 127px，上传时间/操作列被
-   上层裁剪吞掉（立即下载不可达，用户 Zen 实证）。anywhere 把该列 min-content
+   上层裁剪吞掉（立即下载不可达，Zen 实证）。anywhere 把该列 min-content
    塌缩到单字符，两引擎都能压扁全表；.download-list-frame 的 overflow-x:auto
    是极端宽度的兜底逃生口（横向滚动而非吞列）。 */
 .download-table td:nth-child(2) {
@@ -4111,7 +4113,7 @@ html.mcmodder-tab-compact
   overflow-x: auto;
 }
 
-/* ── 留言板/评论区提交按钮主题色（2026-11-23 用户 glitch 报告）────────────
+/* ── 留言板/评论区提交按钮主题色（2026-11-23 真机报告）────────────
    #comment-submit 是站点语义绿（mcmodderUI .btn.btn-success 家族在同文件
    靠后位置覆盖了 .btn 基础模板）——上游从未给它主题色规则（两仓 grep 均无
    此 id）。用户期望走主题色，且样式对齐皮肤「公式化模板」：此处逐字复刻
