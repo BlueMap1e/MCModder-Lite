@@ -1,4 +1,4 @@
-import { GM_openInTab } from "$";
+import { GM_getValue, GM_openInTab } from "$";
 import { BackgroundPool } from "./background/BackgroundPool";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { MenuCommandLoader } from "./loader/MenuCommandLoader";
@@ -670,8 +670,23 @@ export class Mcmodder {
       this.configRepository.setSettings("customFont", 2);
     }
 
+    // 迁移（2026-11-23）：负命名的 disableClassDataTypesetting 重编码为正向
+    // classDataTypesetting（模组页双栏排版，默认关）。旧键 false = 用户正使用
+    // 双栏排版 → 写入新键保住其状态；旧键 true / 未写入 → 新键默认关，无变化。
+    // 裸读旧键（键已移出 Settings 类型），读取后才交给 prune 清理。
+    const legacySettings = JSON.parse(GM_getValue("mcmodderSettings") || "{}") as {
+      disableClassDataTypesetting?: boolean;
+    };
+    if (legacySettings.disableClassDataTypesetting === false) {
+      this.configRepository.setSettings("classDataTypesetting", true);
+    }
+
     // 多账号切换已整体移除（2026-11-04）：清掉旧版本留下的账号列表与快捷切换游标
-    this.configRepository.pruneLegacySettings(["myProfiles", "lastUid"]);
+    this.configRepository.pruneLegacySettings([
+      "myProfiles",
+      "lastUid",
+      "disableClassDataTypesetting",
+    ]);
 
     // 迁移（2026-11-10）：「改动说明」候选不再预置出厂模板——从既有存储里滤除
     // 上游 EditReason.json 的种子项，用户自攒的候选保留

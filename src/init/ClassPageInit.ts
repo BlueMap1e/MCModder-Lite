@@ -298,12 +298,8 @@ export class ClassPageInit extends Init {
         `<span class="more"><a href="/class/version/${classID}.html" target="_blank">更多</a><a></a></span>`,
       );
 
-    // 禁用模组页排版
-    if (
-      /* this.configs.get("mcmodderUI") && */ !this.configs.getSettings(
-        "disableClassDataTypesetting",
-      )
-    ) {
+    // 模组页双栏排版（classDataTypesetting，默认关 = 站点原生布局）
+    if (this.configs.getSettings("classDataTypesetting")) {
       Utils.addStyle(
         ".common-center .right .class-text-top {min-height: unset; padding-right: unset;} .mcmodder-class-page {width: 90%; margin: 0 5%; margin-top: 6em;}",
       );

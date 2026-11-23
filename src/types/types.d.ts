@@ -148,7 +148,7 @@ interface Settings {
   // mcmodderUI: boolean,
   disableAutoStyleFix: boolean;
   // unlockHeaderContainer: boolean,
-  disableClassDataTypesetting: boolean;
+  classDataTypesetting: boolean;
   fastCopyName: boolean;
   autoCheckin: boolean;
   defaultBackground: string;

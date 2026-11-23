@@ -614,12 +614,12 @@ export const settings = [
         label: "模组与资料",
         settings: [
           {
-            id: "disableClassDataTypesetting",
-            title: "恢复模组页排版",
+            id: "classDataTypesetting",
+            title: "模组页双栏排版",
             description:
-              /* "在启用“Mcmodder 风格 UI”的基础上，" */ "禁用对模组页和整合包页的默认排版功能。可能更利于编辑者审查模组基本信息。",
+              "在模组页 / 整合包页启用 Lite 的现代化双栏排版：基本信息列与正文并排，便于编辑者对照审查模组基本信息。默认关闭。",
             type: "checkbox",
-            value: true,
+            value: false,
           },
           {
             id: "fastCopyName",
