@@ -33,6 +33,8 @@
             'mcmodder-table-unsaved-tr':
               currentData[index].edited && Object.keys(currentData[index].edited).length,
             selected: currentData[index].selected,
+            'mcmodder-table-row-even': index % 2 === 0,
+            'mcmodder-table-row-odd': index % 2 === 1,
           }"
           @pointerenter="rowOnPointerenter(index)"
         >

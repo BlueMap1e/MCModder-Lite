@@ -36,9 +36,12 @@ export class Swiper {
     ul.addEventListener(
       "pointerover",
       (e) => {
-        if (e.target instanceof HTMLLIElement) {
+        // 指针常落在标签内的子元素（文字/图标）上，只认 HTMLLIElement 会让
+        // 「悬浮切换标签」时指示器不跟随（上游 6cf3161）
+        const target = e.target;
+        if (target && $(target).closest("ul > li").length) {
           this.hover = true;
-          this.timeout = setTimeout(() => {
+          this.timeout = window.setTimeout(() => {
             this.update();
           }, 550); // 原生实现中标签切换延迟为 500ms，这里稍微多等待一会，确保标签已完全切换
         }
