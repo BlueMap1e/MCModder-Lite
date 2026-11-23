@@ -4163,17 +4163,16 @@ html.mcmodder-tab-compact
   overflow-x: auto;
 }
 
-/* ── 留言板/评论区提交按钮主题色（2026-11-23 真机报告）────────────
-   #comment-submit 是站点语义绿（mcmodderUI .btn.btn-success 家族在同文件
-   靠后位置覆盖了 .btn 基础模板）——上游从未给它主题色规则（两仓 grep 均无
-   此 id）。用户期望走主题色，且样式对齐皮肤「公式化模板」：此处逐字复刻
-   mcmodderUI 的 .btn:not(.btn-link) 基础模板（primary-light → accent-light
-   45° 渐变 + 正文色文字 + 背景色描边）与 hover 扁平化（accent-background /
-   accent-dark2）。全部变量驱动，昼/夜调色板自动适应，无需 html.dark 分层。
-   ID 特异性压过皮肤 success 家族的类级规则。留言板是懒加载动态内容，纯 CSS
-   规则在元素出现时自动生效，无需观察者。故意不设开关——小面积主题一致性修正。
-   scope 注意：主站评论区若共用此 id 则一并走主题色模板（语义统一）。 */
-#comment-submit {
+/* ── 站点语义绿提交按钮 → 主题色模板（2026-11-23 留言板；2026-11-24 添加模组页）
+   #comment-submit / #edit-submit-button 都被站点挂 btn-success（语义绿），
+   皮肤 success 家族只给绿系渐变，上游两仓均无这两个 id 的主题色规则。
+   此处逐字复刻 mcmodderUI 的 .btn:not(.btn-link) 基础模板（primary-light →
+   accent-light 45° 渐变 + 正文色文字 + 背景色描边）与 hover 扁平化
+   （accent-background / accent-dark2）。变量驱动，昼夜自适应，无需 html.dark。
+   ID 特异性压过 success 类级规则；两处按钮都是站点既有 DOM，纯 CSS 生效，
+   无观察者。故意不设开关——小面积主题一致性修正。 */
+#comment-submit,
+#edit-submit-button {
   background: linear-gradient(
     45deg,
     var(--mcmodder-color-primary-light),
@@ -4182,12 +4181,15 @@ html.mcmodder-tab-compact
   color: var(--mcmodder-color-text);
   border: 1px solid var(--mcmodder-color-background);
 }
-#comment-submit:not(:disabled):not(.disabled):hover {
+#comment-submit:not(:disabled):not(.disabled):hover,
+#edit-submit-button:not(:disabled):not(.disabled):hover {
   background-color: var(--mcmodder-color-accent-background);
   background-image: none;
   color: var(--mcmodder-color-accent-dark2);
 }
 #comment-submit:not(:disabled):not(.disabled):active,
-#comment-submit:not(:disabled):not(.disabled):focus {
+#edit-submit-button:not(:disabled):not(.disabled):active,
+#comment-submit:not(:disabled):not(.disabled):focus,
+#edit-submit-button:not(:disabled):not(.disabled):focus {
   color: var(--mcmodder-color-accent-dark2);
 }
