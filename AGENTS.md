@@ -13,9 +13,12 @@ keep code identifiers and paths verbatim.
   implement it, or come back with the tradeoff and let the user decide.
 - Drafts are cheap: settle the target composition before implementing (layout work: the
   user's real viewport + grep the site CSS constraints), then build + on/off screenshot +
-  show. **Commits only after user approval.** Full gates run once, after the user signs
-  off, before a release. Breaking a draft and fixing it in the next screenshot round is
-  the expected loop, not a violation.
+  show. **Commits happen at approval, not later**: when the user signs off, commit in
+  that turn and report the hash; accepted work is never left uncommitted. **「看一下 /
+  盯一下 / 评估」 is read-only**: report, change nothing, propose fixes instead of
+  applying them. Full gates run once, after the user signs off, before a release.
+  Breaking a draft and fixing it in the next screenshot round is the expected loop, not
+  a violation.
 - Timidity is a failure mode. Moving fast on the requirement outranks procedural caution;
   the defaults below exist to prevent _released_ damage, not to slow down drafts.
 - Do not touch anything the user has frozen; when frozen, wait for the trigger.
@@ -35,7 +38,9 @@ the user explicitly asks. Campaign histories, closed campaigns and post-mortems 
    (`https://github.com/BlueMap1e/MCModder-Lite`) — it orphans every install's settings.
 3. **Upstream boundary**: `Charcoal-Black/Mcmodder` is read-only — never merge; nothing
    lands in upstream space (push / PR / issue / comment) without the user's explicit
-   instruction.
+   instruction. PRs: branch from `upstream/dev`, one topic per branch, only where the
+   upstream counterpart is structurally identical — never a Lite-only feature, a module
+   removal, or a branding/doc change.
 4. **No cross-repo issue references** in commit messages (`owner/repo#N`): GitHub's push
    scan posts a permanent `referenced` event that survives force push. Write 「上游 issue N」.
 5. **Never read or write `_uuid`**; multi-account stays out (the browser's job).
@@ -87,7 +92,7 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
   settings win. Forcing everyone over needs a one-off migration.
 - The cycle gate (`scripts/check-cycles.mjs`, verify's 4th step): a cycle is benign iff at
   least one edge is a pure `import type`; all-value-import cycles fail the gate.
-- The shipped bundle is ~1.6 MB; `?raw` CSS is comment/whitespace-stripped at build by the
+- The shipped bundle is ~1.7 MB; `?raw` CSS is comment/whitespace-stripped at build by the
   `minifyRawCss` plugin in `vite.config.ts` — deliberately NOT esbuild CSS minify, whose
   cross-position rule merging rewrites cascade order.
 - The script runs at `document-start` inside mcmod.cn pages. Host globals (`$`/jQuery,
