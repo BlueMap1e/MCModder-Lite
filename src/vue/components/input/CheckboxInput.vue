@@ -50,7 +50,8 @@ const props = withDefaults(defineProps<Props>(), {
 const checkboxRef = useTemplateRef("checkbox");
 
 const fullID = computed(() => {
-  return "settings-" + props.id;
+  // input/label 的 id 与容器 span 的 id（mcmodder-setting-*）区分开，避免文档内重名
+  return "mcmodder-input-" + props.id;
 });
 
 /** `title` 作为 `<label>` 内容渲染，可能含排版标签，绑定 `v-html` 前统一过一遍 sanitizeHTML */

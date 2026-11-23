@@ -6,7 +6,7 @@
       </span>
       <CheckboxInput
         v-if="type === 'checkbox'"
-        :id="id"
+        :id="domId"
         :title="title"
         :title-ranges="matchedRanges?.title"
         :value="value as boolean"
@@ -61,7 +61,7 @@
       />
       <BackgroundPoolInput
         v-else-if="type === 'backgroundPool'"
-        :id="id"
+        :id="domId"
         :title="title"
         :value="value as number"
         :on-successful-change="onConfigSuccessfulChange"
@@ -116,6 +116,11 @@ const props = withDefaults(defineProps<Props>(), {
 const configOption = shallowRef(props.cfgutils.options[props.id]);
 const type = ref<Readonly<InputType>>(configOption.value.type);
 const title = computed(() => configOption.value.title);
+
+/** DOM id 一律加 mcmodder 前缀：配置 id 是通用词（如 blockAds），裸用会被
+ *  广告拦截扩展的元素隐藏规则（uBlock Origin 等）按 id 命中，整个控件被
+ *  display:none（Firefox + uBO 实测复现，Chromium 无该过滤所以探针测不出）。 */
+const domId = computed(() => `mcmodder-setting-${props.id}`);
 /** 标题（含紧跟其后的冒号与两侧空格）；命中区间相对标题本体，故结尾附加内容不影响高亮位置 */
 const titleText = computed(() => `${title.value}: `);
 const value = props.configs.getSettingsWritableRef(props.id);
