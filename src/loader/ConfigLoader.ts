@@ -242,6 +242,8 @@ export const settings = [
             type: "slider",
             value: 0,
             range: [0, 80],
+            // 子选项：只在本域夜间模式开启时有意义（渐进披露）
+            visible: (ctx) => ctx.configs.getSettings("bbsNightMode") !== false,
           },
           {
             id: "bbsImageAspectFix",

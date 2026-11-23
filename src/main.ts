@@ -293,6 +293,11 @@ import { installBbsImageAspectFix } from "./init/BbsImageAspectFix";
       try {
         // 本地背景池要赶在 StyleLoader 生成 CSS 之前读进内存（那里是同步流程）
         BackgroundPool.init();
+        // 独立站点（MOD特性警示）没有页面 Init，用根类名给 nightImageDim 规则做作用域，
+        // 避免 .icon img 这类通用选择器波及主站界面图标
+        if (window.location.hostname === "bug.mcmod.cn") {
+          document.documentElement.classList.add("mcmodder-bug-page");
+        }
         new Mcmodder();
       } catch (error) {
         console.error("Mcmodder 启动失败：", error);

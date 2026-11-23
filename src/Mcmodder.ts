@@ -596,6 +596,9 @@ export class Mcmodder {
     } else {
       document.documentElement.style.removeProperty("--mcmodder-img-dim");
     }
+    // 需要「先暗底、再提文字」的页面（工具页黄历）不能只靠变量默认值：滑条为 0 时
+    // 底色不压暗，若仍提亮文字会变成浅字贴浅底。用根类名把这一组规则限定在调暗生效时。
+    document.documentElement.classList.toggle("mcmodder-has-img-dim", dim > 0);
   }
 
   /** 一次性迁移：布尔自适应开关 adaptableNightMode → 三态偏好 nightModePreference，无条件写入（机制见方法内注释；解析偏好在 computeNightMode/resolveNightMode）。 */

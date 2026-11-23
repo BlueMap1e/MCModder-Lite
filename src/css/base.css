@@ -3398,6 +3398,41 @@ html.dark .common-text img {
   filter: brightness(var(--mcmodder-img-dim, 1));
 }
 
+/* 夜间图片调暗的补充面：工具页大黄历与 MOD特性警示站的图标。
+   - 黄历（/tools/almanacs/）主体是 .frame 的 CSS 背景图（902×702），
+     直接给元素 filter 会连前景文字一起压暗。做法：负 z-index 伪元素盖在
+     元素背景之上、正文内容之下，只压背景图，日期/宜忌文字保持原亮度；
+     isolation 建立层叠上下文，保证负层不落到父级背景后面。
+   - 本站（bug.mcmod.cn）的条目缩略图是 80px 内容图，头像/站点 logo 不在此列；
+     顶部横幅是 ::before 渐变而非图片，同样按亮度规则压暗以消除夜间刺眼。 */
+html.dark.mcmodder-has-img-dim .almanacs_main .frame {
+  position: relative;
+  isolation: isolate;
+}
+html.dark.mcmodder-has-img-dim .almanacs_main .frame::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  border-radius: inherit;
+  background: rgba(0, 0, 0, calc(1 - var(--mcmodder-img-dim, 1)));
+  pointer-events: none;
+}
+/* 黄历正文是站点写死的深灰（#444/#666），背景压暗后深字贴深底不可读；
+   夜间把前景文字统一提亮（只在本页暗色面板内生效）。 */
+html.dark.mcmodder-has-img-dim .almanacs_main .frame * {
+  color: var(--mcmodder-color-text) !important;
+}
+html.dark .almanacs_main img {
+  filter: brightness(var(--mcmodder-img-dim, 1));
+}
+html.dark.mcmodder-bug-page .common-cover::before {
+  filter: brightness(var(--mcmodder-img-dim, 1));
+}
+html.dark.mcmodder-bug-page .icon img {
+  filter: brightness(var(--mcmodder-img-dim, 1));
+}
+
 /* CAPP 服务器页（/sv/，sv.frame.css）：面板写死白底 + 平铺 GIF 纹理底图
    （面包屑 mc_main.gif、内容块 sv_block.gif），夜间整页发白。纹理底图直接
    去掉换调色板深底，标题灰 #777 与 #DDD 边框一并适配。类名 sv_* 为该页专属。 */
