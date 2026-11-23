@@ -4193,3 +4193,18 @@ html.mcmodder-tab-compact
 #edit-submit-button:not(:disabled):not(.disabled):focus {
   color: var(--mcmodder-color-accent-dark2);
 }
+
+/* ── 找服玩服务器页（play.mcmod.cn/sv*.html）夜间引用块：抬升面板 ──────
+   站点给 blockquote 浅底 #f4f8fb、无边框、4px 圆角；夜间只换 dark1 底色时
+   与页底仅差 13 级灰、又无块边界，读起来就是正文（2026-11-24 验收反馈）。
+   按裸 pre 的既有抬升配方补 1px #333 描边；底色在 dark1 上再叠 4% 白，
+   把面抬到「页底与弹层之间」的半档——暗色 UI 的层级靠亮度阶梯表达，但大块
+   内容面直接跳到弹层档（dark2 #414141）会喧宾夺主、挤压 tooltip 的层级，
+   所以用少量叠加而不是换档。圆角沿用站点 4px。
+   页面标记由 PlayServerPageInit 添加，规则不波及主站资料页的引用块。 */
+html.dark.mcmodder-play-page blockquote {
+  background-color: var(--mcmodder-color-background-dark1);
+  background-image: linear-gradient(rgba(255, 255, 255, 0.04), rgba(255, 255, 255, 0.04));
+  border: 1px solid #333;
+  color: var(--mcmodder-color-text);
+}
