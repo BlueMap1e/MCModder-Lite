@@ -15,7 +15,7 @@ export class DiffPageInit extends Init {
     const textA = $(".difference-content-right");
     const textB = $(".difference-content-left");
     const comparatorFrame = $("<div>").insertBefore($(".difference-info").first());
-    createApp(TextComparator, { textA, textB }).mount(comparatorFrame.get(0));
+    createApp(TextComparator, { parent: this.parent, textA, textB }).mount(comparatorFrame.get(0));
 
     $(".difference-table > tbody")
       .contents()

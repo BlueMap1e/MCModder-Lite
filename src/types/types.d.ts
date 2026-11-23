@@ -133,6 +133,8 @@ interface Settings {
   inputSuggestions: boolean;
   mcmodderUISkin: boolean;
   diffComparator: boolean;
+  /** 差异页对比器结果区折叠状态（内部键，无面板条目）：true = 只留统计条 */
+  diffComparatorCollapsed: boolean;
   sandboxSidebarRemoval: boolean;
   customFont: 0 | 1 | 2 | 3;
   disableGradient: boolean;

@@ -1198,7 +1198,10 @@ export class AdminVerifyInit extends AdminBaseInit {
   private mountTextComparator() {
     if (this.textComparator === undefined) {
       this.comparatorContainer = document.createElement("div");
-      this.textComparator = createApp(TextComparator, this.comparatorTexts);
+      this.textComparator = createApp(TextComparator, {
+        ...this.comparatorTexts,
+        parent: this.parent,
+      });
       this.textComparator.mount(this.comparatorContainer);
     }
     const insertPos = this.verifyFrame!.find(".verify-action-btns, .assistant-action-btns")

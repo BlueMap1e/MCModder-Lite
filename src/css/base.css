@@ -86,8 +86,12 @@ html:not(.dark) .mcmodder-format-color {
   background-color: var(--mcmodder-tca3);
 }
 :root {
+  /* 中文显式回退到无衬线：Firefox/Zen 下 monospace 泛型的 CJK 回退是宋体系
+     （衬线、小字号发虚），Chromium 则回退雅黑——同一段代码两种观感。栈内先钉死
+     CJK 无衬线，两个引擎一致。等宽中文与宋体同为全角，代码块对齐不受影响。 */
   --mcmodder-font-monospace:
-    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", "Microsoft YaHei",
+    "PingFang SC", "Noto Sans CJK SC", "Noto Sans SC", monospace;
   --mcmodder-cursor-hand: url(//www.mcmod.cn/images/cursor/hand.png), auto;
   --mcmodder-animation-shinyborder: mcmodder-shinyborder 2s ease-in-out infinite alternate;
   --mcmodder-width-radius: calc(1em * var(--mcmodder-ratio-radius));
@@ -1294,11 +1298,13 @@ body:not(.view),
   text-overflow: ellipsis;
   overflow: hidden;
 }
-.mcmodder-table tr:not(.mcmodder-table-empty):nth-child(2n) {
-  background-color: var(--mcmodder-color-background);
-}
-.mcmodder-table tr:not(.mcmodder-table-empty):nth-child(2n + 1) {
+/* 虚拟滚动只渲染可视行，渲染窗口起点变化时 nth-child 的奇偶会漂移，故按数据行索引着色
+   （上游 366f1ce 同款修复；本仓未跟虚拟滚动重构，只跟这条通用着色修复） */
+.mcmodder-table tr.mcmodder-table-row-even {
   background-color: var(--mcmodder-color-primary-background);
+}
+.mcmodder-table tr.mcmodder-table-row-odd {
+  background-color: var(--mcmodder-color-background);
 }
 .mcmodder-editor-link::before {
   font-family: FontAwesome;
@@ -1817,50 +1823,96 @@ body .top-main .pulldown .arrow {
   font-size: 75%;
   margin-left: 0.375em;
 }
-.mcmodder-text-stats {
+#mcmodder-text-area .mcmodder-text-stats {
   display: flex;
-  gap: var(--mcmodder-width-padding-3);
+  align-items: center;
+  gap: 0.3em;
   margin-bottom: 0.2em;
   overflow-x: auto;
 }
-.mcmodder-text-stats .stats-num > span,
-.mcmodder-text-stats .stats-opt {
+#mcmodder-text-area .mcmodder-text-stats .stats-num {
+  display: flex;
+  align-items: center;
+  overflow-x: auto;
+}
+#mcmodder-text-area .mcmodder-text-stats .stats-num > span {
   font-size: 14px;
   background-color: var(--mcmodder-color-background);
   margin-right: 0.5em;
   text-wrap: nowrap;
 }
-.mcmodder-text-stats .stats-num {
-  display: flex;
-  overflow-x: auto;
-}
-.mcmodder-text-stats .stats-opt {
+#mcmodder-text-area .mcmodder-text-stats .stats-opt {
   margin-left: auto;
   margin-right: 0;
   display: flex;
+  align-items: center;
   gap: 0.2em;
+  font-size: 14px;
+  /* 皮肤层（mcmodderUI.css 后注入）会给整个控件簇加内边距与阴影，右缘因此内缩、
+     与统计条对不齐——这里显式压掉，控件簇只负责排列 */
+  padding: 0;
+  background: transparent;
+  box-shadow: none;
+  border-radius: 0;
 }
-.mcmodder-text-stats .stats-opt > * {
-  padding: 0 5px;
-  border-radius: 0.2em;
-  display: inline-block;
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > * {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  height: 26px;
+  padding: 0 6px;
+  border-radius: 4px;
+  line-height: 1;
   text-align: center;
   color: var(--mcmodder-color-text);
 }
-.mcmodder-text-stats .stats-opt > a {
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > .stats-opt-nav {
+  /* 固定最小宽度 + 等宽数字：翻页时「1 / 1 → 10 / 12」不会推动左右控件 */
+  min-width: 4.5em;
+  font-variant-numeric: tabular-nums;
+  color: var(--mcmodder-color-text-dark1);
+}
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a {
   -webkit-user-select: none;
   user-select: none;
+  cursor: pointer;
 }
-.mcmodder-text-stats .stats-opt > a:hover {
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a:hover {
   background-color: var(--mcmodder-color-background-dark1);
 }
-.mcmodder-text-stats .stats-opt > .mcmodder-dropdown-container {
-  display: flex;
-  margin: 0;
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a.prev,
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a.next {
+  width: 24px;
+  padding: 0;
 }
-.mcmodder-text-stats .stats-opt > .mcmodder-dropdown-container > .mcmodder-dropdown-button {
-  width: 100px;
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a.toggle {
+  margin-left: 0.3em;
+  padding: 0 8px;
+  color: var(--mcmodder-color-text-dark1);
+}
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > a.toggle:hover {
+  color: var(--mcmodder-color-text);
+}
+#mcmodder-text-area .mcmodder-text-stats .stats-opt > .mcmodder-dropdown-container {
+  display: flex;
+  align-items: center;
+  margin: 0;
+  padding: 0;
+}
+#mcmodder-text-area
+  .mcmodder-text-stats
+  .stats-opt
+  > .mcmodder-dropdown-container
+  > .mcmodder-dropdown-button {
+  /* 7.5em 容得下四字模式名 + 箭头；16px 的 .btn 字号会压掉一个字，这里统一回 14px */
+  width: 7.5em;
+  min-width: 7.5em;
   height: 100%;
+  padding: 0 1.8em 0 0.6em;
+  box-sizing: border-box;
+  font-size: 14px;
+  line-height: 1;
 }
 .common-rowlist-block .title,
 .common-imglist-block .title,

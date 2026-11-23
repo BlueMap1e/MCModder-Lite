@@ -20,22 +20,31 @@
         </span>
       </span>
       <span class="stats-opt">
-        <span class="stats-opt-nav">
+        <span v-show="!collapsed" class="stats-opt-nav">
           {{ (currentPos + 1).toLocaleString() }} /
           {{ maxPos.toLocaleString() }}
         </span>
         <DropdownMenuInput
+          v-show="!collapsed"
           title="对比模式"
           :value="defaultMode"
           :range="modeName"
           :on-successful-change="onModeChange"
         >
         </DropdownMenuInput>
-        <a v-show="maxPos >= 1" class="prev" @click="onPrevClick">↑</a>
-        <a v-show="maxPos >= 1" class="next" @click="onNextClick">↓</a>
+        <a v-show="!collapsed && maxPos >= 1" class="prev" @click="onPrevClick">↑</a>
+        <a v-show="!collapsed && maxPos >= 1" class="next" @click="onNextClick">↓</a>
+        <a
+          class="toggle"
+          role="button"
+          :aria-expanded="!collapsed"
+          :title="collapsed ? '展开对比结果' : '收起对比结果'"
+          @click="toggleCollapsed"
+          >{{ collapsed ? "展开" : "收起" }}</a
+        >
       </span>
     </div>
-    <div id="mcmodder-text-result" ref="resultFrame">
+    <div v-show="!collapsed" id="mcmodder-text-result" ref="resultFrame">
       <template v-for="(data, index) in diff" :key="index">
         <del v-if="data.removed" :data-index="index">{{ data.value }}</del>
         <ins v-else-if="data.added" :data-index="index">{{ data.value }}</ins>
@@ -58,8 +67,11 @@ import {
 } from "vue";
 import { diffChars, diffLines, diffWords } from "diff";
 import DropdownMenuInput from "./input/DropdownMenuInput.vue";
+import type { Mcmodder } from "../../Mcmodder";
 
 interface Props {
+  /** 组合根：读取/持久化折叠状态 */
+  parent: Mcmodder;
   /**
    * 编辑前的正文：给出正文节点或纯文本均可。
    * 也可传入持有二者的 `ShallowRef`——宿主据此可在**组件存活期间**替换正文以就地刷新对比结果，
@@ -71,6 +83,17 @@ interface Props {
 }
 
 const props = defineProps<Props>();
+
+/**
+ * 结果区折叠状态（内部键，无面板条目）：只留统计条一行摘要。
+ * 差异页、后台审核窗与编辑器共用同一个状态，避免同一用户在三个入口各折一次。
+ */
+const collapsed = ref(!!props.parent.configRepository.getSettings("diffComparatorCollapsed"));
+
+function toggleCollapsed() {
+  collapsed.value = !collapsed.value;
+  props.parent.configRepository.setSettings("diffComparatorCollapsed", collapsed.value);
+}
 
 const root = useTemplateRef("root");
 const resultFrame = useTemplateRef("resultFrame");

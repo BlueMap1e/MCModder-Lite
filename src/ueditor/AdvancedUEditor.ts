@@ -1221,7 +1221,9 @@ export class AdvancedUEditor extends UEditor {
     });
     this.updateTextLengthDisplay();
     const comparatorFrame = $("<div>").insertBefore($(".tab-content").first());
-    createApp(TextComparator, { textA: ta, textB: tb }).mount(comparatorFrame.get(0));
+    createApp(TextComparator, { parent: this.parent, textA: ta, textB: tb }).mount(
+      comparatorFrame.get(0),
+    );
     // this.updateEditorStats();
   }
 
