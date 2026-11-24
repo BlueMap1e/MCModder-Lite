@@ -408,8 +408,12 @@ const configResourceFileListInteractorProps = [
 ] as const;
 
 function goto(type: "category" | "section", id: string) {
-  // 目录树点进折叠中的分区：先展开再滚动，否则目标只有一条节名横条
-  if (type === "section") expandedSections.value.add(id);
+  // 目录树点进折叠中的分区：先展开再滚动，否则目标只有一条节名横条；
+  // 由目录树展开同样落盘（否则「展开状态会被记住」在纯目录树浏览时失效）
+  if (type === "section" && !expandedSections.value.has(id)) {
+    expandedSections.value.add(id);
+    persistExpandedSections();
+  }
   void nextTick(() => {
     const target = $(settingsContentRef.value!).find(`[data-${type}=${id}]`);
     const el = target.get(0);
