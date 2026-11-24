@@ -1,3 +1,4 @@
+import { computed, watch } from "vue";
 import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { BackgroundPool } from "../background/BackgroundPool";
@@ -204,56 +205,65 @@ export class StyleLoader {
       },
     ]);
 
-    const themeBasePalette: Palette = {
-      primary: Utils.setColorBrightness(parent.styleColors.tc1, 80),
-      accent: Utils.setColorBrightness(parent.styleColors.tc2, 80),
+    // 主题色走 settings ref：设置面板里换色后由下方 watch 即时重注入样式，
+    // 不再要求刷新页面（默认值与 ConfigLoader 登记值一致；正常启动时键已落盘，
+    // 默认值只兜「存储被清空」这类边界）
+    const themeColor1 = configs.getSettingsRef("themeColor1", "#3b82f6");
+    const themeColor2 = configs.getSettingsRef("themeColor2", "#1e40af");
+    const themeBasePalette = computed<Palette>(() => ({
+      primary: Utils.setColorBrightness(themeColor1.value ?? "#3b82f6", 80),
+      accent: Utils.setColorBrightness(themeColor2.value ?? "#1e40af", 80),
       danger: Utils.setColorBrightness("#dc3545", 80),
       success: Utils.setColorBrightness("#28a745", 80),
       warning: Utils.setColorBrightness("#8a6d3b", 80),
-    };
-    const themeNightPalette: Palette = {
-      primary: Utils.setColorBrightness(parent.styleColors.tc1, 60),
-      accent: Utils.setColorBrightness(parent.styleColors.tc2, 60),
+    }));
+    const themeNightPalette = computed<Palette>(() => ({
+      primary: Utils.setColorBrightness(themeColor1.value ?? "#3b82f6", 60),
+      accent: Utils.setColorBrightness(themeColor2.value ?? "#1e40af", 60),
       danger: Utils.setColorBrightness("#dc3545", 60),
       success: Utils.setColorBrightness("#28a745", 60),
       warning: Utils.setColorBrightness("#8a6d3b", 60),
-    };
+    }));
     const paletteTransparentStep: PaletteModifierStep = {
       transparent: {
         converter: (color, tier) => Utils.setColorAlpha(color, Math.pow(0.5, tier!)),
         maxTier: 2,
       },
     };
-    const themePaletteBaseCss = this.applyPaletteModifier(themeBasePalette, [
-      {
-        dark: {
-          converter: (color, tier) => Utils.adjustColorBrightness(color, 1 - 0.2 * tier!),
-          maxTier: 2,
+    const themePaletteBaseCss = computed(() =>
+      this.applyPaletteModifier(themeBasePalette.value, [
+        {
+          dark: {
+            converter: (color, tier) => Utils.adjustColorBrightness(color, 1 - 0.2 * tier!),
+            maxTier: 2,
+          },
+          light: {
+            converter: (color) => Utils.adjustColorBrightness(color, 1.5),
+          },
+          background: {
+            converter: (color) => Utils.setColorBrightness(color, 99),
+          },
         },
-        light: {
-          converter: (color) => Utils.adjustColorBrightness(color, 1.5),
+        paletteTransparentStep,
+      ]),
+    );
+    const themePaletteNightCss = computed(() =>
+      this.applyPaletteModifier(themeNightPalette.value, [
+        {
+          dark: {
+            converter: (color, tier) => Utils.adjustColorBrightness(color, 1 + 0.2 * tier!),
+            maxTier: 2,
+          },
+          light: {
+            converter: (color) => Utils.adjustColorBrightness(color, 0.5),
+          },
+          background: {
+            converter: (color) => Utils.setColorBrightness(color, 8),
+          },
         },
-        background: {
-          converter: (color) => Utils.setColorBrightness(color, 99),
-        },
-      },
-      paletteTransparentStep,
-    ]);
-    const themePaletteNightCss = this.applyPaletteModifier(themeNightPalette, [
-      {
-        dark: {
-          converter: (color, tier) => Utils.adjustColorBrightness(color, 1 + 0.2 * tier!),
-          maxTier: 2,
-        },
-        light: {
-          converter: (color) => Utils.adjustColorBrightness(color, 0.5),
-        },
-        background: {
-          converter: (color) => Utils.setColorBrightness(color, 8),
-        },
-      },
-      paletteTransparentStep,
-    ]);
+        paletteTransparentStep,
+      ]),
+    );
 
     const codemirrorPalette: Palette = {
       "cm-keyword": "#708",
@@ -361,179 +371,207 @@ export class StyleLoader {
       paletteTransparentStep,
     ]);
 
-    const backgroundAlpha =
-      Utils.clamp(Number(configs.getSettings("backgroundAlpha")), 128, 255) / 0xff;
-    const textShadowAlpha =
-      Utils.clamp(Number(configs.getSettings("textShadowAlpha")), 0, 255) / 0xff;
-    const otherPaletteBaseCss = this.applyPaletteModifier(
-      {
-        "background-transparent": Utils.setColorAlpha(basePalette.background, backgroundAlpha),
-        "text-shadow": "#FFF0",
-        "text-shadow-strong": "#8884",
-        "box-shadow": "#8884",
-        "pre-ins": "#406619",
-        "pre-del": "#b30000",
-        "code-text": "#c7254e",
-        "code-background": "#f9f2f4",
-        "text-success": "#28a745",
-        "text-danger": "#dc3545",
-        "text-warning": "#8a6d3b",
-        "text-info": "#31708f",
-        "text-primary": "#31708f",
-        badges: "#fff8",
-        button: "#6c757d",
-        "permission-editor": "#15f",
-        "permission-admin": "#b3f",
-        "permission-developer": "#f51",
-        "itemrelation-jump": "#15f",
-        "itemrelation-general": "#f51",
-        link: "#06c",
-        "link-visited": "#551a8b",
-        "link-foot": "#008000",
-        "channel-1": "#334bdb",
-        "channel-2": "#904623",
-        "copyright-title": "#3b566e",
-        "copyright-text": "#6f8ba4",
-        "alert-primary-1": "#004085",
-        "alert-primary-2": "#cce5ff",
-        "alert-primary-3": "#b8daff",
-        "alert-warning-1": "#856404",
-        "alert-warning-2": "#fff3cd",
-        "alert-warning-3": "#ffeeba",
-        "alert-danger-1": "#721c24",
-        "alert-danger-2": "#f8d7da",
-        "alert-danger-3": "#f5c6cb",
-        "verifyframe-error": "#933",
-        "verifyframe-warning": "#7c4916",
-        "verifyframe-info": "#666",
-        "version-alpha-1": "#f55",
-        "version-alpha-2": "#faa8",
-        "version-beta-1": "#55f",
-        "version-beta-2": "#aaf8",
-        "version-release-1": "#5a5",
-        "version-release-2": "#afa8",
-        "platform-forge": "#5b6197",
-        "platform-fabric": "#8a7b71",
-        "platform-neoforge": "#dc895c",
-        "platform-quilt": "#8b61d4",
-        "platform-liteloader": "#4c90de",
-        "platform-nilloader": "#dd5088",
-        "platform-javaagent": "#111827",
-        uknowtoomuch: "#000",
-        "uknowtoomuch-hover": "#fff",
-        "classstatus-1": "#2cbe4e",
-        "classstatus-2": "#cb6431",
-        "classstatus-3": "#cb2431",
-        "classstatus-4": "#adadad",
-        "classstatus-5": "#3675e9",
-        "classstatus-6": "#303030",
-      },
-      [],
+    const backgroundAlphaRaw = configs.getSettingsRef("backgroundAlpha", 204);
+    const textShadowAlphaRaw = configs.getSettingsRef("textShadowAlpha", 64);
+    const backgroundAlpha = computed(
+      () => Utils.clamp(Number(backgroundAlphaRaw.value), 128, 255) / 0xff,
     );
-    const otherPaletteNightCss = this.applyPaletteModifier(
-      {
-        // 内容面（.class-text / .center-block / .item-list-table 等约 119 个容器共用的
-        // 「面」原语）取 tier1 抬升面而非页底色：媒体密集页面上图文直接贴在最深底色上
-        // 会产生强亮度断层（同时对比），让内容「坐在」稍亮的面上。
-        // 目标是「有效面色」稳定落在 tier1（与 background-dark1 的 tier 换算一致）：
-        // 该变量带 backgroundAlpha 透明度、叠在页底色上渲染，若直接用 tier1 色值，
-        // alpha < 1 时会被页底色稀释（0.8 档实际只得 #1b1b1b），故按 alpha 反解出发光色。
-        // 反解后「背景透明度」设置只控制底图/底色的透出程度，不再改变面色亮度。
-        "background-transparent": StyleLoader.alphaBlendTo(
-          Utils.adjustColorBrightness(nightPalette.background, 1.05),
-          nightPalette.background,
-          backgroundAlpha,
-        ),
-        "text-shadow": Utils.setColorAlpha(nightPalette.background, textShadowAlpha),
-        "text-shadow-strong": "#0004",
-        "box-shadow": "#0008",
-        "pre-ins": "#beff7b",
-        "pre-del": "#ff7b7b",
-        "code-text": "#f68",
-        "code-background": "#423",
-        "text-success": "#4c4",
-        "text-danger": "#faa",
-        "text-warning": "#fa5",
-        "text-info": "#4be",
-        "text-primary": "#4be",
-        badges: "#1118",
-        button: "#9ab",
-        "permission-editor": "#28f",
-        "permission-admin": "#c6f",
-        "permission-developer": "#f82",
-        "itemrelation-jump": "#28f",
-        "itemrelation-general": "#f82",
-        link: "#6bf",
-        "link-visited": "#96c",
-        "link-foot": "#3a3",
-        "channel-1": "#8af",
-        "channel-2": "#fa8",
-        "copyright-title": "#8cf",
-        "copyright-text": "#8bd",
-        "alert-primary-1": "#bdf",
-        "alert-primary-2": "#036",
-        "alert-primary-3": "#27d",
-        "alert-warning-1": "#fdc",
-        "alert-warning-2": "#430",
-        "alert-warning-3": "#860",
-        "alert-danger-1": "#fcc",
-        "alert-danger-2": "#411",
-        "alert-danger-3": "#822",
-        "verifyframe-error": "#f55",
-        "verifyframe-warning": "#da6",
-        "verifyframe-info": "#aaa",
-        "version-alpha-1": "#f99",
-        "version-alpha-2": "#8558",
-        "version-beta-1": "#99f",
-        "version-beta-2": "#5588",
-        "version-release-1": "#8c8",
-        "version-release-2": "#5858",
-        uknowtoomuch: "#444",
-        "uknowtoomuch-hover": "#ddd",
-        "classstatus-1": "#183",
-        "classstatus-2": "#852",
-        "classstatus-3": "#822",
-        "classstatus-4": "#666",
-        "classstatus-5": "#258",
-        "classstatus-6": "#333",
-      },
-      [],
+    const textShadowAlpha = computed(
+      () => Utils.clamp(Number(textShadowAlphaRaw.value), 0, 255) / 0xff,
+    );
+    /** 杂色表（亮色）：除「背景透明」外都是固定色板，故只有透明度两个变量在下方按设置叠加 */
+    const otherPaletteBase: Palette = {
+      "text-shadow": "#FFF0",
+      "text-shadow-strong": "#8884",
+      "box-shadow": "#8884",
+      "pre-ins": "#406619",
+      "pre-del": "#b30000",
+      "code-text": "#c7254e",
+      "code-background": "#f9f2f4",
+      "text-success": "#28a745",
+      "text-danger": "#dc3545",
+      "text-warning": "#8a6d3b",
+      "text-info": "#31708f",
+      "text-primary": "#31708f",
+      badges: "#fff8",
+      button: "#6c757d",
+      "permission-editor": "#15f",
+      "permission-admin": "#b3f",
+      "permission-developer": "#f51",
+      "itemrelation-jump": "#15f",
+      "itemrelation-general": "#f51",
+      link: "#06c",
+      "link-visited": "#551a8b",
+      "link-foot": "#008000",
+      "channel-1": "#334bdb",
+      "channel-2": "#904623",
+      "copyright-title": "#3b566e",
+      "copyright-text": "#6f8ba4",
+      "alert-primary-1": "#004085",
+      "alert-primary-2": "#cce5ff",
+      "alert-primary-3": "#b8daff",
+      "alert-warning-1": "#856404",
+      "alert-warning-2": "#fff3cd",
+      "alert-warning-3": "#ffeeba",
+      "alert-danger-1": "#721c24",
+      "alert-danger-2": "#f8d7da",
+      "alert-danger-3": "#f5c6cb",
+      "verifyframe-error": "#933",
+      "verifyframe-warning": "#7c4916",
+      "verifyframe-info": "#666",
+      "version-alpha-1": "#f55",
+      "version-alpha-2": "#faa8",
+      "version-beta-1": "#55f",
+      "version-beta-2": "#aaf8",
+      "version-release-1": "#5a5",
+      "version-release-2": "#afa8",
+      "platform-forge": "#5b6197",
+      "platform-fabric": "#8a7b71",
+      "platform-neoforge": "#dc895c",
+      "platform-quilt": "#8b61d4",
+      "platform-liteloader": "#4c90de",
+      "platform-nilloader": "#dd5088",
+      "platform-javaagent": "#111827",
+      uknowtoomuch: "#000",
+      "uknowtoomuch-hover": "#fff",
+      "classstatus-1": "#2cbe4e",
+      "classstatus-2": "#cb6431",
+      "classstatus-3": "#cb2431",
+      "classstatus-4": "#adadad",
+      "classstatus-5": "#3675e9",
+      "classstatus-6": "#303030",
+    };
+    const otherPaletteBaseCss = computed(() =>
+      this.applyPaletteModifier(
+        {
+          ...otherPaletteBase,
+          "background-transparent": Utils.setColorAlpha(
+            basePalette.background,
+            backgroundAlpha.value,
+          ),
+        },
+        [],
+      ),
+    );
+    /** 杂色表（夜间）：除「背景透明」「文字阴影」外都是固定色板 */
+    const otherPaletteNight: Palette = {
+      "text-shadow-strong": "#0004",
+      "box-shadow": "#0008",
+      "pre-ins": "#beff7b",
+      "pre-del": "#ff7b7b",
+      "code-text": "#f68",
+      "code-background": "#423",
+      "text-success": "#4c4",
+      "text-danger": "#faa",
+      "text-warning": "#fa5",
+      "text-info": "#4be",
+      "text-primary": "#4be",
+      badges: "#1118",
+      button: "#9ab",
+      "permission-editor": "#28f",
+      "permission-admin": "#c6f",
+      "permission-developer": "#f82",
+      "itemrelation-jump": "#28f",
+      "itemrelation-general": "#f82",
+      link: "#6bf",
+      "link-visited": "#96c",
+      "link-foot": "#3a3",
+      "channel-1": "#8af",
+      "channel-2": "#fa8",
+      "copyright-title": "#8cf",
+      "copyright-text": "#8bd",
+      "alert-primary-1": "#bdf",
+      "alert-primary-2": "#036",
+      "alert-primary-3": "#27d",
+      "alert-warning-1": "#fdc",
+      "alert-warning-2": "#430",
+      "alert-warning-3": "#860",
+      "alert-danger-1": "#fcc",
+      "alert-danger-2": "#411",
+      "alert-danger-3": "#822",
+      "verifyframe-error": "#f55",
+      "verifyframe-warning": "#da6",
+      "verifyframe-info": "#aaa",
+      "version-alpha-1": "#f99",
+      "version-alpha-2": "#8558",
+      "version-beta-1": "#99f",
+      "version-beta-2": "#5588",
+      "version-release-1": "#8c8",
+      "version-release-2": "#5858",
+      uknowtoomuch: "#444",
+      "uknowtoomuch-hover": "#ddd",
+      "classstatus-1": "#183",
+      "classstatus-2": "#852",
+      "classstatus-3": "#822",
+      "classstatus-4": "#666",
+      "classstatus-5": "#258",
+      "classstatus-6": "#333",
+    };
+    const otherPaletteNightCss = computed(() =>
+      this.applyPaletteModifier(
+        {
+          ...otherPaletteNight,
+          // 内容面（.class-text / .center-block / .item-list-table 等约 119 个容器共用的
+          // 「面」原语）取 tier1 抬升面而非页底色：媒体密集页面上图文直接贴在最深底色上
+          // 会产生强亮度断层（同时对比），让内容「坐在」稍亮的面上。
+          // 目标是「有效面色」稳定落在 tier1（与 background-dark1 的 tier 换算一致）：
+          // 该变量带 backgroundAlpha 透明度、叠在页底色上渲染，若直接用 tier1 色值，
+          // alpha < 1 时会被页底色稀释（0.8 档实际只得 #1b1b1b），故按 alpha 反解出发光色。
+          // 反解后「背景透明度」设置只控制底图/底色的透出程度，不再改变面色亮度。
+          "background-transparent": StyleLoader.alphaBlendTo(
+            Utils.adjustColorBrightness(nightPalette.background, 1.05),
+            nightPalette.background,
+            backgroundAlpha.value,
+          ),
+          "text-shadow": Utils.setColorAlpha(nightPalette.background, textShadowAlpha.value),
+        },
+        [],
+      ),
     );
 
     // 本地图池优先：池为空时回落到手填 URL（Lite 无内置默认图，回落 none）
     const bgMode = BackgroundPool.readMode(configs);
     const localBg = BackgroundPool.pick("day", bgMode);
     const localBgNight = BackgroundPool.pick("night", bgMode);
-    const bg = localBg ?? (configs.getSettings("defaultBackground") || "none");
-    const bgNight = localBgNight ?? (configs.getSettings("defaultNightBackground") || "none");
+    const bg = computed(
+      () => localBg ?? (configs.getSettingsRef("defaultBackground", "none").value || "none"),
+    );
+    const bgNight = computed(
+      () =>
+        localBgNight ?? (configs.getSettingsRef("defaultNightBackground", "none").value || "none"),
+    );
     /** data URL 含 base64 的 `+/=`，统一加引号避免 CSS 解析歧义 */
     const toCssUrl = (value: string) =>
       value === "none" ? "none" : `url(${value.startsWith("data:") ? `"${value}"` : value}) fixed`;
-    const otherCss = `
-      --mcmodder-image-background: ${toCssUrl(bg)};
-    `;
-    const otherNightCss = `
-      --mcmodder-image-background: ${toCssUrl(bgNight)};
-    `;
+    const otherCss = computed(
+      () => `
+      --mcmodder-image-background: ${toCssUrl(bg.value)};
+    `,
+    );
+    const otherNightCss = computed(
+      () => `
+      --mcmodder-image-background: ${toCssUrl(bgNight.value)};
+    `,
+    );
 
-    const css = {
+    const css = computed(() => ({
       themeColor: `
       :root {
         ${basePaletteBackgroundCss}
         ${basePaletteTextCss}
-        ${themePaletteBaseCss}
+        ${themePaletteBaseCss.value}
         ${highlightPaletteCss}
         ${codemirrorPaletteCss}
-        ${otherPaletteBaseCss}
-        ${otherCss}
+        ${otherPaletteBaseCss.value}
+        ${otherCss.value}
       }
       :root.dark {
         ${nightPaletteBackgroundCss}
         ${nightPaletteTextCss}
-        ${themePaletteNightCss}
+        ${themePaletteNightCss.value}
         ${codemirrorPaletteNightCss}
-        ${otherPaletteNightCss}
-        ${otherNightCss}
+        ${otherPaletteNightCss.value}
+        ${otherNightCss.value}
       }`,
       base: baseCss,
       mcmodderUI: mcmodderUICss,
@@ -543,46 +581,82 @@ export class StyleLoader {
       codemirrorCss: codemirrorCss,
       // 末尾追加：减弱动效规则需要压过同选择器的静态样式
       reducedMotion: reducedMotionCss,
-    };
+    }));
 
     const htmlNode = $("html");
-    if (configs.getSettings("disableGradient")) {
-      htmlNode.addClass("mcmodder-config-disable-gradient");
-    }
-    if (configs.getSettings("dimCoverAtNight")) {
-      htmlNode.addClass("mcmodder-config-dim-cover");
-    }
 
-    let style = "";
-    style += css.themeColor;
-    style += css.base;
-    // 「界面皮肤」开关（默认开）：mcmodderUI.css 是上游遗留的全站换肤层，关闭后
-    // 按钮渐变、面板配色等回归站点原生样式。该文件不含任何夜间规则，夜间模式
-    // 不受本开关影响（2026-11-10 复活曾死的 mcmodderUI 键，原注释条件见 git 历史）
-    if (configs.getSettings("mcmodderUISkin")) {
-      style += css.mcmodderUI;
-    }
-    if (configs.getSettings("tableThemeColor")) {
-      style += css.tableThemeColor;
-    }
-    if (configs.getSettings("tableLeftAlign")) {
-      style += css.tableLeftAlign;
-    }
-    // 只在分屏真正可用时注入：移动端 JS 不会挂分屏（enableSplit=false），
-    // 这条 CSS 却会隐藏站点原生审核窗，形成「样式生效、功能没挂」的半残状态
-    if (configs.getSettings("splitScreenOnVerify") && !Utils.isMobileClient()) {
-      style += css.splitScreenOnVerify;
-    }
-    style += css.codemirrorCss;
-    style += css.reducedMotion;
+    // 这两个开关只给 <html> 加/去标记类，不必重建样式表；改成响应式后与其它
+    // 主题类设置一致，改完即时生效
+    const disableGradient = configs.getSettingsRef("disableGradient", false);
+    watch(
+      () => !!disableGradient.value,
+      (on) => htmlNode.toggleClass("mcmodder-config-disable-gradient", on),
+      { immediate: true },
+    );
+    const dimCoverAtNight = configs.getSettingsRef("dimCoverAtNight", false);
+    watch(
+      () => !!dimCoverAtNight.value,
+      (on) => htmlNode.toggleClass("mcmodder-config-dim-cover", on),
+      { immediate: true },
+    );
 
-    parent.css = style;
-    Utils.addStyle(style);
+    /** 按当前设置拼接要注入的样式表：静态 CSS + 由设置派生的调色板 */
+    const enabledStyles = computed(() => {
+      const styles = css.value;
+      const result = [styles.themeColor, styles.base];
+      // 「界面皮肤」开关（默认开）：mcmodderUI.css 是上游遗留的全站换肤层，关闭后
+      // 按钮渐变、面板配色等回归站点原生样式。该文件不含任何夜间规则，夜间模式
+      // 不受本开关影响（2026-11-10 复活曾死的 mcmodderUI 键，原注释条件见 git 历史）
+      if (configs.getSettings("mcmodderUISkin")) {
+        result.push(styles.mcmodderUI);
+      }
+      if (configs.getSettings("tableThemeColor")) {
+        result.push(styles.tableThemeColor);
+      }
+      if (configs.getSettings("tableLeftAlign")) {
+        result.push(styles.tableLeftAlign);
+      }
+      // 只在分屏真正可用时注入：移动端 JS 不会挂分屏（enableSplit=false），
+      // 这条 CSS 却会隐藏站点原生审核窗，形成「样式生效、功能没挂」的半残状态
+      if (configs.getSettings("splitScreenOnVerify") && !Utils.isMobileClient()) {
+        result.push(styles.splitScreenOnVerify);
+      }
+      result.push(styles.codemirrorCss);
+      result.push(styles.reducedMotion);
+      return result;
+    });
 
-    const radiusRatio: number | undefined = configs.getSettings("radiusRatio");
-    document.documentElement.style.setProperty(
-      "--mcmodder-ratio-radius",
-      (radiusRatio === undefined ? 1 : radiusRatio).toString(),
+    // 重注入：主题色 / 背景透明度 / 背景图 / 圆角这类纯 CSS 变量的设置改完即时生效，
+    // 不再要求刷新页面。两条实现约束：
+    // 1) `mcmodderSettings` 是整键缓存，任意设置的写入都会让上面的 computed 重算，
+    //    所以必须比较拼接结果，相等就完全不动 DOM——否则改一个无关开关也会重建
+    //    约 190 KB 的样式表并触发全页重算；
+    // 2) 就地改写已有 <style> 的文本，而不是 remove + 重新 append：后者会把样式表挪到
+    //    <head> 末尾，改变它与其它注入样式（Vue 组件 CSS 等）的文档顺序，
+    //    等特异性规则可能因此翻转。
+    const STYLE_ID = "mcmodder-style-global";
+    let appliedCss = "";
+    watch(
+      () => enabledStyles.value.join(""),
+      (nextCss) => {
+        if (nextCss === appliedCss) return;
+        appliedCss = nextCss;
+        parent.css = nextCss;
+        const styleNode = document.getElementById(STYLE_ID);
+        if (styleNode) styleNode.textContent = nextCss;
+        else Utils.addStyle(nextCss, STYLE_ID);
+      },
+      { immediate: true },
+    );
+
+    // 圆角只有一个变量，直接改 <html> 上的自定义属性，比重建样式表便宜得多
+    const radiusRatio = configs.getSettingsRef("radiusRatio", 1);
+    watch(
+      () => radiusRatio.value ?? 1,
+      (value) => {
+        document.documentElement.style.setProperty("--mcmodder-ratio-radius", String(value));
+      },
+      { immediate: true },
     );
 
     parent.updateNightMode();

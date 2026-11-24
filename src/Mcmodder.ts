@@ -1,4 +1,5 @@
 import { GM_getValue, GM_openInTab } from "$";
+import { watch } from "vue";
 import { BackgroundPool } from "./background/BackgroundPool";
 import { ConfigUtils } from "./config/ConfigUtils";
 import { MenuCommandLoader } from "./loader/MenuCommandLoader";
@@ -9,7 +10,7 @@ import { StyleLoader } from "./loader/StyleLoader";
 import { StorageBuffer } from "./StorageBuffer";
 import { AdvancedUEditor } from "./ueditor/AdvancedUEditor";
 import { UEditor } from "./ueditor/UEditor";
-import { Utils, type ThemeColorSet } from "./Utils";
+import { Utils } from "./Utils";
 import { Values } from "./Values";
 import { WebFetchUtils } from "./WebFetchUtils";
 import { Init } from "./init/Init";
@@ -43,7 +44,6 @@ export class Mcmodder {
   cfgutils: ConfigUtils;
   /** 计划任务调度器（自动签到等；装配见构造器，勿删 ScheduleRequestLoader.run 的调用） */
   scheduleRequestUtils: ScheduleRequestUtils;
-  styleColors: ThemeColorSet;
   preferredWiderScreen = false;
   isNightMode = false;
   title = "";
@@ -110,10 +110,6 @@ export class Mcmodder {
     ) {
       this.configRepository.setSettings("keybindFastLink", { altKey: true, key: "X", keyCode: 88 });
     }
-    this.styleColors = {
-      tc1: this.configRepository.getSettings("themeColor1")!,
-      tc2: this.configRepository.getSettings("themeColor2")!,
-    };
 
     InitLoader.run(this, this.initList);
 
@@ -460,15 +456,22 @@ export class Mcmodder {
   }
 
   applyCustomFont(font: number) {
+    // 先撤掉上一次的字族覆盖：切换字体时旧 <style> 若留在 head 里会与新规则叠加，
+    // 且「不指定」需要真正回到站点自带字体；字体 <link> 同理，切回系统字体后
+    // 留在 head 里只是一次白费的请求
+    $("#mcmodder-style-font").remove();
+    document.getElementById("mcmodder-font-link")?.remove();
     switch (font) {
       case 1: {
-        Utils.addStyle(`* {font-family: ${Values.assets.font.fontFamily[font]};}`);
+        Utils.addStyle(
+          `* {font-family: ${Values.assets.font.fontFamily[font]};}`,
+          "mcmodder-style-font",
+        );
         break;
       }
       case 2:
       case 3: {
         // 字体走 Google Fonts：非阻塞加载，3 秒未完成就放弃，避免大陆网络拖住首屏
-        document.getElementById("mcmodder-font-link")?.remove();
         const preconnectAPI = document.createElement("link");
         preconnectAPI.rel = "preconnect";
         preconnectAPI.href = "https://fonts.googleapis.com";
@@ -490,7 +493,10 @@ export class Mcmodder {
         window.setTimeout(() => {
           if (fontLink.isConnected && fontLink.media === "print") fontLink.remove();
         }, 3000);
-        Utils.addStyle(`* {font-family: ${Values.assets.font.fontFamily[font]};}`);
+        Utils.addStyle(
+          `* {font-family: ${Values.assets.font.fontFamily[font]};}`,
+          "mcmodder-style-font",
+        );
         break;
       }
     }
@@ -702,10 +708,13 @@ export class Mcmodder {
       }
     }
 
-    const customFont = this.configRepository.getSettings("customFont");
-    if (customFont) {
-      this.applyCustomFont(customFont);
-    }
+    // 字体切换即时生效（样式节点带 id，先删旧再注入，避免多次切换堆叠 <style>）
+    const customFont = this.configRepository.getSettingsRef("customFont", 0);
+    watch(
+      () => customFont.value ?? 0,
+      (font) => this.applyCustomFont(font),
+      { immediate: true },
+    );
 
     // 夜间图片调暗：初始应用 + watchRef 实时跟随（见 applyNightImageDim）
     this.applyNightImageDim();
