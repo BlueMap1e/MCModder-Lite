@@ -182,9 +182,7 @@ export class AdminVerifyInit extends AdminBaseInit {
         this.verifyFrame.find("> hr").remove();
         this.verifyFrame.find(".verify-action-btns br").remove();
         this.verifyFrame.find(".assistant-action-btns br").remove();
-        // setTimeout(() => {
         window.dispatchEvent(new Event("scroll"));
-        // }, 100);
       };
     }
 
@@ -351,13 +349,6 @@ export class AdminVerifyInit extends AdminBaseInit {
     // 解析基本信息
     this.verifyInfo = this.parseVerifyInfo();
 
-    // if (info["操作类型"] === "资料修改") {
-    //   const tr = $(`#verify-row-${ verifyID }-tr`);
-    //   const td = tr.children("td:nth-child(2)");
-    //   const itemLink = td.children("a.ignore-parent").attr("href");
-    //   itemID = McmodderUtils.abstractIDFromURL(itemLink, "item");
-    // }
-
     // 初始化按钮
     this.modifyButton();
 
@@ -391,7 +382,7 @@ export class AdminVerifyInit extends AdminBaseInit {
       .get(0);
     const verifyInfoText = firstP?.firstChild as Text | undefined;
     // 站点改版 / 结构不符时静默缺字段比 TypeError 中断整个 init 更可取，
-    // 但要留一条警告便于发现（AGENTS：可能永久生效的跳过需显式记录）
+    // 但仍留一条警告——这种跳过在真实页面上基本不会被人注意到
     if (!verifyInfoText || !(verifyInfoText instanceof Text)) {
       console.warn("[MCModder-Lite] 审核项缺少「操作类型」段落，基本信息解析跳过。");
       return verifyInfo;

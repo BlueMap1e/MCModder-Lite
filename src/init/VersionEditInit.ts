@@ -65,8 +65,6 @@ export class VersionEditInit extends Init {
         $("#class-version-updatetime-day").selectpicker("val", date[2]);
         $("li.tab-li:nth-child(3) > div:nth-child(2) > input:nth-child(1)").first().focus();
       });
-    // setTimeout(editorInit, 1e3);
-
     // 自动从 CurseForge/Modrinth/GitHub 源获取日志
     const param = new URLSearchParams(window.location.search);
     let source = 0,

@@ -61,7 +61,6 @@ function onClick() {
     table.value!.show();
     isShown = true;
   } else {
-    // this.table.hide();
     isShown = false;
   }
 }

@@ -9,8 +9,8 @@ import { Init } from "./Init";
  * 站点原生 mouseenter/focus 配对高亮（.active）。开关 tabFillFocusQty（默认开）。
  *
  * 另含配对高亮拆绑（unswitched）：站点按 slot-text-N 类名 + data-type 成对打
- * .active，产出槽的数量/概率字段捆绑同亮（2026-11-22 用户反馈反直觉）——来源
- * 为字段时只保留来源字段与格子，来源为格子时保留整组。
+ * .active，产出槽的数量/概率字段捆绑同亮（子字段跟着来源字段一起亮，语义反直觉）
+ * ——来源为字段时只保留来源字段与格子，来源为格子时保留整组。
  *
  * 数量框键盘导航（tabQtyKeyNav，默认关，opt-in）：思想移植
  * 自上游 TabEditInit.onInputKeydown（↑/↓ ±1、Shift ×2/÷2、Enter/Shift+Enter 列内

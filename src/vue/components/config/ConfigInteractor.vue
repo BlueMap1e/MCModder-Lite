@@ -166,7 +166,6 @@ function onConfigSuccessfulChange(resp: InputValidInfo<typeof value.value>) {
     Utils.commonMsg(PublicLangData.center.setting.complete);
     value.value = resp.final;
   }
-  // configs.setSettings(id, resp.final);
 }
 
 const description = computed(() => {

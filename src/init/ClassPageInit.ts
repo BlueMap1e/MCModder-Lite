@@ -504,14 +504,12 @@ export class ClassPageInit extends Init {
     // maintext
     new MainText(this.parent, $(".text-area.common-text"));
 
-    // if (this.configs.get("mcmodderUI")) {
     $(".class-item-type .mold:not(.mold-0)").each((_, c) => {
       $('<span class="mcmodder-mold-num">')
         .text(parseInt($(c).find(".count").text().slice(1)).toLocaleString())
         .css("color", $(c).find(".title").css("color"))
         .appendTo(c);
     });
-    // }
 
     // 广告优化
     if (this.configs.getSettings("moveAds")) {

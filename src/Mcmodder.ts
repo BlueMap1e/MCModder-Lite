@@ -457,7 +457,6 @@ export class Mcmodder {
       parentPosY: Utils.getAbsolutePos(parent).y,
       parentHeight: parent.getBoundingClientRect().height,
     });
-    // this.screenAttachedFrame = $(".mcmodder-screenattached");
   }
 
   applyCustomFont(font: number) {

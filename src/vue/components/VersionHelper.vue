@@ -786,8 +786,8 @@ function switchPlatform(p: PlatformId) {
   min-width: 860px;
 }
 /* 行底透明（平底表，GitHub dark 风格）：原 dark2 满铺实底在暗页上整块灰板观感
-   沉重（2026-11-19 用户反馈「灰阶不舒服」）；分隔交给 td 的 dark3 下边线，悬停
-   提亮已有专属规则。仅作用于此表的实例 id，不影响其它 GenericTable 的既有观感 */
+   沉重；分隔交给 td 的 dark3 下边线，悬停提亮已有专属规则。仅作用于此表的实例
+   id，不影响其它 GenericTable 的既有观感 */
 #mcmodder-version-menu tr:not(.mcmodder-table-empty) {
   background-color: transparent;
 }

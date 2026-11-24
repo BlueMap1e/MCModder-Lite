@@ -250,7 +250,6 @@ export class CommentInit extends Init {
         `get_comment(comment_container,comment_type);var isUEReady=0;if($(".comment-editor-area .editor-frame").length>0&&0==isUEReady)var ueObj=$.ajax({url:"${this.parent.hostname}/static/ueditor/",async:!0,type:"post",data:{type:"comment"},xhrFields:{withCredentials:true},crossDomain:true,complete:function(e){$(".comment-editor-area .editor-frame .load").html(ueObj.responseText),isUEReady=1}});`,
       );
       if ($(".comment-close").length && $(".comment-dl-tips").length) {
-        // messageCenter.insertBefore($(".common-comment-block.lazy", messageCenter).get(0), $(".comment-dl-tips", messageCenter).get(0));
         $(".comment-close").remove();
       }
     }

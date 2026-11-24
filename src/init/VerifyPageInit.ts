@@ -263,7 +263,6 @@ export class VerifyPageInit extends Init {
 
     // 一键催审
     if (this.configs.getSettings("fastUrge")) {
-      // $("div.bd-callout-warning").first().html('审核周期通常在 24 小时以内，有管理员的模组区域审核周期通常在 7 日以内，如逾期未审，<span class="mcmodder-common-dark">可点“一键催审”按钮给重生上强度！！</span> (´・ω・`)');
       $(
         '<button id="mcmodder-fast-urge" class="btn btn-dark btn-sm" data-toggle="tooltip" data-html="true" data-original-title="一键对当前列表中可催审的审核项催审！审核项提交 24 小时后可催审，首次催审后每隔 1 小时可再次催审。<br>催审并不会对管理员发送强提醒，但能够使审核项在后台的待审列表中排在更靠前的位置。">一键催审</button>',
       )

@@ -449,8 +449,6 @@ export class UEditor {
       "important",
     );
     this.iframeHolder?.style?.setProperty("height", height + "px", "important");
-
-    // this.editor.setHeight(height);
   }
 
   /**
@@ -481,7 +479,6 @@ export class UEditor {
 
   /** 宽度自适应：让编辑器内层与 iframe 容器撑满可用宽度 */
   widthAutoResize() {
-    // $("#mcmodder-mdeditor, #editor-ueeditor").css("width", "100%");
     $("#edui1, #edui1_iframeholder").css("width", "100%");
   }
 

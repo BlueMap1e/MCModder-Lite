@@ -109,8 +109,6 @@ export class RankInit extends Init {
     }
     $(".popover").remove();
 
-    // setTimeout(commentInit, 1e3);
-
     ranklists
       .on("pointerover", "li", (e) => {
         const uid = $(e.currentTarget).attr("data-uid");

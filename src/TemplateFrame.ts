@@ -60,7 +60,6 @@ export class TemplateFrame {
         menu.hide();
       }
     });
-    // $(".group li a").click(e => this.delete((e.currentTarget.parentNode as HTMLElement)?.getAttribute("data-tag")));
     groupUl.prepend(`
       <li class="mcmodder-template-add">
         <input id="mcmodder-template-newtitle" class="form-control title" placeholder="新模板标题... (必填)">

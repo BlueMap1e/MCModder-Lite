@@ -19,7 +19,6 @@ export interface AppRepository<T extends object> {
   deleteFile(filename: string): Promise<void>;
   /** 读回指定文件的全部数据 */
   read(filename: string): Promise<T[]>;
-  // readByIndex(index: number): Promise<T | undefined>;
   /** 覆写指定文件的全部数据 */
   write(filename: string, data: T[]): Promise<void>;
 }

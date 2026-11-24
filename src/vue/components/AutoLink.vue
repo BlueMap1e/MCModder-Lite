@@ -355,7 +355,6 @@ const style = computed({
 const selected = ref(-1);
 /** 是否正在等待搜索请求返回（模板据此展示「加载中」动画） */
 const isPending = ref(false);
-// const enableSearchSourceSettings = ref(false);
 /** 无选中文本时隐藏「选中的文本」这一样式项，并回退到 `preferredAutolinkStyle` */
 const shouldHideSelectedContentStyle = ref(true);
 /** 可展示的搜索结果列表 */

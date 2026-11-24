@@ -99,9 +99,6 @@ export class ItemEditorInit extends Init {
     $("#icon-128x-editor").val(image128px);
     this.parent.editorLoad();
 
-    // 采集工具预览更新
-    // $(document).on("click", () => this.updateItemTooltip());
-
     // JSON 快速手导
     const jsonUploader = $(
       '<input id="mcmodder-json-upload" class="mcmodder-monospace form-control" placeholder="粘贴 JSON 物品导出行于此处以快速填充基本信息..">',

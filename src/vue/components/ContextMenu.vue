@@ -296,7 +296,6 @@ function onItemPointermove(index: number) {
   if (!pressArrowKeyBeforePointerMove) {
     return;
   }
-  // const activeIndex = activeIndexList.indexOf(index);
   selected.value = index;
 }
 

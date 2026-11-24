@@ -480,27 +480,9 @@ export class AdvancedUEditor extends UEditor {
     if (!this.$innerFrame) return;
     super.widthAutoResize();
     const outerHeight = parseInt(this.$innerFrame.css("height"));
-    // const innerHeight = outerHeight - 32;
     this.mdEditorContainer?.css("height", outerHeight + "px");
-    // this.mdEditorContainer?.css("height", innerHeight + "px");
     this.htmlEditorContainer?.css("height", outerHeight + "px");
-    // this.htmlEditorContainer?.css("height", innerHeight + "px");
   }
-
-  /**
-   * 计算正文高度：取基类结果与「已展开的源码编辑器实际高度」的最大值，
-   * 避免源码编辑器把外层编辑区撑得比它矮。
-   */
-  // override autoCalculateHeight() {
-  //   let height = super.autoCalculateHeight();
-  //   if (this.mdEditorOption?.[1].getValue()) {
-  //     height = Math.max(height, this.mdEditorContainer?.height() ?? 0);
-  //   }
-  //   if (this.htmlEditorOption?.[1].getValue()) {
-  //     height = Math.max(height, this.htmlEditorContainer?.height() ?? 0);
-  //   }
-  //   return height;
-  // }
 
   /**
    * 调整编辑器高度：基类调整外层后，再让两个源码编辑器跟随。
@@ -719,8 +701,6 @@ export class AdvancedUEditor extends UEditor {
    * - 统一 `ul` 列表的缩进类，并把 `li` 里的裸文本包成 `<p>`（百科只接受 `li > p` 结构）。
    */
   async performMarkdownIt() {
-    // 预处理
-    // this.mdEditor.find("p > br").remove();
     if (!this.mdEditorApp || !this.body || !this.$document) return;
     // 一次性说明（持久化，终身一次；Modrinth 自动流豁免）：「Markdown → HTML」是
     // **单向覆盖**——正文随后的修改不会回流 MD 源，对包含表格 / 样式文字的已有
@@ -1224,7 +1204,6 @@ export class AdvancedUEditor extends UEditor {
     createApp(TextComparator, { parent: this.parent, textA: ta, textB: tb }).mount(
       comparatorFrame.get(0),
     );
-    // this.updateEditorStats();
   }
 
   /**

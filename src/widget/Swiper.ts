@@ -1,11 +1,8 @@
-// import { Mcmodder } from "../Mcmodder";
-
 import { createApp } from "vue";
 import TabIndicator from "../vue/components/TabIndicator.vue";
 import type { ComponentExposed } from "vue-component-type-helpers";
 
 export class Swiper {
-  // private readonly parent: Mcmodder;
   private readonly instance: JQuery;
   private readonly ul: JQuery;
   private readonly tab: JQuery;
@@ -13,8 +10,7 @@ export class Swiper {
   private hover = false;
   private timeout?: number;
 
-  constructor(/* parent: Mcmodder, */ instance: JQuery) {
-    // this.parent = parent;
+  constructor(instance: JQuery) {
     this.instance = instance;
     this.ul = this.instance.find("ul");
     this.tab = $(`<div class="mcmodder-swiper-tab-container">`).appendTo(this.ul);

@@ -243,7 +243,6 @@ const suggestionList = shallowRef<InputSuggestion[]>([]);
 const isCompletely = ref(false);
 /** 列表是否应显示（唯一的显隐开关，由 `suggestedList` 求值时顺带计算） */
 const selectable = ref(false);
-// let isFocused = false;
 /** 是否展示「+ 保存为快捷输入项」这一项（需要可保存回调且当前段非空） */
 const canCreateNew = ref(false);
 
