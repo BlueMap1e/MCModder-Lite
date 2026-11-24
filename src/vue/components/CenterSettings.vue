@@ -5,12 +5,22 @@
   </div>
 
   <div class="center-setting-search">
-    <input
-      ref="searchInputRef"
-      class="form-control"
-      placeholder="搜索配置项.."
-      @input="onSearchInput"
-    />
+    <div class="center-setting-search-row">
+      <input
+        ref="searchInputRef"
+        class="form-control"
+        placeholder="搜索配置项.."
+        @input="onSearchInput"
+      />
+      <button
+        v-show="!isSearching"
+        type="button"
+        class="btn btn-sm btn-default mcmodder-setting-foldall"
+        @click="toggleAllSections"
+      >
+        {{ allSectionsExpanded ? "全部收起" : "全部展开" }}
+      </button>
+    </div>
   </div>
 
   <p class="center-setting-apply-hint">提示：多数设置修改后需刷新页面才会生效。</p>
@@ -259,10 +269,23 @@ const hasVisibleSettingInCategory = (category: SettingsCategory) =>
 
 /**
  * 分区折叠（渐进披露）：默认全部收起，仅显示节名与条目数；点击节名、侧边目录
- * 树或检索命中均可展开。检索命中的分区由下方 watch 程序化展开，与手动状态共用
- * 一个集合，互不覆盖。
+ * 树或「全部展开」按钮可展开。展开状态持久化到 GM 存储（无面板行的内部键），
+ * 下次进入沿用上次偏好；检索期间所有分区一律展开，清空检索后回到偏好状态。
  */
-const expandedSections = ref(new Set<string>());
+const EXPANDED_SECTIONS_KEY = "settingsExpandedSections";
+
+function readExpandedSections(): Set<string> {
+  const stored = configs.value.getSettings(EXPANDED_SECTIONS_KEY);
+  return new Set(Array.isArray(stored) ? stored.filter((id) => typeof id === "string") : []);
+}
+
+const expandedSections = ref(readExpandedSections());
+
+/** 把当前展开集合写回存储（只存 id，分区被改名/删除后残留的 id 无害） */
+function persistExpandedSections() {
+  configs.value.setSettings(EXPANDED_SECTIONS_KEY, [...expandedSections.value]);
+}
+
 const isSectionFolded = (section: SettingsSection) =>
   !isSearching.value && !expandedSections.value.has(section.id);
 /** 分区内当前可见（权限/移动端满足且检索命中）的条目数，随检索实时变化 */
@@ -274,17 +297,26 @@ function toggleSection(section: SettingsSection) {
   } else {
     expandedSections.value.add(section.id);
   }
+  persistExpandedSections();
 }
-watch(matchedRanges, (map) => {
-  if (!isSearching.value) return;
-  settings.forEach((category) =>
-    category.sections.forEach((section) => {
-      if (section.settings.some((item) => map.has(item.id))) {
-        expandedSections.value.add(section.id);
-      }
-    }),
-  );
-});
+
+/** 全部分区的 id：含当前权限/检索下不可见的，避免「全部展开」漏掉隐藏项 */
+const allSectionIds = settings.flatMap((category) =>
+  category.sections.map((section) => section.id),
+);
+const allSectionsExpanded = computed(
+  () => allSectionIds.length > 0 && allSectionIds.every((id) => expandedSections.value.has(id)),
+);
+
+/** 「全部展开 / 全部收起」：一次性切换所有分区并落盘 */
+function toggleAllSections() {
+  if (allSectionsExpanded.value) {
+    expandedSections.value.clear();
+  } else {
+    allSectionIds.forEach((id) => expandedSections.value.add(id));
+  }
+  persistExpandedSections();
+}
 
 /** 整棵树是否至少有一个配置项需要显示（检索无任何命中时为 false） */
 const hasVisibleSetting = computed(() => settings.some(hasVisibleSettingInCategory));
@@ -564,6 +596,17 @@ onBeforeUnmount(() => treeObserver?.disconnect());
   flex-direction: column;
   gap: var(--mcmodder-width-padding-3);
   padding: var(--mcmodder-width-padding-3) 0;
+}
+
+.center-setting-search-row {
+  display: flex;
+  align-items: center;
+  gap: var(--mcmodder-width-padding-3);
+}
+
+.center-setting-search-row .form-control {
+  flex: 1;
+  min-width: 0;
 }
 
 .center-setting-search-empty {

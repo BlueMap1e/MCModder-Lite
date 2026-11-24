@@ -235,6 +235,8 @@ interface Settings {
 
   // 以下不显示在设置界面
   nightMode: boolean;
+  /** 设置面板里已展开的分区 id（内部键，无面板行；分区改名/删除后残留的 id 无害） */
+  settingsExpandedSections: string[];
   preferredWiderScreen: boolean;
   /** 旧版发包游标；新版本使用独立的 `mcmodderRequestCursor` 键，这里仅在迁移时读取 */
   lastRequestTime: number;
