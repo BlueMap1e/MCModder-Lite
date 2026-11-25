@@ -3445,6 +3445,27 @@ html.dark.mcmodder-bug-page .icon img {
   filter: brightness(var(--mcmodder-img-dim, 1));
 }
 
+/* ── 夜间阅读覆盖层（两个 opt-in 开关，默认关；标记类由 Mcmodder.applyNightSiteOverrides 切）──
+   站点有一批「只按白底设计」的配色，夜间沿用同一套色值就会出问题。这里逐点覆盖、
+   不做通配：通配会连链接色、语义色（危险红/成功绿/差异页增删）和状态徽标一起打死。 */
+
+/* ① 站点按页配置的整页壁纸（`body.bgon` + 内联 `body{background:url(…)}`，实测出现在
+   Vanilla 模组页与其资料列表页）：白天内容面板不透明，壁纸只在页边缝隙里；夜间面板是
+   0.8 透明，壁纸透进正文，使文字底色随壁纸明暗斑驳、对比度不稳定。开关打开时夜间撤掉
+   站点壁纸，回到与无背景页（如 MekMM）一致的稳定深底。
+   刻意不加 `!important`：用户自己在设置里选的背景是内联 style，应当继续优先。 */
+html.dark.mcmodder-hide-site-bg body.bgon {
+  background-image: none;
+}
+
+/* ② 资料类型标签（`.common-item-mold-list`）：站点用同一套深色系色板同时服务日/夜
+   （如 `.mold-7` 的 #810914 压白底约 9:1，到夜间面板上只剩约 1.5:1；`.mold-0` 更是近黑）。
+   只中和文字那一半的 `<span>`，图标（`.iconfont`）保留站点类型色——类型辨识不丢。
+   特异性 (0,4,2) 压过站点的 (0,2,1)，无需 `!important`。 */
+html.dark.mcmodder-normalize-site-colors .common-item-mold-list .mold span:not(.iconfont) {
+  color: var(--mcmodder-color-text);
+}
+
 /* CAPP 服务器页（/sv/，sv.frame.css）：面板写死白底 + 平铺 GIF 纹理底图
    （面包屑 mc_main.gif、内容块 sv_block.gif），夜间整页发白。纹理底图直接
    去掉换调色板深底，标题灰 #777 与 #DDD 边框一并适配。类名 sv_* 为该页专属。 */

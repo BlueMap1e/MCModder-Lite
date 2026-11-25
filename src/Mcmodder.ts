@@ -606,6 +606,25 @@ export class Mcmodder {
     document.documentElement.classList.toggle("mcmodder-has-img-dim", dim > 0);
   }
 
+  /**
+   * 夜间阅读覆盖层（两个 opt-in 开关，默认关）：只在 `<html>` 上切标记类，
+   * 具体规则在 `base.css`（`mcmodder-hide-site-bg` / `mcmodder-normalize-site-colors`）。
+   *
+   * 两条都用 `=== true` 判定：这是默认关的显式 opt-in，TM 沙箱下缺键时不能误开；
+   * 规则自带 `html.dark` 前缀，所以日间与「关态」都没有任何样式副作用。
+   */
+  applyNightSiteOverrides() {
+    const { classList } = document.documentElement;
+    classList.toggle(
+      "mcmodder-hide-site-bg",
+      this.configRepository.getSettings("nightHideSiteBackground") === true,
+    );
+    classList.toggle(
+      "mcmodder-normalize-site-colors",
+      this.configRepository.getSettings("nightNormalizeSiteColors") === true,
+    );
+  }
+
   /** 一次性迁移：布尔自适应开关 adaptableNightMode → 三态偏好 nightModePreference，无条件写入（机制见方法内注释；解析偏好在 computeNightMode/resolveNightMode）。 */
   private migrateNightModePreference() {
     // v2.4.1- 夜间模式配置兼容：布尔自适应开关升级为三态偏好（0 跟随系统 / 1 日间 / 2 夜间）。
@@ -668,6 +687,12 @@ export class Mcmodder {
     });
     this.configRepository.watchSettingsRef("preferredWiderScreen", () => this.updatePageWidth());
     this.configRepository.watchSettingsRef("nightImageDim", () => this.applyNightImageDim());
+    this.configRepository.watchSettingsRef("nightHideSiteBackground", () =>
+      this.applyNightSiteOverrides(),
+    );
+    this.configRepository.watchSettingsRef("nightNormalizeSiteColors", () =>
+      this.applyNightSiteOverrides(),
+    );
   }
 
   main() {
@@ -718,6 +743,8 @@ export class Mcmodder {
 
     // 夜间图片调暗：初始应用 + watchRef 实时跟随（见 applyNightImageDim）
     this.applyNightImageDim();
+    // 夜间阅读覆盖层（两个 opt-in 开关）：只切 <html> 标记类
+    this.applyNightSiteOverrides();
 
     // 关闭主页&整合包区广告
     // 只扫带内联样式的 span：原实现遍历全文档所有 span，每次加载白付一次 O(全页) 扫描

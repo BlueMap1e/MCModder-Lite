@@ -228,6 +228,22 @@ export const settings = [
             range: [0, 80],
           },
           {
+            id: "nightHideSiteBackground",
+            title: "夜间隐藏站点页面背景",
+            description:
+              "部分页面（如原版模组页与其资料列表）由站点配置了整页背景图。夜间模式下半透明面板会让它透进正文，使文字底色斑驳、对比度下降。开启后仅在夜间隐藏这类站点背景；你自己在脚本里设置的背景不受影响。",
+            type: "checkbox",
+            value: false,
+          },
+          {
+            id: "nightNormalizeSiteColors",
+            title: "夜间统一站点文字配色",
+            description:
+              "站点有些文字使用固定深色（如资料类型标签的彩色文字），在白底上可读、在夜间面板上对比度不足。开启后把这类文字统一为正文色，类型图标保留原色，辨识不受影响。",
+            type: "checkbox",
+            value: false,
+          },
+          {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
             description: "对社群页面（论坛列表、帖子等）应用夜间配色。",
