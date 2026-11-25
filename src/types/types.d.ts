@@ -147,6 +147,8 @@ interface Settings {
   nightHideSiteBackground: boolean;
   /** 夜间统一站点文字配色（opt-in，默认关）：把站点写死深色的文字（如资料类型标签）中和为正文色 */
   nightNormalizeSiteColors: boolean;
+  /** 夜间清除页面自定义样式（opt-in，默认关）：禁用站点管理员为单页注入的表格皮肤（表头纹理/渐变、浅色单元格） */
+  nightPurgePageSkin: boolean;
   /** 夜间图片调暗强度（社群，%）：同 nightImageDim（单层、无基数），社群域刷新生效 */
   bbsImageDim: number;
   bbsNightMode: boolean;

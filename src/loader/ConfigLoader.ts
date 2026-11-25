@@ -244,6 +244,14 @@ export const settings = [
             value: false,
           },
           {
+            id: "nightPurgePageSkin",
+            title: "夜间清除页面自定义样式",
+            description:
+              "站点管理员会给个别页面（如部分模组的资料列表）注入表格皮肤：表头纹理图/渐变、浅色单元格等。夜间这些样式常与深色主题冲突。开启后夜间禁用这类页面级注入样式，表格回归脚本统一的深色样式；日间与页面背景图不受影响。",
+            type: "checkbox",
+            value: false,
+          },
+          {
             id: "bbsNightMode",
             title: "社群夜间模式兼容",
             description: "对社群页面（论坛列表、帖子等）应用夜间配色。",

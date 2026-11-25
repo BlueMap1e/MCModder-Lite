@@ -573,6 +573,8 @@ export class Mcmodder {
         e.style.setProperty("color", this.elementColorDictionary.get(e)!);
       });
     }
+    // 页面皮肤（管理员单页注入样式）跟随夜间开关：夜间可整块禁用，切回日间恢复
+    this.applyPageSkinPurge();
   }
 
   updatePageWidth() {
@@ -623,6 +625,27 @@ export class Mcmodder {
       "mcmodder-normalize-site-colors",
       this.configRepository.getSettings("nightNormalizeSiteColors") === true,
     );
+  }
+
+  /**
+   * 夜间清除页面皮肤（opt-in，默认关）：站点管理员会给个别页面注入一段页面级
+   * `<style>`（表头纹理图/渐变、浅色单元格、文字阴影，选择器形如
+   * `.item-list-table.item-list-table-<classID>-<typeID> …`）。这类样式只按白底
+   * 设计，夜间与深色主题冲突且无法逐个页面适配，故按特征整块禁用。
+   *
+   * 用 `<style>.disabled` 开关：浏览器原生属性、可逆、不改 DOM，日间或关态原样恢复。
+   * 含 `body{background` 的注入块跳过——整页壁纸归「夜间隐藏站点页面背景」管，
+   * 两个开关各管一件事。
+   */
+  applyPageSkinPurge() {
+    const purge =
+      this.configRepository.getSettings("nightPurgePageSkin") === true && this.isNightMode;
+    for (const node of document.querySelectorAll<HTMLStyleElement>("style")) {
+      const text = node.textContent ?? "";
+      if (text.includes("--mcmodder-color") || text.includes("body{background")) continue;
+      if (!/\.item-list-table\.item-list-table-\d+-\d+/.test(text)) continue;
+      node.disabled = purge;
+    }
   }
 
   /** 一次性迁移：布尔自适应开关 adaptableNightMode → 三态偏好 nightModePreference，无条件写入（机制见方法内注释；解析偏好在 computeNightMode/resolveNightMode）。 */
@@ -693,6 +716,7 @@ export class Mcmodder {
     this.configRepository.watchSettingsRef("nightNormalizeSiteColors", () =>
       this.applyNightSiteOverrides(),
     );
+    this.configRepository.watchSettingsRef("nightPurgePageSkin", () => this.applyPageSkinPurge());
   }
 
   main() {
@@ -745,6 +769,8 @@ export class Mcmodder {
     this.applyNightImageDim();
     // 夜间阅读覆盖层（两个 opt-in 开关）：只切 <html> 标记类
     this.applyNightSiteOverrides();
+    // 页面皮肤清除（opt-in）：夜间禁用管理员注入的页面级样式块
+    this.applyPageSkinPurge();
 
     // 关闭主页&整合包区广告
     // 只扫带内联样式的 span：原实现遍历全文档所有 span，每次加载白付一次 O(全页) 扫描
