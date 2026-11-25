@@ -4315,3 +4315,13 @@ html.dark .class_block .left .list .menu li a:hover {
   background-color: var(--mcmodder-color-background-dark2);
   color: var(--mcmodder-color-accent-dark2);
 }
+
+/* ── 模组列表页（/modlist.html）筛选搜索按钮夜间图标色 ──────────────
+   搜索框内 <button> 未设 color，夜间沿用浏览器默认 buttontext（黑色），
+   在深色输入框底上几乎不可见。故意不设开关（夜间适配修复）。 */
+html.dark .modlist-filter-block button {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .modlist-filter-block button:hover {
+  color: var(--mcmodder-color-accent-dark2);
+}
