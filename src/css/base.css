@@ -4369,3 +4369,31 @@ html.dark .modlist-block .intro .intro-button {
 html.dark .modlist-block .intro .intro-button:hover {
   color: rgba(255, 255, 255, 0.85);
 }
+
+/* ── center 收藏夹「批量排序」弹窗（#favorite-solt-sort-frame）──────────
+   站点规则 #favorite-solt-sort-frame .modal-body li a 以 (1,1,2) 特异性写死
+   链接色，弹窗本体已被夜间规则压暗后此项漏网 → 深底黑字不可读（登录态实测
+   computed rgb(0,0,0)）。提升特异性反制，颜色交还夜间链接色；选择器自带
+   组件隔离（#favorite-solt-sort-frame 仅此弹窗），无误伤面。 */
+html.dark #favorite-solt-sort-frame .modal-body li a {
+  color: var(--mcmodder-color-link);
+}
+
+/* ── center 成就页卡片（.center-task-block）───────────────────────────
+   夜间实测：抬升 rgba(33,33,33,.8) 存在但无边框、边界含糊；描述 .text p 为
+   dark3（夜间 #888，对 4.5:1 贴线）；已完成卡另有站点 .gray opacity .6 再乘
+   一层 → 描述实际对比 ~2:1 不可读。处理：补 1px dark3 描边定边界（抬升幅度
+   不动——注意力聚焦由描边承担）；描述外科升为 dark2（657 组串着页脚等全站
+   组件，不动组）；已完成卡 opacity 0.6→0.78，保留「已完成更柔」语义但恢复
+   可读。 */
+html.dark .center-task-block {
+  border: 1px solid var(--mcmodder-color-background-dark3);
+}
+
+html.dark .center-task-block .task-item .text p {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+html.dark .center-task-block.gray {
+  opacity: 0.78;
+}
