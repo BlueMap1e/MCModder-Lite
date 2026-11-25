@@ -4397,3 +4397,17 @@ html.dark .center-task-block .task-item .text p {
 html.dark .center-task-block.gray {
   opacity: 0.78;
 }
+
+/* ── center 名片页（#/card/）─────────────────────────────────────────
+   夜间实测：分区说明 .center-block-subhead 与空态 .empty 站点写死 #888
+   （对页底 5.3:1 贴线过 AA）；tracker 数据值 .card-item .text p 落在 657 组的
+   dark3（夜 #7a7a7a，4.0:1 不达 AA，且语义错位——数据值不是次要文字）。
+   处理：说明文字升 dark2（说明含操作指引，仍居次级）；数据值升 dark1（与
+   标题 #ddd 拉开层级）；空态 #888 是「此处为空」的语义灰，过线即不动。 */
+html.dark .center-block-subhead {
+  color: var(--mcmodder-color-text-dark2);
+}
+
+html.dark .center-card-block.tracker .card-item .text p {
+  color: var(--mcmodder-color-text-dark1);
+}
