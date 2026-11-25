@@ -2546,6 +2546,16 @@ html.dark .mcmodder-table-pointerover-tr > .mcmodder-table-pointerover-td {
 .common-item-mold-list .mold {
   margin: 5px 10px;
 }
+/* 资料列表页的两块「底板」：类型条 `.common-item-mold-list`（站点 DOM 里是
+   `.center > ul`，被上面统一面板组上了 0.8 透明底色）与快速搜索外框
+   `.item-list-filter`。两块都只有底色、没有圆角与内边距，在有整页背景图的页面
+   （如原版资料列表）上会露出直角硬边、内容贴边。补上与其他面板一致的圆角与
+   少量内边距；站点自己的 `.item-list-filter { padding: 0 }` 靠 `html` 前缀压过。 */
+html .common-item-mold-list,
+html .item-list-filter {
+  border-radius: var(--mcmodder-width-radius);
+  padding: 4px 8px;
+}
 .mcmodder-table-unsaved-td {
   font-weight: bold;
   background-color: var(--mcmodder-color-primary-transparent1);
