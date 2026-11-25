@@ -4286,3 +4286,32 @@ html.dark .mcmodCommonTable .tableBtn {
   border-color: var(--mcmodder-color-background-dark3);
   color: var(--mcmodder-color-text);
 }
+
+/* ── 教程列表页（/post/）等页头说明、筛选菜单与分页夜间适配 ────────────
+   /post/ 内联样式将 .menu .tit 写死 #888、.menu li a 写死 #222、.menu 上边框
+   写死 #EEE；站点 CSS 将 .class_block .title .text 写死 #888；base.css 通用
+   .pages_system .Pbtn 用 text-dark3 在深底上偏暗。夜间下统一提亮为 text-dark1，
+   未选中筛选链接补按钮胶囊样式与选中态 span 对齐。故意不设开关（夜间修复）。 */
+html.dark .class_block .left .title .text,
+html.dark .class_block .left .list .menu .tit,
+html.dark .pages_system .Pbtn {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .class_block .left .list .menu {
+  border-top-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .class_block .left .list .menu span {
+  border-radius: 3px;
+}
+html.dark .class_block .left .list .menu li a {
+  padding: 4px 8px;
+  border-radius: 3px;
+  border: 1px solid var(--mcmodder-color-background-dark3);
+  background-color: var(--mcmodder-color-background-dark1);
+  color: var(--mcmodder-color-text);
+  text-decoration: none;
+}
+html.dark .class_block .left .list .menu li a:hover {
+  background-color: var(--mcmodder-color-background-dark2);
+  color: var(--mcmodder-color-accent-dark2);
+}
