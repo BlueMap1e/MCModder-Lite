@@ -4255,3 +4255,34 @@ html.dark.mcmodder-play-page blockquote {
   border: 1px solid #333;
   color: var(--mcmodder-color-text);
 }
+
+/* ── 通用数据表（.mcmodCommonTable，见于 /post/ 等页面）夜间适配 ──────────
+   站点 main.css（.mcmodCommonTable th/tr:hover #fbfbfb、tr/td 浅灰边框）与
+   /post/ 页内联样式（.mcmodCommonTable td #888、a #222）均为 (0,1,1)/(0,2,1)
+   特异性，压过 base.css 通用 (0,0,1) 规则，导致夜间表头白底浅字、正文链接黑底
+   黑字、行悬浮整行变回日间白底。用 html.dark 提升特异性反压，日间与其它表格
+   不受影响；故意不设开关（夜间适配修复）。 */
+html.dark .mcmodCommonTable th {
+  background-color: var(--mcmodder-color-background-dark1);
+}
+html.dark .mcmodCommonTable tr,
+html.dark .mcmodCommonTable td {
+  border-color: var(--mcmodder-color-background-dark3);
+}
+html.dark .mcmodCommonTable td {
+  color: var(--mcmodder-color-text-dark1);
+}
+html.dark .mcmodCommonTable a {
+  color: var(--mcmodder-color-link);
+}
+html.dark .mcmodCommonTable a:hover {
+  color: var(--mcmodder-color-accent-dark2);
+}
+html.dark .mcmodCommonTable tr:hover {
+  background-color: var(--mcmodder-color-background-dark2);
+}
+html.dark .mcmodCommonTable .tableBtn {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
