@@ -930,6 +930,14 @@ html.dark .xg2 {
   color: var(--mcmodder-color-text-dark1);
 }
 
+/* xg1（次要灰字工具类）：站点 `.xg1,.xg1 a` 带 !important 写死 #999，上面的普通
+   声明打不过它（个人主页「主站用户组 / 论坛用户组」标签实测仍 #999）——地雷图谱
+   「工具类 !important → 同强度反制，作用域收紧」， specificity 同带 important 下
+   本规则更高（+html.dark），稳定取胜。 */
+html.dark .xg1 {
+  color: var(--mcmodder-color-text-dark1) !important;
+}
+
 html.dark .rate,
 html.dark .ratl,
 html.dark .ratl td,
@@ -1415,6 +1423,13 @@ html.dark .pbm.mbm.bbda.cl a {
   color: var(--mcmodder-color-link) !important;
 }
 
+/* 个人资料字段标签（.pf_l em：MCID / 头衔 / 统计等全部标签列）：站点
+   style_13_home_space.css 的 .pf_l em 写死 #666，夜间低对比（主页实测）。
+   提为次级亮灰，与正文值保持层级差。 */
+html.dark .pf_l em {
+  color: var(--mcmodder-color-text-dark1);
+}
+
 html.dark .green {
   background-color: var(--mcmodder-color-background-dark2);
   border-color: var(--mcmodder-color-background-dark3);
@@ -1562,6 +1577,35 @@ html.dark .ntc_l {
   background-color: var(--mcmodder-color-alert-warning-2);
   border-color: var(--mcmodder-color-alert-warning-3);
   color: var(--mcmodder-color-alert-warning-1);
+}
+
+/* 勋章悬浮菜单（Discuz showMenu 生成，class="tip tip_4"，md_<n>_menu）：上方 .tip
+   兜底规则引用的 alert-warning 调色板变量在 bbs.css 未定义（bbs 域不注入主站
+   调色板块），整条规则实为无效声明 → 菜单背景回退 initial = 全透明，页面文字
+   透上来（主页实测 rgba(0,0,0,0)；日间站点原生 .tip 底 #FEFEE9 不透明）。
+   按 .p_pop / .p-pop 家族同款抬升面板处理；@supports 内给毛玻璃增强
+   （底色转半透明 + backdrop 模糊），不支持的引擎保底不透明底。 */
+html.dark .tip.tip_4 {
+  background-color: var(--mcmodder-color-background-dark1);
+  border-color: var(--mcmodder-color-background-dark3);
+  color: var(--mcmodder-color-text);
+}
+
+/* 菜单内标题/描述分层：Discuz 裸标题规则 `h1..h6 { color:#666 }` 把标题压成
+   低对比灰（CDP 实测命中），标题提为正文亮色、描述降为次级灰，恢复层级。 */
+html.dark .tip.tip_4 h4 {
+  color: var(--mcmodder-color-text);
+}
+
+html.dark .tip.tip_4 p {
+  color: var(--mcmodder-color-text-dark1);
+}
+
+@supports (backdrop-filter: blur(4px)) {
+  html.dark .tip.tip_4 {
+    background-color: color-mix(in srgb, var(--mcmodder-color-background-dark1) 86%, transparent);
+    backdrop-filter: blur(6px);
+  }
 }
 
 /* ===== 个人中心：用户组 / 勋章 / 积分 / 任务页（home.php?mod=spacecp&ac=usergroup、
