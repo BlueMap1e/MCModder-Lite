@@ -4356,3 +4356,16 @@ html.dark .modlist-filter-block button {
 html.dark .modlist-filter-block button:hover {
   color: var(--mcmodder-color-accent-dark2);
 }
+
+/* ── 列表卡片「简介」信息角标（/modlist.html、/modpack.html 共用组件）────
+   站点原生 = 纯白圆盘徽章 + 黑描边（modlist.frame.css：color:#FFF + text-shadow，
+   fa-info-circle 的 "i" 是镂空，露出底下的封面），日间亮度在暗页刺眼；夜间降为
+   半透明白，悬停回提。展开面板 .intro-content 站点自带黑底白字，无需处理。
+   故意不设开关（夜间适配修复）。 */
+html.dark .modlist-block .intro .intro-button {
+  color: rgba(255, 255, 255, 0.5);
+  text-shadow: 0px 0px 2px #000;
+}
+html.dark .modlist-block .intro .intro-button:hover {
+  color: rgba(255, 255, 255, 0.85);
+}
