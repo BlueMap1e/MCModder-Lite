@@ -1,4 +1,5 @@
-import { computed, watch } from "vue";
+import { computed, ref, watch } from "vue";
+import { GM_addValueChangeListener } from "$";
 import type { Mcmodder } from "../Mcmodder";
 import { Utils } from "../Utils";
 import { BackgroundPool } from "../background/BackgroundPool";
@@ -529,17 +530,30 @@ export class StyleLoader {
       ),
     );
 
-    // 本地图池优先：池为空时回落到手填 URL（Lite 无内置默认图，回落 none）
+    // 本地图池优先：池为空时回落到手填 URL（Lite 无内置默认图，回落 none）。
+    // 图池响应式：面板增删图（center 域写 GM）→ 监听器重载缓存并强制重选，
+    // 内容页免刷新换背景（旧写法 pick 一次静态捕获，上传后必须刷新才生效）。
     const bgMode = BackgroundPool.readMode(configs);
-    const localBg = BackgroundPool.pick("day", bgMode);
-    const localBgNight = BackgroundPool.pick("night", bgMode);
-    const bg = computed(
-      () => localBg ?? (configs.getSettingsRef("defaultBackground", "none").value || "none"),
-    );
-    const bgNight = computed(
-      () =>
-        localBgNight ?? (configs.getSettingsRef("defaultNightBackground", "none").value || "none"),
-    );
+    const poolVersion = ref(0);
+    GM_addValueChangeListener("mcmodderBackgroundPool", () => {
+      BackgroundPool.reload();
+      BackgroundPool.resetPicked();
+      poolVersion.value += 1;
+    });
+    const bg = computed(() => {
+      void poolVersion.value;
+      return (
+        BackgroundPool.pick("day", bgMode) ??
+        (configs.getSettingsRef("defaultBackground", "none").value || "none")
+      );
+    });
+    const bgNight = computed(() => {
+      void poolVersion.value;
+      return (
+        BackgroundPool.pick("night", bgMode) ??
+        (configs.getSettingsRef("defaultNightBackground", "none").value || "none")
+      );
+    });
     /** data URL 含 base64 的 `+/=`，统一加引号避免 CSS 解析歧义 */
     const toCssUrl = (value: string) =>
       value === "none" ? "none" : `url(${value.startsWith("data:") ? `"${value}"` : value}) fixed`;

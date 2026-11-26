@@ -836,18 +836,21 @@ export class Mcmodder {
     ).addClass("mcmodder-content-block");
     $(".common-nav .line").html('<i class="fa fa-chevron-right" />');
     $(".oredict-ad, .worldgen-list-ad").remove();
-    // 是否覆盖页面自带的背景：默认否（保守），只替换原本没有背景的页面；
-    // 用户可在设置里开启，强制用脚本背景覆盖站点/其他脚本设置的背景。
-    const overrideExisting = this.configRepository.getSettings("backgroundOverrideExisting");
+    // 本地背景消费端 = base.css 的 html.mcmodder-bg-* 规则（变量随昼夜分流）。
+    // 这里只负责挂标记：覆盖开 → mcmodder-bg-override（!important 规则，站点壁纸
+    // JS 与其他脚本管理器的后写内联碾不掉）；覆盖关 → 仅在启动时 body 无背景图
+    // 的页面挂 mcmodder-bg-plain（bgon 壁纸页与带站点底图的页面让位，保守语义）。
+    // 旧实现是 jQuery 一次性内联，后写内联会碾掉它，「覆盖页面自带背景」形同虚设。
+    const overrideExisting =
+      this.configRepository.getSettings("backgroundOverrideExisting") === true;
     const hasLocalBackground =
       BackgroundPool.getImages("day").length > 0 || BackgroundPool.getImages("night").length > 0;
     if (hasLocalBackground || this.configRepository.getSettings("defaultBackground") != "none") {
-      $("body")
-        .filter((_, c) => overrideExisting || $(c).css("background-image") === "none")
-        .css({
-          background: "var(--mcmodder-image-background)",
-          "background-size": "cover",
-        });
+      if (overrideExisting) {
+        document.documentElement.classList.add("mcmodder-bg-override");
+      } else if (getComputedStyle(document.body).backgroundImage === "none") {
+        document.documentElement.classList.add("mcmodder-bg-plain");
+      }
     }
 
     // 个人菜单（旧「UI 美化」开关已移除，以下行为恒启用）

@@ -4411,3 +4411,22 @@ html.dark .center-block-subhead {
 html.dark .center-card-block.tracker .card-item .text p {
   color: var(--mcmodder-color-text-dark1);
 }
+
+/* ── 本地背景消费端（白天/夜间共用，变量随 :root/:root.dark 分流）────────
+   旧实现 = 启动期 jQuery 给 body 写一次性内联 background，会被站点壁纸 JS 与
+   其他脚本管理器（如同时启用的上游 Mcmodder）后写的 body 内联碾掉——「覆盖页面
+   自带背景」形同虚设；且 jQuery 展开 var() shorthand 产出空长手，纯靠浏览器
+   序列化怪癖撑住。改为标记类 + 样式表规则（标记由 Mcmodder.main() 挂 <html>）：
+   - 覆盖开（html.mcmodder-bg-override）：!important 规则，站点/其他脚本的后写
+     内联再也碾不掉——!important 是反制内联的唯一合法通道。
+   - 覆盖关（html.mcmodder-bg-plain，启动时 body 无背景图的页面才挂）：非
+     important，壁纸页（body.bgon 带站点内联）依旧让位，保守语义不变。 */
+html.mcmodder-bg-plain body:not(.bgon) {
+  background: var(--mcmodder-image-background);
+  background-size: cover;
+}
+
+html.mcmodder-bg-override body {
+  background: var(--mcmodder-image-background) !important;
+  background-size: cover !important;
+}
