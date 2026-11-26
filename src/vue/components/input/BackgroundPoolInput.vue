@@ -130,8 +130,10 @@ const weightInputRef = useTemplateRef<HTMLInputElement>("weightInputRef");
 const images = ref<BackgroundImageRow[]>([]);
 const repository = new BackgroundRepository();
 
-/** 由配置 id 推断 slot */
-const slot: "day" | "night" = props.id === "backgroundPoolNight" ? "night" : "day";
+/** 由配置 id 推断 slot。注意 ConfigInteractor 传的 id 带 `mcmodder-setting-` 前缀
+ *  （uBO 元素 id 撞车修复，2.4.3-lite.1），须用 includes 匹配——严格等号恒不成立，
+ *  两个面板的上传会全部落白天槽（夜间面板失效、图池「日夜混淆」的根因）。 */
+const slot: "day" | "night" = props.id.includes("backgroundPoolNight") ? "night" : "day";
 const slotLabel = slot === "day" ? "白天" : "夜间";
 
 const frames = computed(() => images.value.map((image) => image.dataUrl));
