@@ -172,6 +172,11 @@ GF_UNMINIFIED=1 npm run build   # unminified debug bundle (debug only)
 - `uploadFileButton` rides on undocumented UEditor endpoints (`uploadfile`/`listfile`) —
   fails silently if the site changes them; off by default;
   `Values.ueditorFileAccept` lists every extension the description promises.
+- ConfigInteractor passes input components the **`mcmodder-setting-` prefixed DOM id**
+  (uBO collision fix), not the raw config id — components deriving identity from
+  `props.id` with strict equality silently misroute (the background pool's day/night
+  slot routing shipped every upload into the day slot, f738acc). Derive with
+  `includes`, or have the parent pass an explicit raw-id prop.
 - **Night-mode icon fixes on bbs use CSS mask + inline data-URI SVG** (no FontAwesome sheet
   there; GIF/PNG sprites are 1-bit hard transparency): `::before` with
   `mask: url("data:image/svg+xml;utf8,...") center / contain no-repeat` +
