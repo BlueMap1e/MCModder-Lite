@@ -547,9 +547,9 @@ interface Item {
    * 以单个逗号 `,` 不带空格分隔
    *
    * 每项无引号 `""` 包裹，无前缀 `#`；
-   * 最外层*无*方括号 `[]`
+   * 最外层*有*方括号 `[]`
    *
-   * 合法的例子: `minecraft:piglin_loved,forge:ingots/gold`
+   * 合法的例子: `[minecraft:piglin_loved,forge:ingots/gold]`
    */
   OredictList?: string;
   /**
@@ -1709,10 +1709,15 @@ interface JsonFrameTool {
 }
 
 interface ItemJsonFrameConfig {
+  /** 要爬取的目标模组 ID */
   classID: number;
+  /** 要爬取的资料类型 ID */
   typeID: number;
+  /** 是否启用了「访问潜在资料」 */
   infer: boolean;
+  /** 是否启用了「保存完整数据」 */
   getall: boolean;
+  /** 是否启用了「保存物品图标」 */
   geticon: boolean;
 }
 
